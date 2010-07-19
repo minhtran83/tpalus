@@ -2,6 +2,9 @@ package palus.trace;
 
 import org.objectweb.asm.Type;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+
 import palus.PalusUtil;
 
 public abstract class TraceEvent {
@@ -114,9 +117,42 @@ public abstract class TraceEvent {
 		}
 	}
 	
+	public boolean isNonPublicMethod() {
+	  Class<?> clazz;
+      try {
+          clazz = Class.forName(getClassName());
+      } catch (ClassNotFoundException e) {
+          throw new RuntimeException(e);
+      }
+      Method[] methods = clazz.getDeclaredMethods();
+      for(Method method : methods) {
+          if(method.getName().equals(getMethodName())
+              && Type.getMethodDescriptor(method).equals(getMethodDesc())) {
+              return !Modifier.isPublic(method.getModifiers());
+          }
+      }
+      
+      throw new RuntimeException("Method: " + toString() + " does not exist!");
+	}
+	
 	public abstract boolean isStaticMethod();
 	
 	public abstract boolean isEntryEvent();
+	
+	protected String getParamValues() {
+	  StringBuilder sb = new StringBuilder();
+	  sb.append("Param values: [");
+	  for(Object param : params) {
+	    if(param != null) {
+	      sb.append(param.toString());
+	    } else {
+	      sb.append("'null'");
+	    }
+        sb.append(", ");
+	  }
+	  sb.append("]");
+	  return sb.toString();
+	}
 	
 	private static void checkRep(String methodDesc, Object[] params) {
 		if(Type.getArgumentTypes(methodDesc).length != params.length) {

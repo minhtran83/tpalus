@@ -15,7 +15,7 @@ public class InitExitEvent extends TraceEvent {
 	@Override
 	public String toString() {
 		return "<Init> Exit: " + super.getMethodName() + ":"
-		  + super.getMethodDesc() + ":" + super.getId();
+		  + super.getMethodDesc() + ":" + super.getId() + " : " + super.getParamValues();
 	}
 
 	@Override

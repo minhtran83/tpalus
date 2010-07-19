@@ -19,6 +19,11 @@ public class ClinitEntryEvent extends TraceEvent {
 	}
 
 	@Override
+	public boolean isNonPublicMethod() {
+	  throw new RuntimeException("You can not tell Clinit<> is public or not");
+	}
+	
+	@Override
 	public boolean isStaticMethod() {
 		return false;
 	}

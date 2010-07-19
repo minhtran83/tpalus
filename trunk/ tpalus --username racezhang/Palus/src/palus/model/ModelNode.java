@@ -29,6 +29,11 @@ public class ModelNode {
 		return this.inEdges.size() == 0;
 	}
 	
+	public boolean isExitNode() {
+	  //XXX not reliable enough
+	  return this.outEdges.size() == 0;
+	}
+	
 	public List<Transition> getAllOutgoingEdges() {
 		return this.outEdges;
 	}
@@ -68,7 +73,33 @@ public class ModelNode {
 	}
 	
 	public Class<?> getModelledClass() {
-		return this.classModel.getClass();
+		return this.classModel.getModelledClass();
+	}
+	
+	/** If there is no matched transition, just return null */
+	public Transition getOutgoingTranisitionBySignature(Transition transition) {
+	  for(Transition t : this.outEdges) {
+	    if(t.toSignature().equals(transition.toSignature())) {
+	      return t;
+	    }
+	  }
+	  return null;
+	}
+	
+	public String getNodeInfo() {
+	  StringBuilder sb = new StringBuilder();
+	  sb.append(this.nodeid);
+	  sb.append(" \n    ");
+	  sb.append("incoming transitions: ");
+	  for(Transition t : this.inEdges) {
+	    sb.append(t.getTransitionID() + "  ");
+	  }
+	  sb.append("\n    ");
+	  sb.append("outgoing transitions: ");
+	  for(Transition t : this.outEdges) {
+	    sb.append(t.getTransitionID() + "  ");
+	  }
+	  return sb.toString();
 	}
 	
 	@Override

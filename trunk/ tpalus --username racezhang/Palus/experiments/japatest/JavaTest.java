@@ -8,7 +8,7 @@ import java.io.FileInputStream;
 public class JavaTest {
 
     public static void main(String[] args) throws Exception {
-    	String file = "D:\\Project\\eclipseworkingspace\\Palus\\experiments\\japatest\\JavaTest.java";
+    	String file = "/home/saizhang/workspace/Palus-SVN/experiments/japatest/JavaTest.java";
     	
         // creates an input stream for the file to be parsed
         FileInputStream in = new FileInputStream(file);
