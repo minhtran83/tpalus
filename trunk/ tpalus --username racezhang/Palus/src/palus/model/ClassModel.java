@@ -44,6 +44,13 @@ public class ClassModel {
 		}
 	}
 	
+	//merge the model into the current one
+	public void mergeModel(ClassModel model) {
+		PalusUtil.checkNull(model);
+		PalusUtil.checkTrue(model.getModelledClass() == this.getModelledClass());
+		
+	}
+	
 	//XXX this should have more information in params
 	public void addTransition(ModelNode src, ModelNode dest, String methodName, String methodDesc)
 	    throws ModelNodeNotFoundException {
