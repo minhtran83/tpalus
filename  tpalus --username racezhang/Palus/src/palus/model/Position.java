@@ -10,6 +10,7 @@ public final class Position {
 		this.i = i;
 	}
 	
+	//some static factory methods
 	public static Position getThisPosition() {
 		return new Position(0);
 	}
@@ -27,6 +28,7 @@ public final class Position {
 		return new Position(Integer.MAX_VALUE);
 	}
 	
+	//check the position property
 	public boolean isThisPosition() {
 		return i == 0;
 	}
@@ -42,5 +44,11 @@ public final class Position {
 	public int getParamPosition() {
 		PalusUtil.checkTrue(this.isParamPosition());
 		return this.i;
+	}
+	
+	//return its int value
+	public int toIntValue() {
+	  PalusUtil.checkTrue(i != Integer.MAX_VALUE);
+	  return this.i;
 	}
 }

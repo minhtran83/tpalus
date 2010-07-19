@@ -330,8 +330,15 @@ public class TraceAnalyzer {
 				}
 			}
 		}
+		if(!stack.isEmpty()) {
+		  error++;
+		}
 		if(error != 0) {
 			System.err.println("There are " + error + " errors!");
+			for(TraceEventAndPosition tap : traces) {
+	          System.out.println("-->" + tap.event.getUniqueTracePairID());
+	        }
+	        
 			throw new RuntimeException("There are " + error + " errors after checkTraceEvents!");
 		} else {
 			Log.log("Check passed!");

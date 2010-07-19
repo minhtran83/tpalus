@@ -13,7 +13,7 @@ public class Stats {
 	
 	private static int TRANSITION_ID = 0;
 	public static int genTransitionID() {
-		return TRANSITION_ID;
+		return TRANSITION_ID++;
 	}
 	
 	private static int TRACE_PAIR_ID = 0;
