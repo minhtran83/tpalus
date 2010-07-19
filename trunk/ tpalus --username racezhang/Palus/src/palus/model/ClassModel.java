@@ -49,6 +49,7 @@ public class ClassModel {
 		PalusUtil.checkNull(model);
 		PalusUtil.checkTrue(model.getModelledClass() == this.getModelledClass());
 		
+		throw new RuntimeException("Have not been implemented");
 	}
 	
 	//XXX this should have more information in params

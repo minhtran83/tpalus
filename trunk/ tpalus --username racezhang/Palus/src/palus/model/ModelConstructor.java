@@ -36,9 +36,21 @@ public class ModelConstructor {
 			//first check the validity of the traces
 			TraceAnalyzer.checkTraceEventsAndPosition(traceList);
 			//start to build model from traces
-			
+			ClassModel model = this.buildClassModelFromTrace(clazz, traceList);
+			PalusUtil.checkNull(model);
 		}
 		return classModel;
 	}
-
+	
+	private ClassModel buildClassModelFromTrace(Class<?> clazz, List<TraceEventAndPosition> traceList) {
+		ClassModel model = new ClassModel(clazz);
+		
+		//get first level of traces
+		
+		return model;
+	}
+	
+	public static TraceEventAndPosition[] getFirstLevelEvents(List<TraceEventAndPosition> traceList) {
+		return null;
+	}
 }
