@@ -1,6 +1,7 @@
 package palus.model;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import palus.AbstractState;
@@ -9,15 +10,19 @@ import palus.trace.Stats;
 
 public class ModelNode {
 	private final int nodeid;
-	private final ClassModel classModel;
+	private final Class<?> modelledClass;
 	private final AbstractState state;
 	
 	private final List<Transition> inEdges = new ArrayList<Transition>();
 	private final List<Transition> outEdges = new ArrayList<Transition>();
+
+	//can not make it final because we need to merge models
+    private ClassModel classModel;
 	
 	public ModelNode(ClassModel classModel) {
 		PalusUtil.checkNull(classModel);
 		this.classModel = classModel;
+		this.modelledClass = classModel.getModelledClass();
 		this.nodeid = Stats.genModelNodeID();
 		
 		//XXX untouched yet
@@ -49,6 +54,16 @@ public class ModelNode {
 		this.outEdges.add(transition);
 	}
 	
+	public List<ModelNode> getAllOutgoingNodes() {
+	    List<ModelNode> subNodes = new LinkedList<ModelNode>();
+	    for(Transition transition : this.outEdges) {
+	      PalusUtil.checkTrue(transition.getSourceNode() == this);
+	      PalusUtil.checkNull(transition.getDestNode());
+	      subNodes.add(transition.getDestNode());
+	    }
+	    return subNodes;
+	}
+	
 	public List<Transition> getAllIncomingEdges() {
 		return this.inEdges;
 	}
@@ -72,8 +87,14 @@ public class ModelNode {
 		return this.classModel;
 	}
 	
+	public void setClassModel(ClassModel newModel) {
+	  //make sure they are modelling the same class
+	  PalusUtil.checkTrue(newModel.getModelledClass() == this.modelledClass);
+	  this.classModel = newModel;
+	}
+	
 	public Class<?> getModelledClass() {
-		return this.classModel.getModelledClass();
+		return this.modelledClass;
 	}
 	
 	/** If there is no matched transition, just return null */
@@ -100,6 +121,11 @@ public class ModelNode {
 	    sb.append(t.getTransitionID() + "  ");
 	  }
 	  return sb.toString();
+	}
+	
+	@Override
+	public int hashCode() {
+	  return 13 * this.getNodeId();
 	}
 	
 	@Override
