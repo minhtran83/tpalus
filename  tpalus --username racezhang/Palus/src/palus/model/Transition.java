@@ -38,7 +38,8 @@ public class Transition {
 		PalusUtil.checkNull(methodName);
 		PalusUtil.checkNull(methodDesc);
 		//model the same class
-		PalusUtil.checkTrue(srcNode.getClassModel() == destNode.getClassModel());
+		//XXX check getClassModel() == getClassModel()?
+		PalusUtil.checkTrue(srcNode.getModelledClass() == destNode.getModelledClass());
 		
 		this.modelClass = srcNode.getModelledClass();
 		this.srcNode = srcNode;
@@ -147,6 +148,13 @@ public class Transition {
 	//this is used for merging transitions
 	public String toSignature() {
 	  return this.getClassName() + ":" + this.getMethodName() + ":" + this.getMethodDesc();
+	}
+	
+	@Override
+	public int hashCode() {
+	    return this.getSourceNode().hashCode() * 13 + this.getDestNode().hashCode()*23
+	        + this.getClassName().hashCode() * 53 + this.getMethodName().hashCode() * 65
+	        + this.getMethodDesc().hashCode() * 129;
 	}
 	
 	@Override
@@ -262,6 +270,10 @@ public class Transition {
 			}
 			this.transition = transition;
 			this.position = position;
+		}
+		
+		public Decoration makeClone(Transition t) {
+		    return new Decoration(thiz, params, t, position);
 		}
 		
 		public boolean isInThisPosition() {

@@ -6,6 +6,11 @@ public class Stats {
 		return TRACE_ID++;
 	}
 	
+	private static int CLASS_MODEL_ID = 0;
+	public static int genClassModelID() {
+	  return CLASS_MODEL_ID;
+	}
+	
 	private static int MODEL_NODE_ID = 0;
 	public static int genModelNodeID() {
 		return MODEL_NODE_ID++;

@@ -32,9 +32,9 @@ public class ModelConstructor {
 	//construct the model for each class, and connect each individual model
 	//with dependence edges
 	private ClassModel buildClassModel(Class<?> clazz, Map<Instance, List<TraceEventAndPosition>> classTraces) {
-		ClassModel classModel = new ClassModel(clazz);
-		classModel.addRoot(new ModelNode(classModel));
-		classModel.addExit(new ModelNode(classModel));
+		ClassModel classModel = null; //new ClassModel(clazz);
+//		classModel.addRoot(new ModelNode(classModel));
+//		classModel.addExit(new ModelNode(classModel));
 		
 		System.out.print("   building model for class: " + clazz.getName());
 		for(Instance instance : classTraces.keySet()) {
@@ -45,9 +45,21 @@ public class ModelConstructor {
 			ClassModel model = null;;
             try {
                 model = this.buildClassModelFromTrace(clazz, traceList);
+                //check the invariant here
+                model.checkRep();
                 System.out.print(".");
-                classModel.mergeModel(model);
+                if(classModel == null) {
+                   classModel = model;
+                } else {
+                   classModel.mergeModel(model);
+                }
                 System.out.print("+");
+                
+                Log.log("############### Intermediate merging result #############");
+                Log.log("Class model for :" + clazz.getName());
+                Log.log(classModel.getModelInfo() + "\n");
+                Log.log("#########################################################");
+                
             } catch (ModelNodeNotFoundException e) {
                  throw new RuntimeException(e);
             } catch (MethodNotExistInTransitionException e) {
@@ -56,6 +68,12 @@ public class ModelConstructor {
 			PalusUtil.checkNull(model);
 		}
 		System.out.println();
+		//clean all unreachable node, and reset the exit
+		//classModel.postprocessAfterMerging();
+		Log.log(" ---------------- class model after merged ------------");
+		Log.log("Class model for: " + clazz.getName());
+		Log.log(classModel.getModelInfo() + "\n");
+		Log.log(" ------------------------------------------------------");
 		
 		return classModel;
 	}
