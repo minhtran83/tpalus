@@ -42,7 +42,7 @@ public class ModelConstructor {
 			//first check the validity of the traces
 			TraceAnalyzer.checkTraceEventsAndPosition(traceList);
 			//start to build model from traces
-			ClassModel model = null;;
+			ClassModel model = null;
             try {
                 model = this.buildClassModelFromTrace(clazz, traceList);
                 //check the invariant here
@@ -125,7 +125,7 @@ public class ModelConstructor {
 	    for(int i = 0; i < indices.length; i++) {
 	        int currentIndex = indices[i];
 	        int nextIndex = (i == indices.length - 1) ? traceList.size() : indices[i+1]; //note, here it is traceList.size(), not -1
-	        TraceEventAndPosition traceAndPosition = traceList.get(i);
+	        TraceEventAndPosition traceAndPosition = traceList.get(currentIndex); //XXX traceList.get(i);
 	        //create a new node, add to the model, if it is the last call, connect the current with the destNode
 	        ModelNode connectingNode = (i == indices.length - 1) ? destNode : new ModelNode(model);
 	        model.addModelNode(connectingNode);
@@ -135,6 +135,9 @@ public class ModelConstructor {
 	            traceAndPosition.event.getClassName(), traceAndPosition.event.getMethodName(), traceAndPosition.event.getMethodDesc());
 	        srcToConnectingNode.addDecoration(traceAndPosition.event.getReceiver(), traceAndPosition.event.getParams(), srcToConnectingNode, traceAndPosition.position);
 	        model.addTransition(srcToConnectingNode);
+	        
+	        //save the TraceEvent and Transition relations here
+	        TraceTransitionManager.addInitTraceEventTransitionPair(traceAndPosition.event, srcToConnectingNode);
 	        
 	        if(nextIndex - currentIndex > 2) {
 	          //we need to do recursion here

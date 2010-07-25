@@ -1,4 +1,5 @@
 package palus.model;
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -11,7 +12,7 @@ import palus.PalusUtil;
 import palus.model.Transition.Decoration;
 import palus.trace.Stats;
 
-public class ClassModel {
+public class ClassModel implements Serializable {
 	
     private final int classModelID;
 	private final Class<?> modelledClass;
@@ -25,7 +26,7 @@ public class ClassModel {
 		PalusUtil.checkNull(modelledClass);
 		this.modelledClass = modelledClass;
 		this.classModelID = Stats.genClassModelID();
-		//XXX is it a good to put add root/ add exit inside constructor?
+		//XXX is it a good idea to put add root/ add exit inside constructor?
 	}
 	
 	public int getClassModelID() {
@@ -132,11 +133,12 @@ public class ClassModel {
 		//XXX think about is there any information loss here??
 	    try {
             mergeNode(this.root, model.root);
-            
-            //reset the exit and do some postprocessing (clean dangling edges/nodes)
-            //to check. And check is there any invariant break during merging
-            //this.postprocessAfterMerging();
-            this.removeExtraEdgesAfterMerging();
+            //do some postprocessing about all merged nodes
+            this.postprocessMergedNodes();
+            //unify all exit nodes, and check the invariant after merge
+            this.unifyAllExitNodes();
+            //check the invariant
+            this.checkRep();
         } catch (ModelNodeNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -150,12 +152,12 @@ public class ClassModel {
 	    
 	    if(!hasTransition(transition)) {
             this.transitions.add(transition);
-            if(!src.getAllOutgoingEdges().contains(transition)) {
+            //if(!src.getAllOutgoingEdges().contains(transition)) {
                 src.addOutgoingEdge(transition);
-            }
-            if(!dest.getAllIncomingEdges().contains(transition)) {
+            //}
+            //if(!dest.getAllIncomingEdges().contains(transition)) {
                 dest.addIncomingEdge(transition);
-            }
+           // }
         } else {
             //TODO we should add some actions here
         }
@@ -167,12 +169,13 @@ public class ClassModel {
 	  }
 	}
 	
-	public void deleteTransition(Transition transition) {
-	  PalusUtil.checkTrue(this.transitions.contains(transition));
-	  transition.getSourceNode().getAllOutgoingEdges().remove(transition);
-	  transition.getDestNode().getAllIncomingEdges().remove(transition);
-	  this.transitions.remove(transition);
-	}
+	//the ClassModel is node-oriented, so we do not need delete transition
+//	public void deleteTransition(Transition transition) {
+//	  PalusUtil.checkTrue(this.transitions.contains(transition));
+//	  transition.getSourceNode().getAllOutgoingEdges().remove(transition);
+//	  transition.getDestNode().getAllIncomingEdges().remove(transition);
+//	  this.transitions.remove(transition);
+//	}
 	
 	/**
 	 * Print a brielf summary for the model
@@ -196,9 +199,14 @@ public class ClassModel {
 	  sb.append("\n");
 	  sb.append("All transitions: \n");
 	  for(Transition transition : this.transitions) {
-	    sb.append("   " + transition.getSourceNode().getNodeId() + ":" + transition.getDecorations().size() + "   ------" + transition.getTransitionID()
+	    sb.append("   " + transition.getSourceNode().getNodeId() + ":"
+	        + transition.getDecorations().size() + "   ------" + transition.getTransitionID()
 	        + ":" + transition.getMethodName()  + ":" + transition.getMethodDesc() +  "----->  "
 	        + transition.getDestNode().getNodeId() + "\n");
+	    List<Decoration> decorations = transition.getDecorations();
+	    for (Decoration decoration : decorations) {
+	        sb.append("          " + decoration.toString() + "\n");
+	    }
 	  }
 	  sb.append("\n");
 	  sb.append("---------------------------------------");
@@ -217,7 +225,8 @@ public class ClassModel {
 	public void checkRep() {
 	    PalusUtil.checkNull(this.root);
 	    PalusUtil.checkNull(this.exit);
-	    PalusUtil.checkTrue(this.root.isRootNode() && this.exit.isExitNode());
+	    PalusUtil.checkTrue(this.root.isRootNode());
+	    PalusUtil.checkTrue(this.exit.isExitNode());
 	    //all nodes are reachable from root
 	    PalusUtil.checkTrue(this.getAllSubNodes(this.root).size() + 1 == this.nodes.size());
 	    //only one root, one exit
@@ -266,12 +275,14 @@ public class ClassModel {
 	    //that is OK, we stop merge, the tobeMerged node is actually a part
         //of the destination node
         else if(!destNode.isExitNode() && tobeMerged.isExitNode()) {
-          Log.log(" -- dest node " + destNode.getNodeId() + " is not exit, to be merged is exit" + tobeMerged.getNodeId());
+          Log.log(" -- dest node " + destNode.getNodeId() + " is not exit, tobeMerged node is exit"
+              + tobeMerged.getNodeId());
           return;
         }
 	    //let's extend destNode with tobeMerged's subtree
 	    else if(destNode.isExitNode() && !tobeMerged.isExitNode()) {
-	      Log.log(" -- dest node " + destNode.getNodeId() + " is exit, to be merged is not exit" + tobeMerged.getNodeId());
+	      Log.log(" -- dest node " + destNode.getNodeId() + " is exit, tobeMerged node is not exit"
+	          + tobeMerged.getNodeId());
           //XXX add all sub nodes, not include this one
 	      List<ModelNode> subNodes = this.getAllSubNodes(tobeMerged);
 	      Log.log("     sub nodes added: " + subNodes.size());
@@ -294,25 +305,11 @@ public class ClassModel {
           
           PalusUtil.checkTrue(destNode.getClassModel() == this);
           Log.log(destNode.getClassModel().getModelInfo());
-          //reset the exit
-	      //XXX be aware of the new exit node
-//	      for(Transition transition : tobeMerged.getAllOutgoingEdges()) {
-//	        destNode.addOutgoingEdge(new Transition(destNode, transition.getDestNode(),
-//	            transition.getClassName(), transition.getMethodName(), transition.getMethodDesc()));
-	        //remove the transition
-//	        transition.getSourceNode().getAllOutgoingEdges().remove(transition);
-//	        transition.getDestNode().getAllIncomingEdges().remove(transition);
-//	      }
-	      //XXXX redundant transitions here
-//	      for(Transition transition : tobeMerged.getAllOutgoingEdges()) {
-//	          tobeMerged.getClassModel().deleteTransition(transition);
-//	      }
-//	      destNode.getClassModel().resetExit(tobeMerged.getClassModel().getExit());
 	    }	    
 	    else {
-	      Log.log(" -- both dest node " + destNode.getNodeId() + " is not exit, to be merged is not exit" + tobeMerged.getNodeId());
-	      //do the recursion here, neither node is exit node, so we need to walk
-	      //down one level
+	      Log.log(" -- both dest node " + destNode.getNodeId() + " is not exit, tobeMerged node is not exit "
+	          + tobeMerged.getNodeId());
+	      //do the recursion here, neither node is exit node, so we need to walk down one level
 	      List<Transition> transitions = tobeMerged.getAllOutgoingEdges();
 	      for(Transition transition : transitions) {
 	        //we use the signature for comparison, only concern on the method name, desc, owner class
@@ -320,6 +317,8 @@ public class ClassModel {
 	        if(destT != null) {
 	          //we go down one level to continue merging
 	          PalusUtil.checkTrue(destT.getSourceNode() == destNode && transition.getSourceNode() == tobeMerged);
+	          //do the merge here
+	          //TraceTransitionManager.mergeTransitions(destT, transition);
 	          //merge the decoration
 	          for(Decoration d : transition.getDecorations()) {
 	            destT.addDecoration(d.makeClone(destT));
@@ -328,30 +327,13 @@ public class ClassModel {
 	          Log.log(" -- recusrive " + destT.getDestNode().getNodeId() + " " + transition.getDestNode().getNodeId());
 	          this.mergeNode(destT.getDestNode(), transition.getDestNode());
 	        } else {
-	          Log.log(" -- add new edge to dest: " + destNode.getNodeId() + " from to be merged: " + tobeMerged.getNodeId());
+	          Log.log(" -- add new edge to dest: " + destNode.getNodeId() + " from tobeMerged node: "
+	              + tobeMerged.getNodeId());
 	          destNode.getClassModel().addModelNode(transition.getDestNode());
 	          destNode.getClassModel().addModelNodes(this.getAllSubNodes(transition.getDestNode()));
 	          List<Transition> subTransitions = this.getAllSubTransitions(transition.getDestNode());
 	          subTransitions.add(new Transition(destNode, transition.getDestNode(), transition.getClassName(), transition.getMethodName(), transition.getMethodDesc()));
-	          destNode.getClassModel().addTransitions(subTransitions); //node did not find?
-	          
-	          //add all the subtree from transitions
-	          //XXX be aware of the exit change, and redundant edges, add outgoing edge maybe redundant
-//	          destNode.addOutgoingEdge(new Transition(destNode, transition.getDestNode(),
-//	              transition.getClassName(), transition.getMethodName(), transition.getMethodDesc()));
-//	          //remove the transition
-//	          transition.getSourceNode().getAllOutgoingEdges().remove(transition);
-//	          transition.getDestNode().getAllIncomingEdges().remove(transition);
-	          
-	          //XXX reset the exit node here, or merge the exit node afterwards
-//	          ModelNode exitToRemove = tobeMerged.getClassModel().getExit();
-//	          ModelNode exitNode = destNode.getClassModel().getExit();
-//	          destNode.getClassModel().addModelNode(exitNode);
-//	          for(Transition t2Exit : exitToRemove.getAllIncomingEdges()) {
-//	            destNode.getClassModel().addModelNode(t2Exit.getSourceNode());//???
-//	            destNode.getClassModel().addTransition(new Transition(t2Exit.getSourceNode(), exitNode, t2Exit.getClassName(), t2Exit.getMethodName(), t2Exit.getMethodDesc()));
-//	          }
-//	          tobeMerged.getClassModel().deleteModelNode(exitToRemove);
+	          destNode.getClassModel().addTransitions(subTransitions);
 	        }
 	      }
 	    }
@@ -402,65 +384,87 @@ public class ClassModel {
 	  return new LinkedList<Transition>(transitions);
 	}
 	
-	private void removeExtraEdgesAfterMerging() {
+	private void postprocessMergedNodes() {
+	  //for each model node which is fetched from other class model, we set their
+	  //class model as this. Then, we remove all other redundant edges for each
+	  //model node, which does not belong to the model's edges.
 	  for(ModelNode node : this.nodes) {
 	    node.setClassModel(this);
-	    
+	    //to be removed outgoing edges
 	    List<Transition> outToBeRemoved = new LinkedList<Transition>();
 	    for(Transition t : node.getAllOutgoingEdges()) {
 	      if(!this.transitions.contains(t)) {
 	        outToBeRemoved.add(t);
 	      }
 	    }
+	    //to be removed incoming edges
 	    List<Transition> inToBeRemoved = new LinkedList<Transition>();
 	    for(Transition t : node.getAllIncomingEdges()) {
 	      if(!this.transitions.contains(t)) {
 	        inToBeRemoved.add(t);
 	      }
 	    }
-	    //remove them
+	    //remove them from outgoing/incoming edges
 	    node.getAllOutgoingEdges().removeAll(outToBeRemoved);
 	    node.getAllIncomingEdges().removeAll(inToBeRemoved);
 	  }
 	}
 	
-	public void postprocessAfterMerging() {
+	/** To ease the merging process, we tolerance the existence of multiple
+    /* exit nodes,, which violates the invariants defined in this class.
+    /* We will unify all these exit nodes 
+	 * @throws ModelNodeNotFoundException */
+	private void unifyAllExitNodes() throws ModelNodeNotFoundException {
+	  //check the root invariant does not violate
 	  PalusUtil.checkNull(this.root);
-	  PalusUtil.checkTrue(this.root.isRootNode());
-	  
-	  //remove all unreachable nodes
-	  List<ModelNode> reachableNodes = this.getAllSubNodes(this.root);
-	  
-	  //all removable nodes
-	  List<ModelNode> shouldRemove = new LinkedList<ModelNode>();
-	  for(ModelNode node : this.nodes) {
-	    if(!reachableNodes.contains(node)) {
-	      shouldRemove.add(node);
-	    }
-	  }
-	  //remove it
-	  for(ModelNode node :  shouldRemove) {
-	      try {
-              this.deleteModelNode(node);
-          } catch (ModelNodeNotFoundException e) {
-              throw new RuntimeException(e);
-          }
-	  }
-	  
-	  //get the new exit node
-	  ModelNode exit = null;
+	  PalusUtil.checkNull(this.root.isRootNode());
+	  //first get all exit nodes
+	  List<ModelNode> exitNodes = new LinkedList<ModelNode>();
 	  for(ModelNode node : this.nodes) {
 	    if(node.numOfOutEdges() == 0) {
-	      if(exit != null) {
-	        //XXX throw new RuntimeException("There can not be more than one exit node!");
-	      }
-	      exit = node;
+	      exitNodes.add(node);
 	    }
 	  }
+	  PalusUtil.checkTrue(exitNodes.size() > 0);
+	  for(ModelNode exitNode : exitNodes) {
+	    PalusUtil.checkTrue(exitNode.numOfInEdges() > 0);
+	  }
+	  //log the number of exit nodes
+	  Log.log("start unifying all exits");
+	  Log.log("number of exit nodes: " + exitNodes.size());
+	  for(ModelNode node : exitNodes) {
+	    Log.log("     " + node.getNodeId());
+	  }
 	  
-	  //reset the exit node
-	  this.resetExit(exit);
+	  //we do not need to unify if there is only one node
+	  if(exitNodes.size() == 1) {
+	    this.resetExit(exitNodes.get(0));
+	    return;
+	  }
+	  //start to unify all the exit
+	  //we first pick up the first node as the target node, all unify all exit
+	  //nodes to it
+	  ModelNode unifiedExit = exitNodes.remove(0);
+	  
+	  Log.log("choose: " + unifiedExit.getNodeId() + " as unified exit");
+	  
+	  PalusUtil.checkTrue(unifiedExit.isExitNode());
+	  //go through each of remaining exit nodes
+	  for(ModelNode otherExit : exitNodes) {
+	    for(Transition transition : otherExit.getAllIncomingEdges()) {
+	        Transition newTransition = new Transition(transition.getSourceNode(), unifiedExit,
+	            transition.getClassName(), transition.getMethodName(), transition.getMethodDesc());
+	        this.addTransition(newTransition);
+	    }
+	    //actually it also delete the transitions
+	    this.deleteModelNode(otherExit);
+	  }
+	  //reset the exit
+	  PalusUtil.checkTrue(unifiedExit.isExitNode());
+	  this.resetExit(unifiedExit);
 	}
+	
+
 	/**some model utility methods here for faciliting
 	 * manipulate the model */
 }

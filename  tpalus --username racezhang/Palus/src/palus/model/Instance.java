@@ -2,7 +2,6 @@ package palus.model;
 
 import palus.AbstractState;
 import palus.PalusUtil;
-import palus.State;
 
 public final class Instance {
 	

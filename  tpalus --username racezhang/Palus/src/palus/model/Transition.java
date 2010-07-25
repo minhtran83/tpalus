@@ -251,7 +251,7 @@ public class Transition {
 		/** the initial state, 0 represents this, number 1 - params.length
 		 * -1 represents the return value
 		 * represents the corresponding parameter value */
-		public final int position;
+		private final int position;
 		
 		public Decoration(Object thiz, Object[] params, Transition transition, int position) {
 			//check the input first
@@ -280,6 +280,14 @@ public class Transition {
 			return position == 0;
 		}
 		
+		public boolean isInRetPosition() {
+		    return position == -1;
+		}
+		
+		public int getPosition() {
+		    return this.position;
+		}
+		
 		public DecorationValue getCurrentDecorationValue() {
 			if(this.isInThisPosition()) {
 				return this.getThisValue();
@@ -296,6 +304,18 @@ public class Transition {
 		public DecorationValue[] getParamValues() {
 			return this.params;
 		}
+		
+		@Override
+		public String toString() {
+		   StringBuilder sb = new StringBuilder();
+		   sb.append(thiz.toString());
+		   sb.append("[");
+		   for(DecorationValue param : this.params) {
+		     sb.append(param.toString() + " ");
+		   }		  
+		   sb.append("]");
+		   return sb.toString();
+		}
 	}
 	
 	public static class DecorationValue {
@@ -303,6 +323,7 @@ public class Transition {
 		private final Object objValue;
 		private final boolean isPrimitiveOrStringType;
 
+		//can not set this final, edge need to change during model creation
 		private DependenceEdge edge = null;
 		
 		public DecorationValue(Object obj, Class<?> type) {
@@ -310,7 +331,7 @@ public class Transition {
 			isPrimitiveOrStringType = type.isPrimitive() || PalusUtil.isPrimitive(type)
 				|| type == java.lang.String.class;
 			if(isPrimitiveOrStringType) {
-				objValue = obj; //obj could be null
+				objValue = obj; //obj could be null but it is immutable
 			} else {
 				objValue = null;
 			}
@@ -328,14 +349,23 @@ public class Transition {
 			}
 		}
 		
+		public boolean hasDependenceEdge() {
+		  return this.edge != null;
+		}
+		
 		public void setDependenceEdge(DependenceEdge edge) {
 			PalusUtil.checkNull(edge);
 			this.edge = edge;
 		}
 		
 		public DependenceEdge getDependenceEdge() {
-			assert edge != null;
+			PalusUtil.checkNull(edge);
 			return this.edge;
+		}
+		
+		@Override
+		public String toString() {
+		  return isPrimitiveOrStringType ? (objValue == null? "primitive-null" : objValue.toString()) : "dependence-edge";
 		}
 	}
 }

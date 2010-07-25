@@ -14,8 +14,7 @@ import palus.trace.TraceStack;
  *
  */
 public class Agent {
-  public static void premain(String agentArgs, Instrumentation inst)
-     throws IOException {
+  public static void premain(String agentArgs, Instrumentation inst) {
     final ObjectStateMonitor monitor = new ObjectStateMonitor();
     inst.addTransformer(monitor);
     
@@ -26,7 +25,7 @@ public class Agent {
 			System.out.println("----------Enter postmorten trace analysis-------");
 			System.out.println("num of method calls: " + TraceStack.traces.size());
 			TraceAnalyzer analyzer = new TraceAnalyzer(TraceStack.traces);
-			analyzer.analysis();
+			analyzer.analyzeAndGenerateTests();
 		}
 		
 	});

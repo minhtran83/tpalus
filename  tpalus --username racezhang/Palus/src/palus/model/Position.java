@@ -51,4 +51,19 @@ public final class Position {
 	  PalusUtil.checkTrue(i != Integer.MAX_VALUE);
 	  return this.i;
 	}
+	
+	@Override
+	public int hashCode() {
+	  return this.i * 107;
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+	  if(!(o instanceof Position)) {
+	    return false;
+	  } else {
+	    Position p = (Position)o;
+	    return p.toIntValue() == this.i;
+	  }
+	}
 }

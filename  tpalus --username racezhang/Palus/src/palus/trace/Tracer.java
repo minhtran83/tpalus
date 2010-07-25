@@ -2,7 +2,7 @@
 
 package palus.trace;
 
-import palus.instrument.Util;
+import palus.PalusUtil;
 
 /**
  * @author saizhang@google.com (Your Name Here)
@@ -42,7 +42,7 @@ public class Tracer {
 	  if(switchOff) {
 		  return;
 	  }
-	  className = Util.transClassNameSlashToDot(className);
+	  className = PalusUtil.transClassNameSlashToDot(className);
 	  System.out.println("start call: " + id + "   " + className + "  "+ methodName + "  " + desc + "  " + System.identityHashCode(o) );
 	  TraceStack.pushMethodToStack(id, null, /*no return value*/ className, methodName, desc, o, true);
   }
@@ -52,7 +52,7 @@ public class Tracer {
 	  if(switchOff) {
 		  return;
 	  }
-	  className = Util.transClassNameSlashToDot(className);
+	  className = PalusUtil.transClassNameSlashToDot(className);
 	  System.out.println("end call: "  + id + "   " + className + "   " + methodName + "  " + desc + "  " + System.identityHashCode(o) + " ret: " + System.identityHashCode(ret));
 	  TraceStack.pushMethodToStack(id, ret, className, methodName, desc, o, false);
   }

@@ -25,4 +25,9 @@ public class Stats {
 	public static int genTracePairID() {
 		return TRACE_PAIR_ID++;
 	}
+	
+	private static int TRACE_SEQUENCE_ID = 0;
+	public static int genTraceSequenceID() {
+	  return TRACE_SEQUENCE_ID++;
+	}
 }
