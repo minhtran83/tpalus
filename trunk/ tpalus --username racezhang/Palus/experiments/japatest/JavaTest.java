@@ -12,7 +12,7 @@ public class JavaTest {
     	
         // creates an input stream for the file to be parsed
         FileInputStream in = new FileInputStream(file);
-
+        
         CompilationUnit cu;
         try {
             // parse the file

@@ -3,7 +3,6 @@ package palus.trace;
 import java.util.LinkedList;
 import java.util.List;
 
-import palus.PalusUtil;
 
 public class TraceStack {
 	public static final List<TraceEvent> traces = new LinkedList<TraceEvent>();

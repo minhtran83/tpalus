@@ -9,10 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
-import org.objectweb.asm.Type;
 
 import palus.Log;
 import palus.PalusUtil;
+import palus.testgen.TestGenMain;
 import palus.trace.ClinitEntryEvent;
 import palus.trace.ClinitExitEvent;
 import palus.trace.InitEntryEvent;
@@ -31,11 +31,12 @@ public class TraceAnalyzer {
 		this.traces = traces;
 	}
 	
-	public void analysis() {
-		System.out.println("Switch off the tracing, start analyzing the trace.");
+	public void analyzeAndGenerateTests() {
+		System.out.println("Switch off the tracing. Analyzing the trace....\n");
 		System.out.println("Instrumented methods: " + Stats.genTraceID());
 		System.out.println("Recorded trace size: " + traces.size());
 		
+		//swith off the instrumentation
 		Tracer.switchOff();
 		try {
 			Log.log = new FileWriter(("log.txt"));
@@ -43,16 +44,20 @@ public class TraceAnalyzer {
 			e.printStackTrace();
 		}
 		
-		//match the start/end of method calls
+		//remove any unmatched trace event pairs, and assign an unique id for
+		//each trace event
 		this.removeUnmatchedEvents();
+        this.assignTraceSequenceID();
+        
+        //check the validity before proceeding
+        checkTraceEvents(this.traces);
+		
 		System.out.println("After removing unmatched pairs. Size of trace: " + traces.size());
 		System.out.println("Trace unique id: " + Stats.genTracePairID());
+		System.out.println("Trace sequence id: " + Stats.genTraceSequenceID());
+		System.out.println("\n");
 		
-		//check to see if there are still unmatched pairs
-		if(true) {
-			checkTraceEvents(this.traces);
-		}
-		
+		System.out.println("Start classifying traces by class ...");
 		//classify the traces based on instances of each class
 		Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> traceMap = null;
 		try {
@@ -61,25 +66,34 @@ public class TraceAnalyzer {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
+		//check the validity of the trace map before proceeding
+		checkTraceMapValidity(traceMap);
+		System.out.println("Classification ends, get a valid trace map.");
+		System.out.println("\n");
 		
-		Log.log("Trace map, entries: " + traceMap.entrySet().size());
-		for(Class cls : traceMap.keySet()) {
-			Log.log("   " + cls.toString());
-			Map<Instance, List<TraceEventAndPosition>> instanceMap = traceMap.get(cls);
-			Log.log("        how many instance? " + instanceMap.entrySet().size());
-			for(Instance instance : instanceMap.keySet()) {
-				Log.log("             instance: " + instance.toString() + ", trace size: " + instanceMap.get(instance).size());
-				List<TraceEventAndPosition> eventList = instanceMap.get(instance);
-				checkTraceEventsAndPosition(eventList);
-			}
-		}
+		System.out.println("Computing the trace parameter dependences");
+		try {
+            TraceDependenceRepository.buildTraceDependences(this.traces, traceMap);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (BugInPalusException e) {
+            throw new RuntimeException(e);
+        }
+		System.out.println("Finish computing the trace dependences");
+		System.out.println("\n");
 		
-		System.out.println("Building models...");
-		
-		//assign an id to speed up the model construction process
-		//processToAssignOrderId(traceMap);
+		Log.log("Here is all the dependence information: ");
+		Log.log(TraceDependenceRepository.getTraceDependenceInfo());
+
+		System.out.println("Building models from the trace...");
 		ModelConstructor constructor = new ModelConstructor(traceMap);
-		constructor.buildClassModels();
+		Map<Class<?>, ClassModel> models = constructor.buildClassModels();
+		System.out.println("Finish building models!");
+		System.out.println("\n");
+
+//		System.out.println("Start generating tests...");
+//		TestGenMain testgen = new TestGenMain();
+//		testgen.generateTests(new String[]{} /* XXX empty now*/, models);
 	}
 	
 	public void removeUnmatchedEvents() {
@@ -148,6 +162,12 @@ public class TraceAnalyzer {
 		}
 		Log.log("Size of all unmatched events to be removed: " + unmatchedEvents.size());
 		this.traces.removeAll(unmatchedEvents);
+	}
+	
+	private void assignTraceSequenceID() {
+	  for(TraceEvent trace : this.traces) {
+	    trace.setTraceEventSequenceID(Stats.genTraceSequenceID());
+	  }
 	}
 	
 	public static Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> extractTraceEventByClass(List<TraceEvent> traces)
@@ -343,5 +363,19 @@ public class TraceAnalyzer {
 		} else {
 			Log.log("Check passed!");
 		}
+	}
+	
+	public static void checkTraceMapValidity(Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> traceMap) {
+	  Log.log("Trace map, entries: " + traceMap.entrySet().size());
+      for(Class<?> cls : traceMap.keySet()) {
+          Log.log("   " + cls.toString());
+          Map<Instance, List<TraceEventAndPosition>> instanceMap = traceMap.get(cls);
+          Log.log("        how many instance? " + instanceMap.entrySet().size());
+          for(Instance instance : instanceMap.keySet()) {
+              Log.log("             instance: " + instance.toString() + ", trace size: " + instanceMap.get(instance).size());
+              List<TraceEventAndPosition> eventList = instanceMap.get(instance);
+              checkTraceEventsAndPosition(eventList);
+          }
+      }
 	}
 }

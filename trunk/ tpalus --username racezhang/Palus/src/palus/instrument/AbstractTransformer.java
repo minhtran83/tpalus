@@ -9,6 +9,8 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.util.CheckClassAdapter;
 
+import palus.PalusUtil;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -75,7 +77,7 @@ public abstract class AbstractTransformer {
     } else if (in.getName().endsWith(".jar")) {
       transformJarFile(in, out);
     } else {
-      Util.copyFile(in, out);
+      PalusUtil.copyFile(in, out);
     }
   }
 
@@ -112,7 +114,7 @@ public abstract class AbstractTransformer {
        * else if (entry.getName().endsWith(".jar")) { }
        */
       else {
-        Util.copyStream(inJarStream, outJarStream);
+        PalusUtil.copyStream(inJarStream, outJarStream);
       }
 
       // close the inJar stream
@@ -183,7 +185,6 @@ public abstract class AbstractTransformer {
    * The main class transformation method
    *
    * @param cn
-   * @return
    */
   @SuppressWarnings("unchecked")
   protected abstract void transformClassNode(ClassNode cn);

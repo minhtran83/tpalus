@@ -20,7 +20,6 @@ import palus.trace.Stats;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
-import java.lang.reflect.Method;
 import java.security.ProtectionDomain;
 import java.util.List;
 
@@ -42,9 +41,9 @@ public class ObjectStateMonitor extends AbstractTransformer implements
 	@Override
 	public byte[] transform(ClassLoader loader, String className,
 			Class<?> classBeingRedefined, ProtectionDomain protectionDomain,
-			byte[] classfileBuffer) throws IllegalClassFormatException {
+			byte[] classfileBuffer) {
 		// return null if we don't have to instrument the given class
-		if (!Util.shouldInstrumentThisClass(Util
+		if (!PalusUtil.shouldInstrumentThisClass(PalusUtil
 				.transClassNameDotToSlash(className))) {
 			return null;
 		}

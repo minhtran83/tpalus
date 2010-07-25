@@ -51,7 +51,9 @@ public class ModelNode {
 		PalusUtil.checkNull(transition);
 		assert transition.getSourceNode() == this;
 		
-		this.outEdges.add(transition);
+		if(!this.outEdges.contains(transition)) {
+		    this.outEdges.add(transition);
+		}
 	}
 	
 	public List<ModelNode> getAllOutgoingNodes() {
@@ -76,7 +78,9 @@ public class ModelNode {
 		PalusUtil.checkNull(transition);
 		assert transition.getDestNode() == this;
 		
-		this.inEdges.add(transition);
+		if(!this.inEdges.contains(transition)) {
+		    this.inEdges.add(transition);
+		}
 	}
 	
 	public int getNodeId() {

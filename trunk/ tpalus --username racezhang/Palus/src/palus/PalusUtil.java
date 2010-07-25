@@ -8,8 +8,22 @@ import org.objectweb.asm.tree.IntInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.List;
+
 public class PalusUtil implements Opcodes{
 	
+   private static final List<String> nonTransformedPrefixes = Arrays
+      .asList(new String[] { "java/", /* "com/sun/", */"javax/", "sun/",
+          "test/", "org/objectweb/asm/",
+          "org/xmlpull/" });
+  
 	public static void checkTrue(boolean condition) {
 		if(!condition) {
 			throw new AssertionError("Assertion error!");
@@ -18,7 +32,7 @@ public class PalusUtil implements Opcodes{
 	
 	public static void checkNull(Object o) {
 		if(o == null) {
-			throw new IllegalArgumentException("Object: " + o.toString() + " is null!");
+			throw new IllegalArgumentException("Object: " + o + " is null!");
 		}
 	}
 	
@@ -26,6 +40,53 @@ public class PalusUtil implements Opcodes{
 		return m.name.equals("<init>");
 	}
 	
+	public static String transClassNameDotToSlash(String name) {
+        return name.replace('.', '/');
+    }
+
+    public static String transClassNameSlashToDot(String name) {
+        return name.replace('/', '.');
+    }
+    
+    public static int copyFile(File inFile, File outFile) throws IOException {
+      FileInputStream in = new FileInputStream(inFile);
+      FileOutputStream out = new FileOutputStream(outFile);
+      int size = copyStream(in, out);
+      in.close();
+      out.close();
+
+      return size;
+  }
+    
+  public static int copyStream(InputStream in, OutputStream out)
+          throws IOException {
+      int size = 0;
+      // Transfer bytes from in to out
+      byte[] buf = new byte[1024];
+      int len;
+
+      while ((len = in.read(buf)) > 0) {
+          size += len;
+          out.write(buf, 0, len);
+      }
+
+      return size;
+  }
+  
+    public static boolean shouldInstrumentThisClass(String className) {
+        for (String p : nonTransformedPrefixes) {
+            if (className.startsWith(p)) {
+                return false;
+            }
+        }
+
+    return true;
+    }
+
+    public static boolean isPrimitiveOrStringType(Class<?> clz) {
+      return clz.isPrimitive() || isPrimitive(clz) || isStringType(clz);
+    }
+    
 	public static boolean isPrimitive(Type type) {
 		if (type.equals(Type.BOOLEAN_TYPE)|| type.equals(Type.CHAR_TYPE) || type.equals(Type.BYTE_TYPE)
 			||type.equals(Type.SHORT_TYPE)|| type.equals(Type.INT_TYPE) || type.equals(Type.FLOAT_TYPE)
@@ -66,7 +127,7 @@ public class PalusUtil implements Opcodes{
 		}
 	}
 	
-	public static boolean isPrimitive(Class clz) {
+	public static boolean isPrimitive(Class<?> clz) {
 	  if (clz == java.lang.Boolean.class || clz == java.lang.Character.class
 	      || clz == java.lang.Byte.class || clz == java.lang.Short.class
 	      || clz == java.lang.Integer.class || clz == java.lang.Float.class
@@ -74,6 +135,10 @@ public class PalusUtil implements Opcodes{
           return true;
       }
       return false;
+	}
+	
+	public static boolean isStringType(Class<?> clz) {
+	  return clz == java.lang.String.class;
 	}
 	
 	public static AbstractInsnNode getIConstInsn(int i) {

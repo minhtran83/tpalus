@@ -8,15 +8,21 @@ import org.objectweb.asm.Type;
 public class MethodExitEvent extends TraceEvent {
 
 	private final Object retObj;
+	private final int retObjID;
 	
 	public MethodExitEvent(int id, Object retObj, String className, String methodName, String methodDesc, Object thiz,
 			Object[] params) {
 		super(id, className, methodName, methodDesc, thiz, params);
 		this.retObj = retObj;
+		this.retObjID = System.identityHashCode(retObj);
 	}
 
 	public Object getRetObject() {
 		return retObj;
+	}
+	
+	public int getRetObjectID() {
+	  return this.retObjID;
 	}
 
 	@Override
