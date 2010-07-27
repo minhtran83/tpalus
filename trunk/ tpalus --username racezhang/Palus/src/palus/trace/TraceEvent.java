@@ -15,9 +15,9 @@ public abstract class TraceEvent implements Serializable {
 	private final String className;	
 	private final String methodName;	
 	private final String methodDesc;	
-	private final Object thiz;
+	private transient final Object thiz;
 	private final int thizID;
-	private final Object[] params;
+	private transient final Object[] params;
 	private final int[] paramIDs;
 	
 	//a unique trace pair id, for quick matching the pair (entry vs exit)
@@ -28,6 +28,10 @@ public abstract class TraceEvent implements Serializable {
 	//a unique trace sequence id based on occurrence time stamp,
 	//for quick identify the consequences. The field is designed as final
 	private int traceEventSequenceId = -1;
+	
+	//a positive id representing the stack of depth when this trace event
+	//is recorded
+	private int stackDepth = -1;
 	
 	public TraceEvent(int id, String className, String methodName, String methodDesc, Object thiz,
 			Object[] params) {
@@ -41,6 +45,8 @@ public abstract class TraceEvent implements Serializable {
 		this.className = className;
 		this.methodName = methodName;
 		this.methodDesc = methodDesc;
+		//XXX i think we only need to save primtive/string type
+		//it is no-sense to save other kinds of object here (due to the serialization)
 		this.thiz = thiz;
 		this.params = params;
 		//compute the object id
@@ -77,6 +83,15 @@ public abstract class TraceEvent implements Serializable {
 	  this.traceEventSequenceId = sequenceId;
 	}
 	
+	public int getStackDepth() {
+	  return this.stackDepth;
+	}
+	
+	public void setStackDepth(int stackDepth) {
+	  PalusUtil.checkTrue(this.stackDepth == -1);
+	  this.stackDepth = stackDepth;
+	}
+	
 	public String getClassName() {
 		return this.className;
 	}
@@ -111,9 +126,9 @@ public abstract class TraceEvent implements Serializable {
 		return thiz != null;
 	}
 	
-	public int getParamsNum() {
-		return params.length;
-	}
+//	public int getParamsNum() {
+//		return params.length;
+//	}
 	
 	public Object[] getParams() {
 		return this.params;
@@ -123,10 +138,10 @@ public abstract class TraceEvent implements Serializable {
 	  return this.paramIDs;
 	}
 	
-	public Object getParam(int i) {
-		PalusUtil.checkTrue(i >= 0 && i < this.params.length);
-		return this.params[i];
-	}
+//	public Object getParam(int i) {
+//		PalusUtil.checkTrue(i >= 0 && i < this.params.length);
+//		return this.params[i];
+//	}
 	
 	public int getParamObjectID(int i) {
 	  PalusUtil.checkTrue(i >= 0 && i < this.params.length);
@@ -136,6 +151,10 @@ public abstract class TraceEvent implements Serializable {
 	public String getParamTypeName(int i) {
 	  assert i >= 0 && i < params.length;
 	  return Type.getArgumentTypes(this.methodDesc)[i].getClassName();
+	}
+	
+	public Class<?> getReceiverType() throws ClassNotFoundException {
+	  return Class.forName(this.className);
 	}
 	
 	public Class<?> getParamType(int i) throws ClassNotFoundException {
@@ -182,25 +201,55 @@ public abstract class TraceEvent implements Serializable {
       
       throw new RuntimeException("Method: " + toString() + " does not exist!");
 	}
+	    
+    public String toParsableString() {
+      PalusUtil.checkTrue(this.stackDepth != -1);
+      StringBuilder sb = new StringBuilder();
+      for(int i = 0; i < this.stackDepth; i++) {
+        sb.append("  ");
+      }
+      sb.append(toString());
+      
+      return sb.toString();
+    }
 	
 	public abstract boolean isStaticMethod();
 	
 	public abstract boolean isEntryEvent();
 	
-	protected String getParamValues() {
+	protected String getParamIDs() {
 	  StringBuilder sb = new StringBuilder();
-	  sb.append("Param values: [");
-	  for(Object param : params) {
-	    if(param != null) {
-	      sb.append(param.toString());
-	    } else {
-	      sb.append("'null'");
+	  int[] ids = this.paramIDs;
+	  sb.append("[");
+	  for(int i = 0; i < ids.length; i++) {
+	    sb.append(ids[i]);
+	    if( i != ids.length - 1) {
+	      sb.append(",");
 	    }
-        sb.append(", ");
 	  }
 	  sb.append("]");
 	  return sb.toString();
 	}
+	
+//	protected String getParamValues() {
+//	  StringBuilder sb = new StringBuilder();
+//	  if(params == null) {
+//	    sb.append("Param values are null.");
+//	  } else {
+//	    //not null
+//	    sb.append("Param values: [");
+//	    for(Object param : params) {
+//	      if(param != null) {
+//	        sb.append(param.toString());
+//	      } else {
+//	        sb.append("'null'");
+//	      }
+//          sb.append(", ");
+//	    }
+//	    sb.append("]");
+//	  }
+//	  return sb.toString();
+//	}
 	
 	protected boolean isArrayType(String typeName) {
 	  return typeName.contains("[]");

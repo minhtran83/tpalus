@@ -53,6 +53,11 @@ public final class Position {
 	}
 	
 	@Override
+	public String toString() {
+	  return "position: " + this.i;
+	}
+	
+	@Override
 	public int hashCode() {
 	  return this.i * 107;
 	}

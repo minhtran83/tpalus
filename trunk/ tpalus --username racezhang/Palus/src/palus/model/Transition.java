@@ -3,6 +3,7 @@ package palus.model;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.objectweb.asm.Type;
@@ -141,8 +142,36 @@ public class Transition {
 		this.decorations.add(decoration);
 	}
 	
+	public void addDecorations(List<Decoration> decorations) {
+	  PalusUtil.checkNull(decorations);
+	  for(Decoration decoration : decorations) {
+	    this.addDecoration(decoration);
+	  }
+	}
+	
 	public List<Decoration> getDecorations() {
 	    return this.decorations;
+	}
+	
+	public List<Decoration> makeClones(Transition t) {
+	  PalusUtil.checkNull(t);
+	  List<Decoration> cloneDecorations = new LinkedList<Decoration>();
+	  //clone the decoration
+	  for(Decoration decoration : this.decorations) {
+	    cloneDecorations.add(decoration.makeClone(t));
+	  }
+	  
+	  return cloneDecorations;
+	}
+	
+	public boolean hasDecorationOnPosition(Position position) {
+	  PalusUtil.checkNull(position);
+	  for(Decoration decoration : this.decorations) {
+	    if(decoration.position == position.toIntValue()) {
+	      return true;
+	    }
+	  }
+	  return false;
 	}
 	
 	//this is used for merging transitions
@@ -365,7 +394,9 @@ public class Transition {
 		
 		@Override
 		public String toString() {
-		  return isPrimitiveOrStringType ? (objValue == null? "primitive-null" : objValue.toString()) : "dependence-edge";
+		  return isPrimitiveOrStringType ?
+		          (objValue == null? "primitive-null" : objValue.toString()) :
+		            (edge == null ? "dependence-edge-not-set" : "dependence-edge");
 		}
 	}
 }

@@ -7,11 +7,13 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Stack;
 
 
 import palus.Log;
 import palus.PalusUtil;
+import palus.model.serialize.TraceSerializer;
 import palus.testgen.TestGenMain;
 import palus.trace.ClinitEntryEvent;
 import palus.trace.ClinitExitEvent;
@@ -22,10 +24,17 @@ import palus.trace.MethodExitEvent;
 import palus.trace.Stats;
 import palus.trace.TraceEvent;
 import palus.trace.Tracer;
+import palus.visualization.ClassModelViewer;
 
 public class TraceAnalyzer {
 	
 	private final List<TraceEvent> traces;
+	
+	public static final String LOG_FILE = "log.txt";
+	
+	public static final String TRACE_FILE = "trace.txt";
+	
+	public static final String TRACE_OBJECT_FILE = "trace_obj.model";
 	
 	public TraceAnalyzer(List<TraceEvent> traces) {
 		this.traces = traces;
@@ -39,7 +48,7 @@ public class TraceAnalyzer {
 		//swith off the instrumentation
 		Tracer.switchOff();
 		try {
-			Log.log = new FileWriter(("log.txt"));
+			Log.log = new FileWriter((LOG_FILE));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -56,6 +65,30 @@ public class TraceAnalyzer {
 		System.out.println("Trace unique id: " + Stats.genTracePairID());
 		System.out.println("Trace sequence id: " + Stats.genTraceSequenceID());
 		System.out.println("\n");
+		
+		System.out.println("Serializing trace to file: " + TRACE_FILE + " as text ...");
+		TraceSerializer serializer;
+        try {
+          serializer = new TraceSerializer(this.traces, TRACE_FILE);
+          serializer.serializeTracesAsText();
+        } catch (IOException e1) {
+          e1.printStackTrace();
+          throw new RuntimeException(e1);
+        }
+        System.out.println("Serialization successes!");
+		System.out.println("\n");
+		
+		System.out.println("Serializing trace to file: " + TRACE_OBJECT_FILE + " as object ...");
+        TraceSerializer objectSerializer;
+        try {
+          objectSerializer = new TraceSerializer(this.traces, TRACE_OBJECT_FILE);
+          objectSerializer.serializeTracesAsObject();
+        } catch (IOException e1) {
+          e1.printStackTrace();
+          throw new RuntimeException(e1);
+        }
+        System.out.println("Serialization successes!");
+        System.out.println("\n");
 		
 		System.out.println("Start classifying traces by class ...");
 		//classify the traces based on instances of each class
@@ -83,14 +116,24 @@ public class TraceAnalyzer {
 		System.out.println("\n");
 		
 		Log.log("Here is all the dependence information: ");
+		Map<TraceEventAndPosition, TraceEventAndPosition> dependenceMap = TraceDependenceRepository.getTraceDependences();
 		Log.log(TraceDependenceRepository.getTraceDependenceInfo());
 
-		System.out.println("Building models from the trace...");
-		ModelConstructor constructor = new ModelConstructor(traceMap);
-		Map<Class<?>, ClassModel> models = constructor.buildClassModels();
-		System.out.println("Finish building models!");
-		System.out.println("\n");
-
+//		System.out.println("Building models from the trace...");
+//		ModelConstructor constructor = new ModelConstructor(traceMap);
+//		Map<Class<?>, ClassModel> models = constructor.buildClassModels();
+//		System.out.println("Finish building models!");
+//		System.out.println("\n");
+//
+//		TraceDependenceRepository.findModelDependence();
+		
+		//XXX the visualization code
+//		for(Entry<Class<?>, ClassModel> entry : models.entrySet()) {
+//		  ClassModelViewer viewer = new ClassModelViewer(entry.getValue());
+//		  viewer.viewModel();
+//		}
+		
+		//XXX the test generation code
 //		System.out.println("Start generating tests...");
 //		TestGenMain testgen = new TestGenMain();
 //		testgen.generateTests(new String[]{} /* XXX empty now*/, models);
@@ -132,6 +175,9 @@ public class TraceAnalyzer {
 						//set up the pairs
 						topEvent.setPair(event);
 						event.setPair(topEvent);
+						//set up the stack depth
+						topEvent.setStackDepth(stack.size());
+						event.setStackDepth(stack.size());
 					} else {
 					    //If we did not find a matched trace. We pop the stack until find
 						// a matched one. And add all unmatched pair to the event list
@@ -155,6 +201,9 @@ public class TraceAnalyzer {
 							//set up the pairs
 							topEvent.setPair(event);
 							event.setPair(topEvent);
+							//set up the stack depth
+	                        topEvent.setStackDepth(stack.size());
+	                        event.setStackDepth(stack.size());
 						}
 					}
 				}
@@ -207,17 +256,20 @@ public class TraceAnalyzer {
 					Position thizPosition = Position.getThisPosition();
 				    Object thiz = event.getReceiver();
 				    assert thiz != null;
-				    PalusUtil.checkNull(thiz);
-				    addEventToClassMap(retMap, thiz, thiz.getClass(), event, thizPosition);
+				    PalusUtil.checkNull(thiz); //XXX be aware, use declarative type or runtime type?
+				    Class<?> thizType = event.getReceiverType(); //XXX thiz.getClass();
+				    addEventToClassMap(retMap, thiz, thizType, event, thizPosition);
 				}
 				//add the parameters
 				Object[] params = event.getParams();
 				assert params != null;
 				for(int i = 0; i < params.length; i++) {
 					Position paramPosition = Position.getParaPosition(i + 1); //1 - param.length
-					Object param = params[i];
+					Object param = params[i]; //XXX be aware, use declarative type or runtime type?
 					if(param != null) {
-						addEventToClassMap(retMap, param, param.getClass(), event, paramPosition);
+					     Class<?> paramType = event.getParamType(i); // XXX param.getClass();
+					     Log.log("parameter position trace: " + event.toString() + ", on position: " + paramPosition.toIntValue());
+						addEventToClassMap(retMap, param, paramType, event, paramPosition);
 					} else {
 						continue; //does not make sense to record the state if the parameter is null
 //						//String className = Type.getArgumentTypes(event.getMethodDesc())[i].getClassName();
@@ -277,11 +329,13 @@ public class TraceAnalyzer {
 		
 		if(!ClassesToModel.modelThisClass(type)) {
 			//do not model other classes which is not in the list
+		    Log.log("   skip type not in classes to model : " + type);
 			return;
 		}
 		
 		if(PalusUtil.isPrimitive(type) || type.isPrimitive() || type == java.lang.String.class) {
 			//skip all primitive, and String type
+		    Log.log("   skip primitive, string type: " + type);
 			return;
 		}
 		
@@ -299,6 +353,8 @@ public class TraceAnalyzer {
 		assert eventList != null;
 		
 		eventList.add(new TraceEventAndPosition(event, p));
+		
+		Log.log("    added to the map");
 	}
 	
 	
@@ -318,6 +374,9 @@ public class TraceAnalyzer {
 		Stack<TraceEvent> stack = new Stack<TraceEvent>();
 		for(TraceEventAndPosition traceAndPosition : traces) {
 			TraceEvent trace = traceAndPosition.event;
+			if(trace.getStackDepth() ==  -1) {
+			  error++;
+			}
 			if(trace.getUniqueTracePairID() == -1) {
 				error ++;
 			}

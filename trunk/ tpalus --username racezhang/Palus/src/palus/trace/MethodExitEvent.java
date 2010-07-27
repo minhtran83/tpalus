@@ -7,7 +7,7 @@ import org.objectweb.asm.Type;
 
 public class MethodExitEvent extends TraceEvent {
 
-	private final Object retObj;
+	private transient final Object retObj;
 	private final int retObjID;
 	
 	public MethodExitEvent(int id, Object retObj, String className, String methodName, String methodDesc, Object thiz,
@@ -32,8 +32,9 @@ public class MethodExitEvent extends TraceEvent {
 	
 	@Override
 	public String toString() {
-		return "<Method> Exit: " + super.getMethodName() + ":"
-		  + super.getMethodDesc() + ":" + super.getId() + " : " + super.getParamValues();
+	  return "<Method> Exit:" + super.getMethodName() + ":"
+        + super.getMethodDesc() + ":" +super.getReceiverObjectID() + ":" 
+        + super.getParamIDs() + ":" + this.retObjID;
 	}
 
 	@Override

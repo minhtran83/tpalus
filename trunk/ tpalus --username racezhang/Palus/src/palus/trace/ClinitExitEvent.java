@@ -14,7 +14,7 @@ public class ClinitExitEvent extends TraceEvent {
 	
 	@Override
 	public String toString() {
-		return "<Clinit> Exit: " + super.getMethodName() + ":"
+		return "<Clinit> Exit:" + super.getMethodName() + ":"
 		  + super.getMethodDesc() + ":" + super.getId();
 	}
 

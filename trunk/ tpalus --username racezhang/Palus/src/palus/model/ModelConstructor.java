@@ -138,6 +138,7 @@ public class ModelConstructor {
 	        
 	        //save the TraceEvent and Transition relations here
 	        TraceTransitionManager.addInitTraceEventTransitionPair(traceAndPosition.event, srcToConnectingNode);
+	        Log.log("adding event to trace-transition map: " + traceAndPosition.event.toString() + " position: " + traceAndPosition.position.toIntValue());
 	        
 	        if(nextIndex - currentIndex > 2) {
 	          //we need to do recursion here
