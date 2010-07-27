@@ -37,6 +37,14 @@ public class ClassModel implements Serializable {
 		return this.modelledClass;
 	}
 	
+	public Set<ModelNode> getAllNodes() {
+	  return this.nodes;
+	}
+	
+	public Set<Transition> getAllTransitions() {
+	  return this.transitions;
+	}
+	
 	public void addRoot(ModelNode root) {
 		PalusUtil.checkTrue(this.root == null);
 		PalusUtil.checkNull(root);
@@ -294,8 +302,13 @@ public class ClassModel implements Serializable {
           //would be problematic
           List<Transition> subTransitions = this.getAllSubTransitions(tobeMerged);
           for(Transition t : tobeMerged.getAllOutgoingEdges()) {
-            subTransitions.add(new Transition(destNode, t.getDestNode(), t.getClassName(), t.getMethodName(), t.getMethodDesc()));
+            Transition newTransition = new Transition(destNode, t.getDestNode(), t.getClassName(), t.getMethodName(), t.getMethodDesc());
+            //copy its decorations
+            newTransition.addDecorations(t.makeClones(newTransition));
+            subTransitions.add(newTransition);
             subTransitions.remove(t);
+            //XXX update the repository
+            TraceTransitionManager.replaceTransitions(t, newTransition);
           }
           Log.log("    sub transitions added: " + subTransitions.size());
           for(Transition subT : subTransitions) {
@@ -317,8 +330,8 @@ public class ClassModel implements Serializable {
 	        if(destT != null) {
 	          //we go down one level to continue merging
 	          PalusUtil.checkTrue(destT.getSourceNode() == destNode && transition.getSourceNode() == tobeMerged);
-	          //do the merge here
-	          //TraceTransitionManager.mergeTransitions(destT, transition);
+	          //XXX do the merge here
+	          TraceTransitionManager.mergeTransitions(destT, transition);
 	          //merge the decoration
 	          for(Decoration d : transition.getDecorations()) {
 	            destT.addDecoration(d.makeClone(destT));
@@ -332,8 +345,12 @@ public class ClassModel implements Serializable {
 	          destNode.getClassModel().addModelNode(transition.getDestNode());
 	          destNode.getClassModel().addModelNodes(this.getAllSubNodes(transition.getDestNode()));
 	          List<Transition> subTransitions = this.getAllSubTransitions(transition.getDestNode());
-	          subTransitions.add(new Transition(destNode, transition.getDestNode(), transition.getClassName(), transition.getMethodName(), transition.getMethodDesc()));
+	          Transition newTransition = new Transition(destNode, transition.getDestNode(), transition.getClassName(), transition.getMethodName(), transition.getMethodDesc());
+	          newTransition.addDecorations(transition.makeClones(newTransition));
+	          subTransitions.add(newTransition);
 	          destNode.getClassModel().addTransitions(subTransitions);
+	          //XXX update the transition repository
+	          TraceTransitionManager.replaceTransitions(transition, newTransition);
 	        }
 	      }
 	    }
@@ -454,7 +471,11 @@ public class ClassModel implements Serializable {
 	    for(Transition transition : otherExit.getAllIncomingEdges()) {
 	        Transition newTransition = new Transition(transition.getSourceNode(), unifiedExit,
 	            transition.getClassName(), transition.getMethodName(), transition.getMethodDesc());
+	        //also copy its decorations
+	        newTransition.addDecorations(transition.makeClones(newTransition));
 	        this.addTransition(newTransition);
+	        //XXX replace transitions
+	        TraceTransitionManager.replaceTransitions(transition, newTransition);
 	    }
 	    //actually it also delete the transitions
 	    this.deleteModelNode(otherExit);
