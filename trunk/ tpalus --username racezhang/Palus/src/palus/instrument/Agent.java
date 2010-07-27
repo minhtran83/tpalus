@@ -25,7 +25,7 @@ public class Agent {
 			System.out.println("----------Enter postmorten trace analysis-------");
 			System.out.println("num of method calls: " + TraceStack.traces.size());
 			TraceAnalyzer analyzer = new TraceAnalyzer(TraceStack.traces);
-			analyzer.analyzeAndGenerateTests();
+			analyzer.dumpTraces();
 		}
 		
 	});

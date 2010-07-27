@@ -10,7 +10,6 @@ import palus.PalusUtil;
 import palus.model.Transition;
 import palus.model.Transition.Decoration;
 import palus.model.Transition.DecorationValue;
-import randoop.AbstractGenerator;
 import randoop.BugInRandoopException;
 import randoop.HelperSequenceCreator;
 import randoop.InputsAndSuccessFlag;
@@ -24,7 +23,6 @@ import randoop.SubTypeSet;
 import randoop.Variable;
 import randoop.main.GenInputsAbstract;
 import randoop.util.ArrayListSimpleList;
-import randoop.util.ListOfLists;
 import randoop.util.MultiMap;
 import randoop.util.PrimitiveTypes;
 import randoop.util.Randomness;
@@ -99,7 +97,7 @@ public class MethodInputSelector {
           if (PrimitiveTypes.isBoxedOrPrimitiveOrStringType(t)) {
             t = PrimitiveTypes.primitiveType(t);
           }
-          arrayList.add(Sequence.create(new PrimitiveOrStringOrNullDecl(t, ValueSelectHelper.createObjectValueFromString(t, o.toString()))));
+          arrayList.add(Sequence.create(new PrimitiveOrStringOrNullDecl(t, PalusUtil.createPrimitiveOrStringValueFromString(t, o.toString()))));
           l = arrayList;
         }
       }

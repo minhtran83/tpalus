@@ -12,6 +12,8 @@ public class Tracer {
 	
   private static boolean switchOff = false;
   
+  private static boolean verbose = true;
+  
   public static void switchOff() {
 	  switchOff = true;
   }
@@ -19,13 +21,19 @@ public class Tracer {
   public static void switchOn() {
 	  switchOff = false;
   }
+  
+  public static void verboseOff() {
+      verbose = false;
+  }
+  
+  public static void verboseOn() {
+      verbose = true;
+  }
    
   public static void traceMethodEntryArgs(Object[] objs) {
 	  if(switchOff) {
 		  return;
 	  }
-	  
-	  //System.out.println( " - entry argument size: " + objs.length );
 	  TraceStack.pushParamsToStack(objs, true);
   }
   
@@ -33,8 +41,6 @@ public class Tracer {
 	  if(switchOff) {
 		  return;
 	  }
-	  //throw new RuntimeException();
-	  //System.out.println( " * exit argument size: " + objs.length );
 	  TraceStack.pushParamsToStack(objs, false);
   }
   
@@ -43,17 +49,22 @@ public class Tracer {
 		  return;
 	  }
 	  className = PalusUtil.transClassNameSlashToDot(className);
-	  System.out.println("start call: " + id + "   " + className + "  "+ methodName + "  " + desc + "  " + System.identityHashCode(o) );
+	  if(verbose) {
+	      System.out.println("start call: " + id + "   " + className + "  "+ methodName
+	          + "  " + desc + "  " + System.identityHashCode(o) );
+	  }
 	  TraceStack.pushMethodToStack(id, null, /*no return value*/ className, methodName, desc, o, true);
   }
   
-  //#XXX ret
   public static void traceMethodExit(Object ret, String methodName, String desc, Object o, int id, String className) {
 	  if(switchOff) {
 		  return;
 	  }
 	  className = PalusUtil.transClassNameSlashToDot(className);
-	  System.out.println("end call: "  + id + "   " + className + "   " + methodName + "  " + desc + "  " + System.identityHashCode(o) + " ret: " + System.identityHashCode(ret));
+	  if(verbose) {
+	      System.out.println("end call: "  + id + "   " + className + "   " + methodName
+	          + "  " + desc + "  " + System.identityHashCode(o) + " ret: " + System.identityHashCode(ret));
+	  }
 	  TraceStack.pushMethodToStack(id, ret, className, methodName, desc, o, false);
   }
   

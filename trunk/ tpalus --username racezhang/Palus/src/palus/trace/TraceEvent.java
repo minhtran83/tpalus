@@ -15,10 +15,14 @@ public abstract class TraceEvent implements Serializable {
 	private final String className;	
 	private final String methodName;	
 	private final String methodDesc;	
-	private transient final Object thiz;
+	//private transient final Object thiz; /* can not serialize this, because you do not know what the runtime type it is*/
 	private final int thizID;
-	private transient final Object[] params;
+	//private transient final Object[] params; /*can not serialize it, because you do not know what the runtime type it is*/
 	private final int[] paramIDs;
+	//serialization thiz
+	private final String serializableThis;
+	//serialization params
+	private final String[] serializableParams;
 	
 	//a unique trace pair id, for quick matching the pair (entry vs exit)
 	private int unique_trace_pair_id = -1;
@@ -45,10 +49,31 @@ public abstract class TraceEvent implements Serializable {
 		this.className = className;
 		this.methodName = methodName;
 		this.methodDesc = methodDesc;
-		//XXX i think we only need to save primtive/string type
-		//it is no-sense to save other kinds of object here (due to the serialization)
-		this.thiz = thiz;
-		this.params = params;
+		//this.thiz = thiz;
+		//this.params = params;
+		//for serialization purpose we keep a copy of seriazable thiz value
+		if(thiz != null) {
+		  if(PalusUtil.isPrimitiveOrStringType(thiz.getClass())) {
+		    this.serializableThis = thiz.toString();
+		  } else {
+		    this.serializableThis = null;
+		  }
+		} else {
+		  this.serializableThis = null;
+		}
+		//for serialization purpose we keep a copy of serializable param value
+		this.serializableParams = new String[params.length];
+		for(int i = 0; i < params.length; i++) {
+		  if(params[i] == null) {
+		    this.serializableParams[i] = null;
+		  } else {
+		    if(PalusUtil.isPrimitiveOrStringType(params[i].getClass())) {
+		      this.serializableParams[i] = params[i].toString();
+		    } else {
+		      this.serializableParams[i] = null;
+		    }
+		  }
+		}
 		//compute the object id
 		thizID = System.identityHashCode(thiz);
 		paramIDs = new int[params.length];
@@ -114,24 +139,28 @@ public abstract class TraceEvent implements Serializable {
 		return this.pair;
 	}
 	
-	public Object getReceiver() {
-		return thiz;
+//	public Object getReceiver() {
+//		return thiz;
+//	}
+	
+	public String getSerializableThisValue() {
+	  return this.serializableThis;
 	}
 	
 	public int getReceiverObjectID() {
 	  return this.thizID;
 	}
 	
-	public boolean hasReceiver() {
-		return thiz != null;
-	}
-	
 //	public int getParamsNum() {
 //		return params.length;
 //	}
 	
-	public Object[] getParams() {
-		return this.params;
+//	public Object[] getParams() {
+//		return this.params;
+//	}
+	
+	public String[] getSerializableParams() {
+	  return this.serializableParams;
 	}
 	
 	public int[] getParamObjectIDs() {
@@ -144,12 +173,12 @@ public abstract class TraceEvent implements Serializable {
 //	}
 	
 	public int getParamObjectID(int i) {
-	  PalusUtil.checkTrue(i >= 0 && i < this.params.length);
+	  PalusUtil.checkTrue(i >= 0 && i < this.serializableParams.length);
 	  return this.paramIDs[i];
 	}
 	
 	public String getParamTypeName(int i) {
-	  assert i >= 0 && i < params.length;
+	  assert i >= 0 && i < this.serializableParams.length;
 	  return Type.getArgumentTypes(this.methodDesc)[i].getClassName();
 	}
 	
@@ -158,7 +187,7 @@ public abstract class TraceEvent implements Serializable {
 	}
 	
 	public Class<?> getParamType(int i) throws ClassNotFoundException {
-		assert i >= 0 && i < params.length;
+		assert i >= 0 && i < serializableParams.length;
 		String paramTypeName = Type.getArgumentTypes(this.methodDesc)[i].getClassName();
 		if(this.isArrayType(paramTypeName)) {
 		   return this.getClassForArrayType(paramTypeName);
@@ -209,6 +238,15 @@ public abstract class TraceEvent implements Serializable {
         sb.append("  ");
       }
       sb.append(toString());
+      sb.append(",,,, id:");
+      sb.append(this.id + ",");
+      sb.append("pair_id:");
+      sb.append(this.unique_trace_pair_id + ",");
+      sb.append("seq_id:");
+      sb.append(this.traceEventSequenceId + ",");
+      sb.append("stack_depth:");
+      sb.append(this.stackDepth + ",");
+      sb.append("pair_trace:" + this.pair);
       
       return sb.toString();
     }
@@ -217,12 +255,15 @@ public abstract class TraceEvent implements Serializable {
 	
 	public abstract boolean isEntryEvent();
 	
-	protected String getParamIDs() {
+	protected String getParamsAsString() {
+	  PalusUtil.checkTrue(this.paramIDs.length == this.serializableParams.length);
 	  StringBuilder sb = new StringBuilder();
 	  int[] ids = this.paramIDs;
 	  sb.append("[");
 	  for(int i = 0; i < ids.length; i++) {
 	    sb.append(ids[i]);
+	    sb.append(":");
+	    sb.append(this.serializableParams[i]);
 	    if( i != ids.length - 1) {
 	      sb.append(",");
 	    }

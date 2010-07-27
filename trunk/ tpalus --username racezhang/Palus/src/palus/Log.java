@@ -28,7 +28,14 @@ public final class Log {
     out = System.out;
   }
   
-  //Add by SOPHIA
+  public static void logConfig(String logFile) {
+    try {
+      Log.log = new FileWriter((logFile));
+  } catch (IOException e) {
+      e.printStackTrace();
+  }
+  }
+  
   public static void log(String s) {
 	  if (! isLoggingOn()) return;
 

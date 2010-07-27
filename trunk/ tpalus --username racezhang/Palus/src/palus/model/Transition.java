@@ -131,8 +131,9 @@ public class Transition {
 		return this.methodDesc;
 	}
 	
-	public void addDecoration(Object thiz, Object[] params, Transition transition, Position p) {
-	  Decoration decoration = new Decoration(thiz, params, transition, p.toIntValue());
+	public void addDecoration(String serializableThiz, String[] serializableParams,
+	    Transition transition, Position p) {
+	  Decoration decoration = new Decoration(serializableThiz, serializableParams, transition, p.toIntValue());
 	  this.addDecoration(decoration);
 	}
 	
@@ -282,23 +283,35 @@ public class Transition {
 		 * represents the corresponding parameter value */
 		private final int position;
 		
-		public Decoration(Object thiz, Object[] params, Transition transition, int position) {
+		public Decoration(String seriazableThisValue, String [] seriazableParamValues,
+		    Transition transition, int position) {
 			//check the input first
 			PalusUtil.checkNull(transition);
-			PalusUtil.checkNull(params);
+			PalusUtil.checkNull(seriazableParamValues);
 			//System.out.println("position: " + position + ",  param length: " + params.length);
-			PalusUtil.checkTrue(position >= -1 && position <= params.length);
+			PalusUtil.checkTrue(position >= -1 && position <= seriazableParamValues.length);
 			//get the type
 			Class<?> thizType = transition.getModelClass();
 			Class<?>[] paramTypes = transition.getParamClasses();
 			
-			this.thiz = new DecorationValue(thiz, thizType);
-			this.params = new DecorationValue[params.length];
+			this.thiz = new DecorationValue(seriazableThisValue, thizType);
+			this.params = new DecorationValue[seriazableParamValues.length];
 			for(int i = 0; i < this.params.length; i++) {
-				this.params[i] = new DecorationValue(params[i], paramTypes[i]);
+				this.params[i] = new DecorationValue(seriazableParamValues[i], paramTypes[i]);
 			}
 			this.transition = transition;
 			this.position = position;
+		}
+		
+		public Decoration(DecorationValue thizValue, DecorationValue[] paramValues, Transition transition,
+		    int position) {
+		  PalusUtil.checkNull(thizValue);
+		  PalusUtil.checkNull(paramValues);
+		  PalusUtil.checkNull(transition);
+		  this.thiz = thizValue;
+		  this.params = paramValues;
+		  this.transition = transition;
+		  this.position = position;
 		}
 		
 		public Decoration makeClone(Transition t) {
@@ -348,26 +361,32 @@ public class Transition {
 	}
 	
 	public static class DecorationValue {
-		
+		//this field only stores the primitive or string value
 		private final Object objValue;
+		private final Class<?> type;
 		private final boolean isPrimitiveOrStringType;
 
 		//can not set this final, edge need to change during model creation
 		private DependenceEdge edge = null;
 		
-		public DecorationValue(Object obj, Class<?> type) {
+		public DecorationValue(String objStr, Class<?> type) {
 			PalusUtil.checkNull(type);
+			this.type = type;
 			isPrimitiveOrStringType = type.isPrimitive() || PalusUtil.isPrimitive(type)
 				|| type == java.lang.String.class;
-			if(isPrimitiveOrStringType) {
-				objValue = obj; //obj could be null but it is immutable
+			if(isPrimitiveOrStringType && objStr != null) {
+				objValue = objStr;
 			} else {
-				objValue = null;
+				objValue = null; //either non-primitive, non-string, or null value
 			}
 		}
 		
 		public boolean isPrimitiveOrStringType() {
 			return this.isPrimitiveOrStringType;
+		}
+		
+		public Class<?> getDecorationType() {
+		  return this.type;
 		}
 		
 		public Object getValue() {

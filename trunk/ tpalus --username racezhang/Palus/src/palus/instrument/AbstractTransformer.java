@@ -34,7 +34,6 @@ public abstract class AbstractTransformer {
     assert (descDir != null);
 
     if (!srcDir.exists()) {
-      // XXX Log here
       return;
     }
 
@@ -69,9 +68,6 @@ public abstract class AbstractTransformer {
     if (out.getParentFile() != null) {
       out.getParentFile().mkdirs();
     }
-
-    // ### FIXME: is there more reliable way to check if it is a class file
-    // or a jar file
     if (in.getName().endsWith(".class")) {
       transformClassFile(in, out);
     } else if (in.getName().endsWith(".jar")) {
@@ -159,12 +155,12 @@ public abstract class AbstractTransformer {
     return treeAPITransform(cr);
   }
 
-  public byte[] treeAPITransform(byte[] classIn) throws IOException {
+  public byte[] treeAPITransform(byte[] classIn) {
     ClassReader cr = new ClassReader(classIn);
     return treeAPITransform(cr);
   }
 
-  public byte[] treeAPITransform(ClassReader cr) throws IOException {
+  public byte[] treeAPITransform(ClassReader cr) {
     ClassNode cn = new ClassNode();
     cr.accept(cn, ClassReader.SKIP_FRAMES);
     transformClassNode(cn);

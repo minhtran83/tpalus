@@ -21,7 +21,7 @@ public class MethodEntryEvent extends TraceEvent {
 	public String toString() {  
         return "<Method> Entry:" + super.getMethodName() + ":"
         + super.getMethodDesc() + ":" +super.getReceiverObjectID() + ":" 
-        + super.getParamIDs();
+        + super.getParamsAsString();
 	}
 
 	@Override

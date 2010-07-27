@@ -4,14 +4,13 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import palus.AbstractState;
 import palus.PalusUtil;
 import palus.trace.Stats;
 
 public class ModelNode {
 	private final int nodeid;
 	private final Class<?> modelledClass;
-	private final AbstractState state;
+	//private final AbstractState state;
 	
 	private final List<Transition> inEdges = new ArrayList<Transition>();
 	private final List<Transition> outEdges = new ArrayList<Transition>();
@@ -26,7 +25,7 @@ public class ModelNode {
 		this.nodeid = Stats.genModelNodeID();
 		
 		//XXX untouched yet
-		this.state = null;
+		//this.state = null;
 	}
 	
 	public boolean isRootNode() {

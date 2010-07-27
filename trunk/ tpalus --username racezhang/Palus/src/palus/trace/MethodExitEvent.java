@@ -5,21 +5,31 @@ import java.lang.reflect.Modifier;
 
 import org.objectweb.asm.Type;
 
+import palus.PalusUtil;
+
 public class MethodExitEvent extends TraceEvent {
 
-	private transient final Object retObj;
+	//private transient final Object retObj; /* can not serialize it, because you never know what is the runtime type*/
 	private final int retObjID;
+	//for serialization
+	private final String retObjString;
 	
 	public MethodExitEvent(int id, Object retObj, String className, String methodName, String methodDesc, Object thiz,
 			Object[] params) {
 		super(id, className, methodName, methodDesc, thiz, params);
-		this.retObj = retObj;
+		//this.retObj = retObj;
 		this.retObjID = System.identityHashCode(retObj);
+		//for serialization
+		if(retObj != null && PalusUtil.isPrimitiveOrStringType(retObj.getClass())) {
+		  retObjString = retObj.toString();
+		} else {
+		  retObjString = null;
+		}
 	}
 
-	public Object getRetObject() {
-		return retObj;
-	}
+//	public Object getRetObject() {
+//		return retObj;
+//	}
 	
 	public int getRetObjectID() {
 	  return this.retObjID;
@@ -34,7 +44,7 @@ public class MethodExitEvent extends TraceEvent {
 	public String toString() {
 	  return "<Method> Exit:" + super.getMethodName() + ":"
         + super.getMethodDesc() + ":" +super.getReceiverObjectID() + ":" 
-        + super.getParamIDs() + ":" + this.retObjID;
+        + super.getParamsAsString() + ":(" + this.retObjID + ":" +  this.retObjString + ")";
 	}
 
 	@Override
