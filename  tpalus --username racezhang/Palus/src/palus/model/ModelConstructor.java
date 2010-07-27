@@ -133,7 +133,9 @@ public class ModelConstructor {
 	        //add the transition  src --> connectingNode
 	        Transition srcToConnectingNode = new Transition(currentSrc, connectingNode,
 	            traceAndPosition.event.getClassName(), traceAndPosition.event.getMethodName(), traceAndPosition.event.getMethodDesc());
-	        srcToConnectingNode.addDecoration(traceAndPosition.event.getReceiver(), traceAndPosition.event.getParams(), srcToConnectingNode, traceAndPosition.position);
+	        srcToConnectingNode.addDecoration(traceAndPosition.event.getSerializableThisValue(),
+	            traceAndPosition.event.getSerializableParams(), srcToConnectingNode, traceAndPosition.position);
+//	        srcToConnectingNode.addDecoration(traceAndPosition.event.getReceiver(), traceAndPosition.event.getParams(), srcToConnectingNode, traceAndPosition.position);
 	        model.addTransition(srcToConnectingNode);
 	        
 	        //save the TraceEvent and Transition relations here

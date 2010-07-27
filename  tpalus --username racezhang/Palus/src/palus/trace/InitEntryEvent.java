@@ -16,7 +16,7 @@ public class InitEntryEvent extends TraceEvent {
 	public String toString() {
 		return "<Init> Entry:" + super.getMethodName() + ":"
 		  + super.getMethodDesc() + ":" +super.getReceiverObjectID() + ":" 
-		  + super.getParamIDs();
+		  + super.getParamsAsString();
 	}
 
 	@Override

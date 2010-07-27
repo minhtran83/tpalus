@@ -51,7 +51,7 @@ public class ObjectStateMonitor extends AbstractTransformer implements
 		try {
 			// return instrumented class
 			return this.treeAPITransform(classfileBuffer);
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}

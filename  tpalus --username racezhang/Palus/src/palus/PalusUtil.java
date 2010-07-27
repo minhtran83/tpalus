@@ -238,4 +238,31 @@ public class PalusUtil implements Opcodes{
 			throw new RuntimeException("Not a primitive type: " + type.toString());
 		}
 	}
+	
+	public static Object createPrimitiveOrStringValueFromString(Class<?> t, String value) {
+	    PalusUtil.checkTrue(t.isPrimitive() || PalusUtil.isStringType(t));
+	    
+	    if(PalusUtil.isStringType(t)) {
+	      return value;
+	    } else if ( t == int.class) {
+	      return new Integer(value);
+	    } else if ( t == float.class) {
+	      return new Float(value);
+	    } else if ( t == short.class) {
+	      return new Short(value);
+	    } else if ( t == byte.class) {
+	      return new Byte(value);
+	    } else if ( t == long.class) {
+	      return new Long(value);
+	    } else if ( t == double.class) {
+	      return new Double(value);
+	    } else if ( t == char.class) {
+	      PalusUtil.checkTrue(value.length() == 1);
+	      return new Character(value.charAt(0));
+	    } else if ( t == boolean.class) {
+	      return Boolean.getBoolean(value);
+	    }
+	    
+	    throw new RuntimeException("not string or primitive type: " + t);
+	  }
 }

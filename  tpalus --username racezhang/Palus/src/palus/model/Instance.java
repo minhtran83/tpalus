@@ -10,14 +10,14 @@ public final class Instance {
 	//public final Object obj;
 	public final Class<?> type;
 	
-	public Instance(Object obj, Class<?> type) {
-		PalusUtil.checkNull(type);
-		this.type = type;
-		
-		//obj field could be null, if so objId will be 0
-		//this.obj = obj;
-		objId = System.identityHashCode(obj);
-	}
+//	public Instance(Object obj, Class<?> type) {
+//		PalusUtil.checkNull(type);
+//		this.type = type;
+//		
+//		//obj field could be null, if so objId will be 0
+//		//this.obj = obj;
+//		objId = System.identityHashCode(obj);
+//	}
 	
 	public Instance(int objectId, Class<?> type) {
 	  PalusUtil.checkNull(type);
