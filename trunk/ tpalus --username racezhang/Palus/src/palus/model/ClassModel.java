@@ -17,6 +17,7 @@ public class ClassModel implements Serializable {
 	private final Set<ModelNode> nodes = new HashSet<ModelNode>();
 	private final Set<Transition> transitions = new HashSet<Transition>();
 	
+	//can not make them to be final, need to change during model merging
 	private ModelNode root = null;	
 	private ModelNode exit = null;
 	
@@ -48,6 +49,8 @@ public class ClassModel implements Serializable {
 		PalusUtil.checkNull(root);
 		if(!this.nodes.contains(root)) {
 		  this.nodes.add(root);
+		} else {
+		  Log.log("Root: " + root + " already exists.");
 		}
 		this.root = root;
 	}
@@ -63,12 +66,15 @@ public class ClassModel implements Serializable {
 	  PalusUtil.checkNull(exit);
 	  if(!this.nodes.contains(exit)) {
 	    this.nodes.add(exit);
-	  }
-	  
+	  } else {
+	    Log.log("Exit: " + exit + " already exists.");
+	  }	  
 	  this.exit = exit;
 	}
 	
-	//this is used for merging models
+	/**
+	 * This method is used during model merging
+	 * */
 	public void resetExit(ModelNode newExit) {
 	  PalusUtil.checkNull(this.exit);
 	  //XXX PalusUtil.checkTrue(!this.exit.isExitNode() ||  !this.nodes.contains(exit));
@@ -97,7 +103,17 @@ public class ClassModel implements Serializable {
 					+ " has already existed!");
 		}
 	}
+    
+    public void addModelNodes(List<ModelNode> nodes) {
+      PalusUtil.checkNull(nodes);
+      for(ModelNode node : nodes) {
+        this.addModelNode(node);
+      }
+    }
 	
+	/**
+	 * When deleting a node, its neighbor edges will also be deleted.
+	 * */
 	public void deleteModelNode(ModelNode node) throws ModelNodeNotFoundException {
 	  PalusUtil.checkNull(node);
 	  PalusUtil.checkNull(this.root != null);
@@ -106,7 +122,7 @@ public class ClassModel implements Serializable {
 	  //remove its transitions
 	  List<Transition> outEdges = node.getAllOutgoingEdges();
 	  List<Transition> inEdges = node.getAllIncomingEdges();
-	  
+	  //update the edge information of all neighboring nodes
 	  for(Transition t : outEdges) {
 	    t.getDestNode().getAllIncomingEdges().remove(t);
 	    this.transitions.remove(t);
@@ -115,17 +131,34 @@ public class ClassModel implements Serializable {
 	    t.getSourceNode().getAllOutgoingEdges().remove(t);
 	    this.transitions.remove(t);
 	  }
+	  //remove the node
 	  this.nodes.remove(node);
 	}
+	   
+    public void addTransition(Transition transition) throws ModelNodeNotFoundException {
+        ModelNode src = transition.getSourceNode();
+        ModelNode dest = transition.getDestNode();
+        this.checkExistence(src);
+        this.checkExistence(dest);
+        
+        if(!hasTransition(transition)) {
+            this.transitions.add(transition);
+                src.addOutgoingEdge(transition);
+                dest.addIncomingEdge(transition);
+        } else {
+            Log.log("New added transtion: " + transition + " already exists.");
+        }
+    }
+    
+    public void addTransitions(List<Transition> transitions) throws ModelNodeNotFoundException {
+      for(Transition transition : transitions) {
+        this.addTransition(transition);
+      }
+    }
 	
-	public void addModelNodes(List<ModelNode> nodes) {
-	  PalusUtil.checkNull(nodes);
-	  for(ModelNode node : nodes) {
-	    this.addModelNode(node);
-	  }
-	}
-	
-	//merge the model into the current one
+	/**
+	 * Merge the model into the current one
+	 * */
 	public void mergeModel(ClassModel model) {
 		PalusUtil.checkNull(model);
 		PalusUtil.checkNull(this.root);
@@ -134,12 +167,13 @@ public class ClassModel implements Serializable {
 		PalusUtil.checkNull(model.exit);
 		PalusUtil.checkTrue(model.getModelledClass() == this.getModelledClass());
 		
-		//throw new RuntimeException("Have not been implemented");
-		//start from root, then begin merging
+		//The merge algorithm is a recursive one, which which the graph node
+		//from root. And do that level by level following the outgoing edges.
 		//XXX think about is there any information loss here??
 	    try {
             mergeNode(this.root, model.root);
             //do some postprocessing about all merged nodes
+            //remove dangling edges
             this.postprocessMergedNodes();
             //unify all exit nodes, and check the invariant after merge
             this.unifyAllExitNodes();
@@ -149,39 +183,7 @@ public class ClassModel implements Serializable {
             throw new RuntimeException(e);
         }
 	}
-	
-	public void addTransition(Transition transition) throws ModelNodeNotFoundException {
-	    ModelNode src = transition.getSourceNode();
-	    ModelNode dest = transition.getDestNode();
-	    this.checkExistence(src);
-	    this.checkExistence(dest);
-	    
-	    if(!hasTransition(transition)) {
-            this.transitions.add(transition);
-            //if(!src.getAllOutgoingEdges().contains(transition)) {
-                src.addOutgoingEdge(transition);
-            //}
-            //if(!dest.getAllIncomingEdges().contains(transition)) {
-                dest.addIncomingEdge(transition);
-           // }
-        } else {
-            //TODO we should add some actions here
-        }
-	}
-	
-	public void addTransitions(List<Transition> transitions) throws ModelNodeNotFoundException {
-	  for(Transition transition : transitions) {
-	    this.addTransition(transition);
-	  }
-	}
-	
-	//the ClassModel is node-oriented, so we do not need delete transition
-//	public void deleteTransition(Transition transition) {
-//	  PalusUtil.checkTrue(this.transitions.contains(transition));
-//	  transition.getSourceNode().getAllOutgoingEdges().remove(transition);
-//	  transition.getDestNode().getAllIncomingEdges().remove(transition);
-//	  this.transitions.remove(transition);
-//	}
+
 	
 	/**
 	 * Print a brielf summary for the model
@@ -248,6 +250,7 @@ public class ClassModel implements Serializable {
 	
 	private boolean hasTransition(Transition transition) {
 		for(Transition t : this.transitions) {
+		    //equals has been overriden, compare src/dest nodes, and transition signature
 			if(t.equals(transition)) {
 				return true;
 			}
@@ -258,11 +261,11 @@ public class ClassModel implements Serializable {
 	private void checkExistence(ModelNode nodeToCheck) throws ModelNodeNotFoundException {
 		PalusUtil.checkNull(nodeToCheck);
 		for(ModelNode node : this.nodes) {
+		    //only compare node id in equals
 			if(node.equals(nodeToCheck)) {
 				return;
 			}
-		}
-		
+		}		
 		throw new ModelNodeNotFoundException("Model node: " + nodeToCheck 
 				+ " does not found in current ClassModel: " + this);
 	}
@@ -272,7 +275,7 @@ public class ClassModel implements Serializable {
 	 * @throws ModelNodeNotFoundException 
 	 * */
 	private void mergeNode(ModelNode destNode,  ModelNode tobeMerged) throws ModelNodeNotFoundException {
-	    System.out.print("merging...");
+	    //System.out.print("merging...");
 	    //if both are exit nodes, the recursion ends
 	    if(destNode.isExitNode() && tobeMerged.isExitNode()) {
 	      Log.log(" -- both " + destNode.getNodeId() + " exit" + tobeMerged.getNodeId());
@@ -300,7 +303,8 @@ public class ClassModel implements Serializable {
           //would be problematic
           List<Transition> subTransitions = this.getAllSubTransitions(tobeMerged);
           for(Transition t : tobeMerged.getAllOutgoingEdges()) {
-            Transition newTransition = new Transition(destNode, t.getDestNode(), t.getClassName(), t.getMethodName(), t.getMethodDesc());
+            Transition newTransition = new Transition(destNode, t.getDestNode(),
+                t.getClassName(), t.getMethodName(), t.getMethodDesc());
             //copy its decorations
             newTransition.addDecorations(t.makeClones(newTransition));
             subTransitions.add(newTransition);
@@ -354,34 +358,37 @@ public class ClassModel implements Serializable {
 	    }
 	}
 	
+	/**
+	 * Get all sub nodes from a given one (excluding the given one)
+	 * */
 	private List<ModelNode> getAllSubNodes(ModelNode node) {
 	  PalusUtil.checkNull(node);
-	  Set<ModelNode> subNodes = new HashSet<ModelNode>();
-	  
+	  Set<ModelNode> subNodes = new HashSet<ModelNode>();	  
 	  //do a breadth-first traverse
 	  List<ModelNode> tmp = new LinkedList<ModelNode>();
 	  tmp.addAll(node.getAllOutgoingNodes());
 	  while(!tmp.isEmpty()) {
 	    ModelNode n = tmp.remove(0);
 	    subNodes.add(n);
-	    //avoid duplicate, ugly code, here
 	    for(ModelNode mn : n.getAllOutgoingNodes()) {
+	      //avoid duplication, check first
 	      if(!tmp.contains(mn)) {
 	         tmp.add(mn);
 	      }
 	    }
-	  }
-	  
+	  }	  
 	  return new LinkedList<ModelNode>(subNodes);
 	}
 	
+	/**
+	 * Get all sub transitions from a given node (including the outgoing
+	 * transitions from the given node)
+	 * */
 	private List<Transition> getAllSubTransitions(ModelNode node) {
-	  PalusUtil.checkNull(node);
-	  
+	  PalusUtil.checkNull(node);	  
 	  //add all connecting edges
 	  Set<Transition> transitions = new HashSet<Transition>();
-	  transitions.addAll(node.getAllOutgoingEdges());
-	  
+	  transitions.addAll(node.getAllOutgoingEdges());	  
 	  //do a breadth-first traverse
 	  List<ModelNode> tmp = new LinkedList<ModelNode>();
 	  tmp.addAll(node.getAllOutgoingNodes());
@@ -394,15 +401,19 @@ public class ClassModel implements Serializable {
 	        tmp.add(mn);
 	      }
 	    }
-	  }
-	  
+	  }	  
 	  return new LinkedList<Transition>(transitions);
 	}
 	
+	/**
+	 * Removes dangling edges (edges connected to some of the nodes, but do not
+	 * belong to the edge set) after merging models
+	 * */
 	private void postprocessMergedNodes() {
-	  //for each model node which is fetched from other class model, we set their
-	  //class model as this. Then, we remove all other redundant edges for each
-	  //model node, which does not belong to the model's edges.
+	  //for each model node which is "fetched" from other class model during merge,
+	  //we set its class model be this. Then, for each node, we remove its connecting
+	  //edges (including outgoing and incoming), which do not belong to the edge
+	  //set of this class model
 	  for(ModelNode node : this.nodes) {
 	    node.setClassModel(this);
 	    //to be removed outgoing edges
@@ -426,9 +437,8 @@ public class ClassModel implements Serializable {
 	}
 	
 	/** To ease the merging process, we tolerance the existence of multiple
-    /* exit nodes,, which violates the invariants defined in this class.
-    /* We will unify all these exit nodes 
-	 * @throws ModelNodeNotFoundException */
+     * exit nodes,, which violates the invariants defined in this class.
+     * We will unify all these exit nodes */
 	private void unifyAllExitNodes() throws ModelNodeNotFoundException {
 	  //check the root invariant does not violate
 	  PalusUtil.checkNull(this.root);
@@ -440,42 +450,48 @@ public class ClassModel implements Serializable {
 	      exitNodes.add(node);
 	    }
 	  }
+	  //there must be more than one exit node after merging
+	  //and each exit node should have more than one incoming edge
+	  //If not, the exit node is disconnected!
 	  PalusUtil.checkTrue(exitNodes.size() > 0);
 	  for(ModelNode exitNode : exitNodes) {
 	    PalusUtil.checkTrue(exitNode.numOfInEdges() > 0);
 	  }
-	  //log the number of exit nodes
+	  //we do not need to unify if there is only one node
+      if(exitNodes.size() == 1) {
+        this.resetExit(exitNodes.get(0));
+        return;
+      }
+      
+	  //log exit nodes info
 	  Log.log("start unifying all exits");
 	  Log.log("number of exit nodes: " + exitNodes.size());
 	  for(ModelNode node : exitNodes) {
 	    Log.log("     " + node.getNodeId());
-	  }
+	  }	  
 	  
-	  //we do not need to unify if there is only one node
-	  if(exitNodes.size() == 1) {
-	    this.resetExit(exitNodes.get(0));
-	    return;
-	  }
-	  //start to unify all the exit
-	  //we first pick up the first node as the target node, all unify all exit
-	  //nodes to it
+	  //When unifying all exit nodes, we first (randomly) pick the first
+	  //exit node. Then, we use it to substitue all other exit nodes (reconnecting
+	  //their incoming edges). Finally, all other exit nodes will be deleted.
 	  ModelNode unifiedExit = exitNodes.remove(0);
 	  
-	  Log.log("choose: " + unifiedExit.getNodeId() + " as unified exit");
-	  
 	  PalusUtil.checkTrue(unifiedExit.isExitNode());
-	  //go through each of remaining exit nodes
+	  Log.log("choose: " + unifiedExit.getNodeId() + " as unified exit");	  
+	  
+	  //reconnecting the incoming edges of other exit nodes to the unified exit
 	  for(ModelNode otherExit : exitNodes) {
 	    for(Transition transition : otherExit.getAllIncomingEdges()) {
-	        Transition newTransition = new Transition(transition.getSourceNode(), unifiedExit,
-	            transition.getClassName(), transition.getMethodName(), transition.getMethodDesc());
-	        //also copy its decorations
+	        //create a new transition
+	        Transition newTransition = new Transition(transition.getSourceNode(),
+	            unifiedExit /*for this unified exit node*/, transition.getClassName(),
+	            transition.getMethodName(), transition.getMethodDesc());
+	        //also copy its decorations to the newly created transition
 	        newTransition.addDecorations(transition.makeClones(newTransition));
 	        this.addTransition(newTransition);
-	        //XXX replace transitions
+	        //XXX update the trace transition mappings
 	        TraceTransitionManager.replaceTransitions(transition, newTransition);
 	    }
-	    //actually it also delete the transitions
+	    //delete other exit node (and its connecting edges)
 	    this.deleteModelNode(otherExit);
 	  }
 	  //reset the exit
@@ -484,6 +500,6 @@ public class ClassModel implements Serializable {
 	}
 	
 
-	/**some model utility methods here for faciliting
+	/**TODO add some model utility methods here for faciliting
 	 * manipulate the model */
 }

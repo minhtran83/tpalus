@@ -2,8 +2,8 @@ package palus.trace;
 
 public class InitEntryEvent extends TraceEvent {
 
-	public InitEntryEvent(int id, String className, String methodName, String methodDesc, Object thiz,
-			Object[] params) {
+	public InitEntryEvent(int id, String className, String methodName, String methodDesc,
+	    Object thiz, Object[] params) {
 		super(id, className, methodName, methodDesc, thiz, params);
 	}
 

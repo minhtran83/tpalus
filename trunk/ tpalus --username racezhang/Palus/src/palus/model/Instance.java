@@ -7,27 +7,18 @@ public final class Instance {
 	
 	//the object id in JVM
 	public final int objId;
-	//public final Object obj;
 	public final Class<?> type;
-	
-//	public Instance(Object obj, Class<?> type) {
-//		PalusUtil.checkNull(type);
-//		this.type = type;
-//		
-//		//obj field could be null, if so objId will be 0
-//		//this.obj = obj;
-//		objId = System.identityHashCode(obj);
-//	}
 	
 	public Instance(int objectId, Class<?> type) {
 	  PalusUtil.checkNull(type);
 	  this.type = type;
-	  //this.obj = null; //XXX be aware
 	  this.objId = objectId;
 	}
 	
+	/**
+	 * Check is the current instance a primitive or primitive wrapper type
+	 * */
 	public boolean isPrimitiveType() {
-		//is primitive or primitive wrapper
 		return type.isPrimitive() || PalusUtil.isPrimitive(type);
 	}
 	
@@ -61,10 +52,5 @@ public final class Instance {
 	@Override
 	public String toString() {
 	  return this.type + "@" + this.objId;
-//		if(this.isPrimitiveType() || this.isStringType()) {
-//			return this.type + ":" + this.obj;
-//		} else {
-//		    return this.type + ":" + this.objId;
-//		}
 	}
 }

@@ -272,26 +272,6 @@ public abstract class TraceEvent implements Serializable {
 	  return sb.toString();
 	}
 	
-//	protected String getParamValues() {
-//	  StringBuilder sb = new StringBuilder();
-//	  if(params == null) {
-//	    sb.append("Param values are null.");
-//	  } else {
-//	    //not null
-//	    sb.append("Param values: [");
-//	    for(Object param : params) {
-//	      if(param != null) {
-//	        sb.append(param.toString());
-//	      } else {
-//	        sb.append("'null'");
-//	      }
-//          sb.append(", ");
-//	    }
-//	    sb.append("]");
-//	  }
-//	  return sb.toString();
-//	}
-	
 	protected boolean isArrayType(String typeName) {
 	  return typeName.contains("[]");
 	}

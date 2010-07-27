@@ -12,31 +12,35 @@ public class ModelConstructor {
 	
 	private final Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> traceByClasses;
 	
+	/**
+	 * Constructor to set up the original raw trace events
+	 * */
 	public ModelConstructor(Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> traceByClasses) {
 		PalusUtil.checkNull(traceByClasses);
 		this.traceByClasses = traceByClasses;
 	}
 	
+	/**
+	 * Build class model for each class
+	 * */
 	public Map<Class<?>, ClassModel> buildClassModels() {
-		Map<Class<?>, ClassModel> models = new HashMap<Class<?>, ClassModel>();
-		
+		Map<Class<?>, ClassModel> models = new HashMap<Class<?>, ClassModel>();		
 		for(Class<?> clazz : traceByClasses.keySet()) {
 			ClassModel model = this.buildClassModel(clazz, this.traceByClasses.get(clazz));
 			PalusUtil.checkNull(model);
 			models.put(clazz, model);
-		}
-		
+		}		
 		return models;
 	}
 	
-	//construct the model for each class, and connect each individual model
-	//with dependence edges
-	private ClassModel buildClassModel(Class<?> clazz, Map<Instance, List<TraceEventAndPosition>> classTraces) {
-		ClassModel classModel = null; //new ClassModel(clazz);
-//		classModel.addRoot(new ModelNode(classModel));
-//		classModel.addExit(new ModelNode(classModel));
-		
+	/**
+	 * Constructs the model for each class
+	 * TODO should connect each model with dependence edges
+	 **/
+	private ClassModel buildClassModel(Class<?> clazz, Map<Instance, List<TraceEventAndPosition>> classTraces) {		
 		System.out.print("   building model for class: " + clazz.getName());
+		//the output model
+		ClassModel classModel = null;
 		for(Instance instance : classTraces.keySet()) {
 			List<TraceEventAndPosition> traceList = classTraces.get(instance);
 			//first check the validity of the traces
@@ -51,15 +55,15 @@ public class ModelConstructor {
                 if(classModel == null) {
                    classModel = model;
                 } else {
+                  //merge the model with the new one
                    classModel.mergeModel(model);
                 }
                 System.out.print("+");
-                
-                Log.log("############### Intermediate merging result #############");
-                Log.log("Class model for :" + clazz.getName());
-                Log.log(classModel.getModelInfo() + "\n");
-                Log.log("#########################################################");
-                
+                //for debugging purpose
+//                Log.log("############### Intermediate merging result #############");
+//                Log.log("Class model for :" + clazz.getName());
+//                Log.log(classModel.getModelInfo() + "\n");
+//                Log.log("#########################################################");
             } catch (ModelNodeNotFoundException e) {
                  throw new RuntimeException(e);
             } catch (MethodNotExistInTransitionException e) {
@@ -68,8 +72,6 @@ public class ModelConstructor {
 			PalusUtil.checkNull(model);
 		}
 		System.out.println();
-		//clean all unreachable node, and reset the exit
-		//classModel.postprocessAfterMerging();
 		Log.log(" ---------------- class model after merged ------------");
 		Log.log("Class model for: " + clazz.getName());
 		Log.log(classModel.getModelInfo() + "\n");
@@ -78,15 +80,21 @@ public class ModelConstructor {
 		return classModel;
 	}
 	
-	private ClassModel buildClassModelFromTrace(Class<?> clazz, List<TraceEventAndPosition> traceList) throws ModelNodeNotFoundException, MethodNotExistInTransitionException {
+	/**
+	 * Builds a class model from a list trace events
+	 * */
+	private ClassModel buildClassModelFromTrace(Class<?> clazz, List<TraceEventAndPosition> traceList)
+	    throws ModelNodeNotFoundException, MethodNotExistInTransitionException {
+	    //first create an empty model
 		ClassModel model = new ClassModel(clazz);
 		ModelNode root = new ModelNode(model);
 		ModelNode exit = new ModelNode(model);
-		
+		//add root/exit node
         model.addRoot(root);
         model.addExit(exit);
         PalusUtil.checkTrue(root.isRootNode());
         PalusUtil.checkTrue(exit.isExitNode());
+        //check the validity of the given trace list
         TraceAnalyzer.checkTraceEventsAndPosition(traceList);
 		
 		//building models
@@ -94,13 +102,19 @@ public class ModelConstructor {
 		
 		Log.log(model.getModelInfo());
 		
+		//check the invariant
 		PalusUtil.checkTrue(root.isRootNode());
 		PalusUtil.checkTrue(exit.isExitNode());
 		
 		return model;
 	}
 	
-	private void buildClassModelRecurisvely(ClassModel model, ModelNode srcNode, ModelNode destNode, List<TraceEventAndPosition> traceList)
+	/**
+	 * Builds a class model recursively from the traces.
+	 * Why recursive? because there are calling level in the trace list
+	 * */
+	private void buildClassModelRecurisvely(ClassModel model, ModelNode srcNode,
+	    ModelNode destNode, List<TraceEventAndPosition> traceList)
 	    throws ModelNodeNotFoundException, MethodNotExistInTransitionException {
 	    //check the precondition of this method
 	    PalusUtil.checkNull(model);
@@ -153,7 +167,17 @@ public class ModelConstructor {
 	}
 	
 	/**
-	 * Given a list of traces. Extract the first level of matched list.
+	 * Given a list of traces. Extract the first level of matched event item.
+	 * For example, here is a list trace (indentation represents the stack depth):
+	 * 0.  method a entry
+	 * 1.      method b entry
+	 * 2.      method b exit
+	 * 3.  method a exit
+	 * 4.  method c entry
+	 * 5.  method c exit
+	 * 
+	 * This method will return new int[] {0, 4}, which representing the matched
+	 * method pair index in the first level
 	 * */
 	private Integer[] getFirstLevelEventsStartIndex(List<TraceEventAndPosition> traceList) {
 	    PalusUtil.checkTrue(traceList.size() >= 2);
