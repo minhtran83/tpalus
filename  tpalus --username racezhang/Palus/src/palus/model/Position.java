@@ -2,6 +2,12 @@ package palus.model;
 
 import palus.PalusUtil;
 
+/**
+ * This simple class represents the position where an object could
+ * appear in a method. for example:
+ * Constructs:     ret-type    this  (param1, param2, .... param n)
+ * Positions:        -1         0        1       2    ....   n
+ * */
 public final class Position {
 	private int i = Integer.MAX_VALUE;
 	

@@ -17,9 +17,7 @@ import org.objectweb.asm.tree.VarInsnNode;
 import palus.PalusUtil;
 import palus.trace.Stats;
 
-import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
-import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 import java.util.List;
 
@@ -197,18 +195,18 @@ public class ObjectStateMonitor extends AbstractTransformer implements
 		mlist = method.instructions;
 		for (insnPlace = 0; insnPlace < mlist.size(); insnPlace++) {
 			AbstractInsnNode insn = mlist.get(insnPlace);
-			if (insn.getOpcode() >= this.IRETURN
-					&& insn.getOpcode() <= this.RETURN) {
+			if (insn.getOpcode() >= IRETURN
+					&& insn.getOpcode() <= RETURN) {
 				
-				if(insn.getOpcode() == this.RETURN) {
+				if(insn.getOpcode() == RETURN) {
 					mlist.insertBefore(mlist.get(insnPlace), new InsnNode(ACONST_NULL));
-				} else if (insn.getOpcode() == this.DRETURN || insn.getOpcode() == this.LRETURN) {
+				} else if (insn.getOpcode() == DRETURN || insn.getOpcode() == LRETURN) {
 					mlist.insertBefore(mlist.get(insnPlace), new InsnNode(DUP2));
 				} else {
 					mlist.insertBefore(mlist.get(insnPlace), new InsnNode(DUP));
 				}
 				insnPlace++;
-				if(insn.getOpcode() != this.RETURN && insn.getOpcode() != this.ARETURN) {
+				if(insn.getOpcode() != RETURN && insn.getOpcode() != ARETURN) {
 					Type retType = Type.getReturnType(method.desc);
 					mlist.insertBefore(mlist.get(insnPlace), PalusUtil
 							.getBoxingInsn(retType));

@@ -24,6 +24,9 @@ public class TraceEventAndPosition {
 	    return false;
 	  } else {
 	    TraceEventAndPosition tap = (TraceEventAndPosition)o;
+	    //the equals method in TraceEvent class has not been overriden, here we
+	    //just use the equals method in Object class. The equals method in the
+	    //Position class just compares the int position value
 	    return this.event.equals(tap.event) && this.position.equals(tap.position);
 	  }
 	}

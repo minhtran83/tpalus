@@ -14,7 +14,7 @@ import palus.trace.Stats;
 public class Transition {
 	
 	private final int transitionId;
-	private final Class<?> modelClass;
+	private final Class<?> modelledClass;
 	private final ModelNode srcNode;
 	private final ModelNode destNode;
 	// Note that this className might not be the same as modelClass
@@ -36,13 +36,14 @@ public class Transition {
 	public Transition(ModelNode srcNode, ModelNode destNode, String className, String methodName, String methodDesc) {
 		PalusUtil.checkNull(srcNode);
 		PalusUtil.checkNull(destNode);
+		PalusUtil.checkNull(className);
 		PalusUtil.checkNull(methodName);
 		PalusUtil.checkNull(methodDesc);
 		//model the same class
 		//XXX check getClassModel() == getClassModel()?
 		PalusUtil.checkTrue(srcNode.getModelledClass() == destNode.getModelledClass());
 		
-		this.modelClass = srcNode.getModelledClass();
+		this.modelledClass = srcNode.getModelledClass();
 		this.srcNode = srcNode;
 		this.destNode = destNode;
 		this.className = className;
@@ -65,7 +66,7 @@ public class Transition {
 	}
 	
 	public Class<?> getModelClass() {
-		return this.modelClass;
+		return this.modelledClass;
 	}
 	
 	public Class<?>[] getParamClasses() {
@@ -207,23 +208,26 @@ public class Transition {
 		    + this.getDestNode().getNodeId();
 	}
 	
-	/*
+	/**
 	 *This method is for invariant checking
 	 * */
-	public boolean checkRep() {
-		
+	public void checkRep() {
+	    //check the transition id
+	    PalusUtil.checkTrue(this.transitionId > 0);
+	    //check the source and dest node
+	    PalusUtil.checkTrue(this.srcNode.getModelledClass() == this.destNode.getModelledClass());
+		//if it is loop transition
 		if(loopNum != 0) {
-			if (this.srcNode != this.destNode) {
-				return false;
-			}
+		    PalusUtil.checkTrue(this.srcNode == this.destNode);
 		}
-		
-		return true;
+		if(this.isMethodOrConstructor) {
+		  PalusUtil.checkNull(this.method);
+		} else {
+		  PalusUtil.checkNull(this.constructor);
+		}
 	}
 	
   private Method tryToGetMethod() {
-//      System.out.println("In trying to get method: " + this.methodName +
-//           ",  desc: " + this.methodDesc);
       Method[] methods = null;
       try {
           methods = Class.forName(this.className).getDeclaredMethods();
@@ -233,27 +237,22 @@ public class Transition {
           throw new RuntimeException(e);
       }
       for (Method method : methods) {
-//          System.out.println("    what we have: " + method.getName() + ", desc: "
-//              + Type.getMethodDescriptor(method));
           if (Type.getMethodDescriptor(method).equals(this.methodDesc)
               && method.getName().equals(this.methodName)) {
               return method;
           }
-      }
-      
+      }      
       return null;
   }
 	
 	private Constructor<?> tryToGetConstructor() {
-	  //System.out.println("In trying to get constructor: " + this.methodName + ",  desc: " + this.methodDesc);
       Constructor<?>[] constructors = null;
       try {
-          constructors = this.modelClass.getDeclaredConstructors();
+          constructors = this.modelledClass.getDeclaredConstructors();
       } catch (SecurityException e) {
           throw new RuntimeException(e);
       }
-      for(Constructor<?> constructor : constructors) {        
-           //System.out.println("    what we have: " + constructor.getName() + ", desc: " + Type.getConstructorDescriptor(constructor));
+      for(Constructor<?> constructor : constructors) {
           if(Type.getConstructorDescriptor(constructor).equals(this.methodDesc)
               && "<init>".equals(this.methodName) ) {
               return constructor;
@@ -303,6 +302,9 @@ public class Transition {
 			this.position = position;
 		}
 		
+		/**
+		 * Copy constructor
+		 * */
 		public Decoration(DecorationValue thizValue, DecorationValue[] paramValues, Transition transition,
 		    int position) {
 		  PalusUtil.checkNull(thizValue);

@@ -44,7 +44,8 @@ public class Tracer {
 	  TraceStack.pushParamsToStack(objs, false);
   }
   
-  public static void traceMethodEntry(int id, String className, String methodName, String desc, Object o) {
+  public static void traceMethodEntry(int id, String className, String methodName,
+      String desc, Object o) {
 	  if(switchOff) {
 		  return;
 	  }
@@ -56,7 +57,8 @@ public class Tracer {
 	  TraceStack.pushMethodToStack(id, null, /*no return value*/ className, methodName, desc, o, true);
   }
   
-  public static void traceMethodExit(Object ret, String methodName, String desc, Object o, int id, String className) {
+  public static void traceMethodExit(Object ret, String methodName, String desc,
+      Object o, int id, String className) {
 	  if(switchOff) {
 		  return;
 	  }

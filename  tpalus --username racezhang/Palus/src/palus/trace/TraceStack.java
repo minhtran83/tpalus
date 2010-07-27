@@ -17,7 +17,8 @@ public class TraceStack {
 	private static Object currentReturnObj = null;
 	private static boolean currentEntryOrExit = false;
 	
-	public static void pushMethodToStack(int id, Object ret, String className, String methodName, String methodDesc, Object thiz, boolean entryOrExit) {
+	public static void pushMethodToStack(int id, Object ret, String className, String methodName,
+	    String methodDesc, Object thiz, boolean entryOrExit) {
 		if(hasMethodToPush) {
 			throw new RuntimeException("State error! Current method name, desc: " + currentMethodName
 					+ ",  " + currentMethodDesc+ ". But now pushing: " + methodName + ", " + methodDesc);
@@ -46,12 +47,13 @@ public class TraceStack {
 					+ ", now entry or exit: " + entryOrExit);
 		}
 		
-		pushToStack(currentId, currentReturnObj, currentClassName, currentMethodName, currentMethodDesc, currentThizObj, args, entryOrExit);
+		pushToStack(currentId, currentReturnObj, currentClassName, currentMethodName,
+		    currentMethodDesc, currentThizObj, args, entryOrExit);
 		hasMethodToPush = false;
 	}
 	
-	private static void pushToStack(int id, Object retObj, String className, String methodName, String methodDesc, Object thiz, Object[] params,
-			boolean entryOrExit) { //true is entry, false is exit
+	private static void pushToStack(int id, Object retObj, String className, String methodName,
+	    String methodDesc, Object thiz, Object[] params, boolean entryOrExit) { //true is entry, false is exit
 		TraceEvent pushItem = null;
 		if(methodName.equals("<init>")) {
 			if(entryOrExit) {

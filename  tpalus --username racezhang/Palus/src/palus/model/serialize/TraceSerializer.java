@@ -54,14 +54,16 @@ public class TraceSerializer {
   public void serializeTracesAsObject() throws IOException {
     FileOutputStream out = new FileOutputStream(file);
     ObjectOutputStream oos = new ObjectOutputStream(out);
+    //first write the size of event list
     oos.writeInt(events.size());
+    //write the trace event
     for(TraceEvent event : events) {
       oos.writeObject(event);
     }
     oos.flush();
-    //out.flush();
+    out.flush();
     oos.close();
-    //out.close();
+    out.close();
   }
   
   public static List<TraceEvent> deserializeObjectsFromTrace(File file) throws IOException, ClassNotFoundException {

@@ -2,8 +2,8 @@ package palus.trace;
 
 public class ClinitExitEvent extends TraceEvent {
 
-	public ClinitExitEvent(int id, String className, String methodName, String methodDesc, Object thiz,
-			Object[] params) {
+	public ClinitExitEvent(int id, String className, String methodName, String methodDesc,
+	    Object thiz, Object[] params) {
 		super(id, className, methodName, methodDesc, thiz, params);
 	}
 

@@ -5,6 +5,11 @@ import java.lang.reflect.Modifier;
 import palus.PalusUtil;
 
 public final class ClassesToModel {
+    /**
+     * Check whether this class should be included in the model or not
+     * @param clz the class to be check
+     * @return true if the class needs to be modelled, false if else.
+     * */
 	public static boolean modelThisClass(Class<?> clz) {
 		//exclude abstract
 	    if(Modifier.isAbstract(clz.getModifiers()) || Modifier.isInterface(clz.getModifiers())) {

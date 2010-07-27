@@ -100,7 +100,9 @@ public class ModelNode {
 		return this.modelledClass;
 	}
 	
-	/** If there is no matched transition, just return null */
+	/** If there is no matched transition, just return null.
+	 * A transitions's signature only consists of its class name, method desc,
+	 * and method name*/
 	public Transition getOutgoingTranisitionBySignature(Transition transition) {
 	  for(Transition t : this.outEdges) {
 	    if(t.toSignature().equals(transition.toSignature())) {
@@ -110,6 +112,9 @@ public class ModelNode {
 	  return null;
 	}
 	
+	/**
+	 * Dump the basic information of this node
+	 * */
 	public String getNodeInfo() {
 	  StringBuilder sb = new StringBuilder();
 	  sb.append(this.nodeid);
@@ -136,14 +141,24 @@ public class ModelNode {
 		if(!(node instanceof ModelNode)) {
 			return false;
 		} else {
+		    //only using the node id
 			ModelNode modelNode = (ModelNode)node;
 			return modelNode.getNodeId() == this.getNodeId();
 		}
 	}
 	
-	public boolean checkRep() {
-		//check the property of this data structure
-		return false;
+	/**
+	 * Checking the invariant of this class
+	 * */
+	public void checkRep() {
+	    PalusUtil.checkTrue(this.nodeid >= 0);
+		PalusUtil.checkTrue(this.modelledClass == this.classModel.getModelledClass());
+		for(Transition transition : this.getAllIncomingEdges()) {
+		  PalusUtil.checkTrue(transition.getDestNode() == this);
+		}
+		for(Transition transition : this.getAllOutgoingEdges()) {
+		  PalusUtil.checkTrue(transition.getSourceNode() == this);
+		}
 	}
 	
 }

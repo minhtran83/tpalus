@@ -236,7 +236,7 @@ public final class AbstractState {
     return extracts;
   }
   
-  private Field[] getNonStaticNonFinalFields(Class c) {
+  private Field[] getNonStaticNonFinalFields(Class<?> c) {
     List<Field> list = new ArrayList<Field>();
     Field[] allFields = c.getDeclaredFields();
     for(Field field : allFields) {
