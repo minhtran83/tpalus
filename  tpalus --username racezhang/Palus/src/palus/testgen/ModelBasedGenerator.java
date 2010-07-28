@@ -454,7 +454,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
   private void updateModelSequenceMap(Sequence sequence, Transition transition) {
     ModelNode sourceNode = transition.getSourceNode();
     ModelNode destNode = transition.getDestNode();
-    Class<?> clz = transition.getModelClass();
+    Class<?> clz = transition.getModelledClass();
     
     //check null here
     PalusUtil.checkNull(sourceNode);

@@ -17,6 +17,10 @@ public class ModelNode {
 
 	//can not make it final because we need to merge models
     private ClassModel classModel;
+    
+    //a flag for test generation purpose. True means that this could be
+    //a terminate node for test generation
+    private boolean stopFlag = false;
 	
 	public ModelNode(ClassModel classModel) {
 		PalusUtil.checkNull(classModel);
@@ -100,6 +104,18 @@ public class ModelNode {
 		return this.modelledClass;
 	}
 	
+	public boolean hasStopFlag() {
+	  return this.stopFlag;
+	}
+	
+	public void setStopFlag() {
+	  this.stopFlag = true;
+	}
+	
+	public void removeStopFlag() {
+	  this.stopFlag = false;
+	}
+	
 	/** If there is no matched transition, just return null.
 	 * A transitions's signature only consists of its class name, method desc,
 	 * and method name*/
@@ -109,6 +125,28 @@ public class ModelNode {
 	      return t;
 	    }
 	  }
+	  return null;
+	}
+	
+	/**
+	 * This method returns a matched transition based on its signature and the
+	 * position of its decorations
+	 * */
+	public Transition getOutgoingTransitionBySignatureAndPosition(Transition transition) {
+	  for(Transition t : this.outEdges) {
+	    if(t.toSignature().equals(transition.toSignature())) {
+	      // check the position of its decorations
+	      // first need to check that both transitions (this and the parameter) should have unique position
+	      PalusUtil.checkTrue(t.hasDecoration());
+	      PalusUtil.checkTrue(t.hasUniqueDecorationPosition());
+	      PalusUtil.checkTrue(transition.hasDecoration());
+	      PalusUtil.checkTrue(transition.hasUniqueDecorationPosition());
+	      if(t.getUniqueDecorationPosition() == transition.getUniqueDecorationPosition()) {
+	        return t;
+	      }
+	    }
+	  }
+	  //can not find a matched transition
 	  return null;
 	}
 	

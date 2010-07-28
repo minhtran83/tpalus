@@ -12,6 +12,7 @@ import java.util.Stack;
 
 import palus.Log;
 import palus.PalusUtil;
+import palus.model.serialize.TraceDumper;
 import palus.model.serialize.TraceSerializer;
 import palus.testgen.TestGenMain;
 import palus.trace.ClinitEntryEvent;
@@ -24,6 +25,7 @@ import palus.trace.Stats;
 import palus.trace.TraceEvent;
 import palus.trace.Tracer;
 import palus.visualization.ClassModelViewer;
+import plume.Pair;
 
 public class TraceAnalyzer {
 	//the raw traces from program execution
@@ -35,9 +37,12 @@ public class TraceAnalyzer {
 	//dump the trace event as object stream for reuse
 	public static final String TRACE_OBJECT_FILE = "trace_obj.model";
 	
+	//testing purpose
+	private static final String TRACE_DUMP_FILE = "trace_dump_by_class.txt";
+	
 	//turn on the log
 	static {
-	  Log.log(LOG_FILE);
+	  Log.logConfig(LOG_FILE);
 	}
 	
 	/**
@@ -99,6 +104,24 @@ public class TraceAnalyzer {
       }
       System.out.println("Serialization successes!");
       System.out.println("\n");
+      
+      //the following is only for testing purpose
+//      System.out.println("Dump by class and instance to file: ");
+//      Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> traceMap = null;
+//      try {
+//          traceMap = extractTraceEventByClass(this.traces);
+//      } catch (ClassNotFoundException e) {
+//          e.printStackTrace();
+//          throw new RuntimeException(e);
+//      }
+//      //check the validity of the trace map before proceeding
+//      checkTraceMapValidity(traceMap);
+//      try {
+//        TraceDumper.dumpTraceEventsByClass(TRACE_DUMP_FILE, traceMap);
+//      } catch (IOException e) {
+//        e.printStackTrace();
+//      }
+//      System.out.println("Dump by class successes!");
 	}
 	
 	/**
@@ -147,7 +170,11 @@ public class TraceAnalyzer {
 		System.out.println("\n");
 		
 		//TODO enrich the model by adding dependence!
-		TraceDependenceRepository.findModelDependence();
+		Map<Pair<Transition, Position>, Pair<ModelNode, Position>> dependences
+		    = TraceDependenceRepository.findModelDependence();
+		
+		//enhance the built class model with dependence information
+		ClassModel.enhanceClassModel(models, dependences);
 		
 		return models;		
 	}

@@ -1,14 +1,20 @@
 package palus.model;
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import palus.Log;
 import palus.PalusUtil;
 import palus.model.Transition.Decoration;
 import palus.trace.Stats;
+import plume.Pair;
 
 public class ClassModel implements Serializable {
 	
@@ -20,6 +26,18 @@ public class ClassModel implements Serializable {
 	//can not make them to be final, need to change during model merging
 	private ModelNode root = null;	
 	private ModelNode exit = null;
+	
+	//the flag to control different strategy in deleting non-public transitions
+	//it could be either:
+	// (1) if the flag is true, delete the non-public transition, and all
+	//     its unreachable sub-transitions afterwards (which could be public
+	//     transitions.
+	// (2) if the flag is not true, delete the non-public transition, but move
+	//     the next level calls up. e.g.
+	//     m1 calls m2, then calls m3. If using the first strategy, when deleting
+	//     m2 call, m3 will also be deleted, but using the second strategy, the
+	//     call chain would be m1 calls m3
+	public static boolean use_delete_in_removing_nonpublic = true;
 	
 	public ClassModel(Class<?> modelledClass) {
 		PalusUtil.checkNull(modelledClass);
@@ -174,7 +192,7 @@ public class ClassModel implements Serializable {
             mergeNode(this.root, model.root);
             //do some postprocessing about all merged nodes
             //remove dangling edges
-            this.postprocessMergedNodes();
+            this.removeDanglingEdges();
             //unify all exit nodes, and check the invariant after merge
             this.unifyAllExitNodes();
             //check the invariant
@@ -182,6 +200,87 @@ public class ClassModel implements Serializable {
         } catch (ModelNodeNotFoundException e) {
             throw new RuntimeException(e);
         }
+	}
+	
+	/**
+	 * Removes non-public transitions from the model
+	 * @throws ModelNodeNotFoundException 
+	 * */
+	public void removeNonPublicTransitions() throws ModelNodeNotFoundException {
+	  //first check the invariant before removal
+	  this.checkRep();
+	  
+	  //first find all nonpublic transitions
+	  Set<Transition> nonPublicTransitions = new HashSet<Transition>();
+	  for(Transition transition : this.transitions) {
+	    if(transition.isMethod()) {
+	      //add all method transition
+	      Method m = transition.getMethod();
+	      if(!Modifier.isPublic(m.getModifiers())) {
+	        nonPublicTransitions.add(transition);
+	      }
+	    } else if(transition.isConstructor()) {
+	      //add all constructor transition
+	      Constructor<?> c = transition.getConstructor();
+	      if(!Modifier.isPublic(c.getModifiers())) {
+	        nonPublicTransitions.add(transition);
+	      }
+	    } else {
+	      throw new BugInPalusException("A transition: " + transition.toSignature()
+	          + " has neither method nor constructor.");
+	    }
+	  }	  
+	  //remove all nonpublic transitions, and update their connecting nodes
+	  for(Transition nonPublicTransition : nonPublicTransitions) {
+	    nonPublicTransition.getSourceNode().getAllOutgoingEdges().remove(nonPublicTransition);
+	    nonPublicTransition.getDestNode().getAllIncomingEdges().remove(nonPublicTransition);
+	    //XXX update the repository?
+	    this.transitions.remove(nonPublicTransition);
+	  }
+	  
+	  Log.log("In class model: " + this.getModelledClass() + ", remove: "
+	      + nonPublicTransitions.size() + " transitions out of " + this.transitions.size());
+	  
+	  //to unify the exit nodes
+	  //two possibilities: 1) the original exit has no incoming edges
+	  // 2) there is other node being isolated
+	  this.removeUnreachableNodesFromRoot();
+	  
+	  //unify all the exit
+	  this.unifyAllExitNodes();
+	  
+	  //finally check the invariant after removal
+	  this.checkRep();
+	  //check all transitions are public now
+	  this.checkPublicTransitions();
+	}
+	
+	/**
+	 * Remove the dangling nodes. This method is called only in remove non-public transition.
+	 * Since removing non-pubic transition, it is possible that some nodes are unreachable
+	 * from the root.
+	 * @throws ModelNodeNotFoundException 
+	 * */
+	private void removeUnreachableNodesFromRoot() throws ModelNodeNotFoundException {
+	  PalusUtil.checkNull(this.root);
+      PalusUtil.checkTrue(this.root.isRootNode());
+	//get all dangling nodes (nodes which do not have incoming/outgoing edges)
+      List<ModelNode> danglingNodes = new LinkedList<ModelNode>();
+      List<ModelNode> reachableNodes = this.getAllSubNodes(this.root);
+      for(ModelNode modelNode : this.nodes) {
+        if(modelNode == this.root) {
+          continue;
+        }
+        if(!reachableNodes.contains(modelNode)) {
+          danglingNodes.add(modelNode);
+        }
+      }
+      //remove all dangling nodes
+      for(ModelNode modelNode : danglingNodes) {
+          this.deleteModelNode(modelNode);
+      }
+      Log.log("In class model: " + this.getModelledClass() + ", remove: "
+          + danglingNodes.size() + " dangling nodes.");      
 	}
 
 	
@@ -209,8 +308,13 @@ public class ClassModel implements Serializable {
 	  for(Transition transition : this.transitions) {
 	    sb.append("   " + transition.getSourceNode().getNodeId() + ":"
 	        + transition.getDecorations().size() + "   ------" + transition.getTransitionID()
-	        + ":" + transition.getMethodName()  + ":" + transition.getMethodDesc() +  "----->  "
+	        + ":" + transition.getClassName() + ":" +  transition.getMethodName()
+	        + ":" + transition.getMethodDesc() +  "----->  "
 	        + transition.getDestNode().getNodeId() + "\n");
+	    sb.append("           unique decoration position? " + transition.hasUniqueDecorationPosition() + "\n");
+	    if(transition.hasUniqueDecorationPosition() && transition.hasDecoration()) {
+	        sb.append("             if so: " + transition.getUniqueDecorationPosition() + "\n");
+	    }
 	    List<Decoration> decorations = transition.getDecorations();
 	    for (Decoration decoration : decorations) {
 	        sb.append("          " + decoration.toString() + "\n");
@@ -236,6 +340,8 @@ public class ClassModel implements Serializable {
 	    PalusUtil.checkTrue(this.root.isRootNode());
 	    PalusUtil.checkTrue(this.exit.isExitNode());
 	    //all nodes are reachable from root
+	    Log.log("In check rep, sub node number after root: " + this.getAllSubNodes(this.root).size()
+	        + ", all nodes: " + this.nodes.size());
 	    PalusUtil.checkTrue(this.getAllSubNodes(this.root).size() + 1 == this.nodes.size());
 	    //only one root, one exit
 	    for(ModelNode node : this.nodes) {
@@ -246,6 +352,58 @@ public class ClassModel implements Serializable {
 	        PalusUtil.checkTrue(node == root);
 	      }
 	    }
+	    //check the transition
+	    for(Transition transition : this.transitions) {
+	      try {
+             this.checkExistence(transition.getSourceNode());
+             this.checkExistence(transition.getDestNode());
+          } catch (ModelNodeNotFoundException e) {
+              throw new RuntimeException(e);
+          }
+	    }
+	}
+	
+	/**
+	 * Enhance the built class model with dependence information
+	 * */
+	public static void enhanceClassModel(Map<Class<?>, ClassModel> models,
+	    Map<Pair<Transition, Position>, Pair<ModelNode, Position>> dependences) {
+	  //just for logging purpose
+	  Log.log("------- enhancing created models with dependence information -------");
+	  for(Entry<Pair<Transition, Position>, Pair<ModelNode, Position>> entry : dependences.entrySet()) {
+	    Log.log(" transition: " + entry.getKey().a.getTransitionID()
+	        + " position: " + entry.getKey().b.toIntValue()
+	        + " depends on model node:" + entry.getValue().a.getNodeId()
+	        + " position: " + entry.getValue().b.toIntValue());
+	    
+	    //get the transition class
+	    Class<?> modelled = entry.getKey().a.getModelledClass();
+	    ClassModel model = models.get(modelled);
+	    Log.log("Model for: " + modelled + " contains transition:? " + entry.getKey().a.toSignature()
+	        + ":    " +  model.hasTransition(entry.getKey().a));
+	    modelled = entry.getValue().a.getModelledClass();
+	    model = models.get(modelled);
+	    Log.log("Model for: " + modelled + " contains node:?" + model.hasNode(entry.getValue().a));
+	    Log.log("\n");
+	  }
+	}
+	
+	/**
+	 * Check whether all transitions are public
+	 * */
+	private void checkPublicTransitions() {
+	  for(Transition transition : this.transitions) {
+	    PalusUtil.checkTrue(transition.isPublicTransition());
+	  }
+	}
+	
+	private boolean hasNode(ModelNode node) {
+	  for(ModelNode n : this.nodes) {
+	    if(n.equals(node)) {
+	      return true;
+	    }
+	  }
+	  return false;
 	}
 	
 	private boolean hasTransition(Transition transition) {
@@ -284,12 +442,14 @@ public class ClassModel implements Serializable {
 	    //that is OK, we stop merge, the tobeMerged node is actually a part
         //of the destination node
         else if(!destNode.isExitNode() && tobeMerged.isExitNode()) {
+          destNode.setStopFlag();
           Log.log(" -- dest node " + destNode.getNodeId() + " is not exit, tobeMerged node is exit"
               + tobeMerged.getNodeId());
           return;
         }
 	    //let's extend destNode with tobeMerged's subtree
 	    else if(destNode.isExitNode() && !tobeMerged.isExitNode()) {
+	      destNode.setStopFlag();
 	      Log.log(" -- dest node " + destNode.getNodeId() + " is exit, tobeMerged node is not exit"
 	          + tobeMerged.getNodeId());
           //XXX add all sub nodes, not include this one
@@ -328,7 +488,8 @@ public class ClassModel implements Serializable {
 	      List<Transition> transitions = tobeMerged.getAllOutgoingEdges();
 	      for(Transition transition : transitions) {
 	        //we use the signature for comparison, only concern on the method name, desc, owner class
-	        Transition destT = destNode.getOutgoingTranisitionBySignature(transition);
+	        Transition destT = //destNode.getOutgoingTranisitionBySignature(transition); //XXX
+	            destNode.getOutgoingTransitionBySignatureAndPosition(transition);
 	        if(destT != null) {
 	          //we go down one level to continue merging
 	          PalusUtil.checkTrue(destT.getSourceNode() == destNode && transition.getSourceNode() == tobeMerged);
@@ -405,11 +566,12 @@ public class ClassModel implements Serializable {
 	  return new LinkedList<Transition>(transitions);
 	}
 	
+	
 	/**
 	 * Removes dangling edges (edges connected to some of the nodes, but do not
 	 * belong to the edge set) after merging models
 	 * */
-	private void postprocessMergedNodes() {
+	private void removeDanglingEdges() {
 	  //for each model node which is "fetched" from other class model during merge,
 	  //we set its class model be this. Then, for each node, we remove its connecting
 	  //edges (including outgoing and incoming), which do not belong to the edge

@@ -246,7 +246,7 @@ public abstract class TraceEvent implements Serializable {
       sb.append(this.traceEventSequenceId + ",");
       sb.append("stack_depth:");
       sb.append(this.stackDepth + ",");
-      sb.append("pair_trace:" + this.pair);
+      //sb.append("pair_trace:" + this.pair);
       
       return sb.toString();
     }
