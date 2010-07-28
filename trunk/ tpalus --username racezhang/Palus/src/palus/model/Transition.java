@@ -2,12 +2,14 @@ package palus.model;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.objectweb.asm.Type;
 
+import palus.Log;
 import palus.PalusUtil;
 import palus.trace.Stats;
 
@@ -30,7 +32,7 @@ public class Transition {
 	private final Method method;
 	private final Constructor<?> constructor;
 	
-	//if it is a loop call, indicate how many loops it is
+	//if it is a loop call, indicate how many loops there are
 	private int loopNum = 0;
 	
 	public Transition(ModelNode srcNode, ModelNode destNode, String className, String methodName, String methodDesc) {
@@ -65,7 +67,7 @@ public class Transition {
 		return this.transitionId;
 	}
 	
-	public Class<?> getModelClass() {
+	public Class<?> getModelledClass() {
 		return this.modelledClass;
 	}
 	
@@ -101,6 +103,15 @@ public class Transition {
 	  PalusUtil.checkNull(this.constructor);
 	  PalusUtil.checkTrue(this.method == null);
 	  return this.constructor;
+	}
+	
+	public boolean isPublicTransition() {
+	  PalusUtil.checkTrue(this.method != null || this.constructor != null);
+	  if(this.method != null) {
+	    return Modifier.isPublic(this.method.getModifiers());
+	  } else {
+	    return Modifier.isPublic(this.constructor.getModifiers());
+	  }
 	}
 	
 	public int getLoopNum() {
@@ -155,6 +166,35 @@ public class Transition {
 	    return this.decorations;
 	}
 	
+	public boolean hasDecoration() {
+	  return this.decorations.size() != 0;
+	}
+	
+	public boolean hasUniqueDecorationPosition() {
+	    if(this.decorations.isEmpty()) {
+	      Log.log("There are no decorations in transition: " + this.toSignature());
+	      return true;
+	    }
+	    int position = Integer.MAX_VALUE;
+	    for(Decoration decoration : this.decorations) {
+	      if(position == Integer.MAX_VALUE) {
+	        position = decoration.getPosition();
+	      } else {
+	        if(position != decoration.getPosition()) {
+	          return false;
+	        }
+	      }
+	    }
+	    return true;
+	}
+	
+	public int getUniqueDecorationPosition() {
+	  PalusUtil.checkTrue(this.hasDecoration());
+	  PalusUtil.checkTrue(this.hasUniqueDecorationPosition());
+	  //return the position of any decoration
+	  return this.decorations.get(0).getPosition();
+	}
+	
 	public List<Decoration> makeClones(Transition t) {
 	  PalusUtil.checkNull(t);
 	  List<Decoration> cloneDecorations = new LinkedList<Decoration>();
@@ -203,7 +243,7 @@ public class Transition {
 	
 	@Override
 	public String toString() {
-		return "Transition: (" + this.getModelClass().getName() + " - " + this.getMethodName() + ":" + this.getMethodDesc()
+		return "Transition: (" + this.getModelledClass().getName() + " - " + this.getMethodName() + ":" + this.getMethodDesc()
 		    + ") from ModelNode: " + this.getSourceNode().getNodeId() + " --> "
 		    + this.getDestNode().getNodeId();
 	}
@@ -290,7 +330,7 @@ public class Transition {
 			//System.out.println("position: " + position + ",  param length: " + params.length);
 			PalusUtil.checkTrue(position >= -1 && position <= seriazableParamValues.length);
 			//get the type
-			Class<?> thizType = transition.getModelClass();
+			Class<?> thizType = transition.getModelledClass();
 			Class<?>[] paramTypes = transition.getParamClasses();
 			
 			this.thiz = new DecorationValue(seriazableThisValue, thizType);
@@ -411,6 +451,52 @@ public class Transition {
 		public DependenceEdge getDependenceEdge() {
 			PalusUtil.checkNull(edge);
 			return this.edge;
+		}
+		
+		@Override
+		public int hashCode() {
+		  return 13*this.type.hashCode() + 53 * (this.isPrimitiveOrStringType ? 1 : 0)
+		      + 71 * (this.objValue ==  null? 33 : this.objValue.hashCode());
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+		  if(!(obj instanceof DecorationValue)) {
+		    return false;
+		  } else {
+		    DecorationValue value = (DecorationValue)obj;
+		    if(!this.type.equals(value.type)) {
+		      return false;
+		    }
+		    //equal type
+		    if(this.objValue != null && value.getValue() != null) {
+		      //compare value if neither is null
+		      return this.objValue.equals(value.getValue());
+		    } else if ((this.objValue == null && value.getValue() != null)
+		        || (this.objValue != null && value.getValue() == null)) {
+		      //if one is null, but the other is not null
+		      return false;
+		    } else {
+		      //if both values are null
+		      if(this.isPrimitiveOrStringType == value.isPrimitiveOrStringType) {
+		        //the same type
+		        if(this.edge != null && value.getDependenceEdge() != null) {
+		          //compare the dependence edge if neither is null
+		          return this.edge.equals(value.getDependenceEdge());
+		        } else if ((this.edge != null && value.getDependenceEdge() == null)
+		            || (this.edge == null & value.getDependenceEdge() != null)) {
+		          //if one is null and the other is not
+		          return false;
+		        } else {
+		          //all null
+		          return true;
+		        }
+		      } else {
+		        //differen type
+		        return false;
+		      }
+		    }
+		  }
 		}
 		
 		@Override

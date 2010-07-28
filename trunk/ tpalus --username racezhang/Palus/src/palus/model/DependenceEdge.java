@@ -26,4 +26,26 @@ public class DependenceEdge {
 	public ModelNode getDependentNode() {
 		return this.dependentNode;
 	}
+	
+	@Override
+	public int hashCode() {
+	  return 5*this.transition.hashCode() + 29*this.dependentNode.hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+	  if(!(obj instanceof DependenceEdge)) {
+	    return false;
+	  } else {
+	    DependenceEdge edge = (DependenceEdge)obj;
+	    return this.transition.equals(edge.getTransition())
+	        && this.dependentNode.equals(edge.getDependentNode());
+	  }
+	}
+	
+	@Override
+	public String toString() {
+	  return "Transition: " + transition.toSignature() + " depends on node: "
+	      + dependentNode.getNodeId();
+	}
 }

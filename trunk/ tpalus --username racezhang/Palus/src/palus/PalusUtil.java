@@ -87,6 +87,20 @@ public class PalusUtil implements Opcodes{
       return clz.isPrimitive() || isPrimitive(clz) || isStringType(clz);
     }
     
+    public static boolean isPrimitiveOrStringOneDimensionArrayType(Class<?> clz) {
+      if(!clz.isArray()) {
+        return false;
+      } else {
+        Class<?> componentType = clz.getComponentType();
+        if(componentType.isArray()) {
+          //mutliple dimension array
+          return false;
+        } else {
+          return isPrimitiveOrStringType(componentType);
+        }
+      }
+    }
+    
 	public static boolean isPrimitive(Type type) {
 		if (type.equals(Type.BOOLEAN_TYPE)|| type.equals(Type.CHAR_TYPE) || type.equals(Type.BYTE_TYPE)
 			||type.equals(Type.SHORT_TYPE)|| type.equals(Type.INT_TYPE) || type.equals(Type.FLOAT_TYPE)
@@ -237,6 +251,13 @@ public class PalusUtil implements Opcodes{
 		} else {
 			throw new RuntimeException("Not a primitive type: " + type.toString());
 		}
+	}
+	
+	public static Object createOneDimenPrimitiveOrStringArrayFromString(Class<?> componentType,
+	    String[] values) {
+	  PalusUtil.checkNull(componentType);
+	  PalusUtil.checkTrue(isPrimitiveOrStringType(componentType));	  
+	  throw new RuntimeException("This method has not been implemented!");
 	}
 	
 	public static Object createPrimitiveOrStringValueFromString(Class<?> t, String value) {

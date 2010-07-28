@@ -2,10 +2,13 @@
 
 package palus.main;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import palus.model.ClassModel;
 import palus.model.TraceAnalyzer;
@@ -30,5 +33,16 @@ public class OfflineMain {
     List<TraceEvent> events = TraceSerializer.deserializeObjectsFromTrace(new File(TRACE_FILE));
     TraceAnalyzer analyzer = new TraceAnalyzer(events);
     Map<Class<?>, ClassModel> models = analyzer.createModels();
+    //for testing purpose
+    dumpModels(models, "./models.txt");
+  }
+  
+  private static void dumpModels(Map<Class<?>, ClassModel> models, String fileName) throws IOException {
+    BufferedWriter bw = new BufferedWriter(new FileWriter(fileName));
+    for(Entry<Class<?>, ClassModel> entry : models.entrySet()) {
+      bw.write("Model for class: " + entry.getKey().toString() + "\n");
+      bw.write(entry.getValue().getModelInfo() + "\n");
+      bw.write("\n\n\n");
+    }
   }
 }

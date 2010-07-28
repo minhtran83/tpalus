@@ -9,6 +9,8 @@ import palus.Log;
 import palus.PalusUtil;
 
 public class ModelConstructor {
+  
+    public static boolean remove_non_public = true;
 	
 	private final Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> traceByClasses;
 	
@@ -71,8 +73,17 @@ public class ModelConstructor {
             }
 			PalusUtil.checkNull(model);
 		}
+		//remove all public transition
+		try {
+		    if(remove_non_public) {
+                classModel.removeNonPublicTransitions();
+		    }
+        } catch (ModelNodeNotFoundException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
 		System.out.println();
-		Log.log(" ---------------- class model after merged ------------");
+		Log.log(" ---------------- class model after merging and removing nonpublic transitions ------------");
 		Log.log("Class model for: " + clazz.getName());
 		Log.log(classModel.getModelInfo() + "\n");
 		Log.log(" ------------------------------------------------------");
@@ -130,37 +141,49 @@ public class ModelConstructor {
 	      return;
 	    }
 	    
-	    //keep track of the current source and dest node
+	    //We use two nodes to remember the current positions, from the source node
+	    //to the destination node
 	    ModelNode currentSrc = srcNode;
 	    ModelNode currentDest = destNode;
-	    //start to build the model recursively
+	    
+	    //Get the index of first level method invocation events
 	    Integer[] indices = this.getFirstLevelEventsStartIndex(traceList);
 	    
+	    //Process each of the first-level trace event one by one.
+	    //For lower-level trace event below the first-level event, this algorithm
+	    //builds the model recursively
 	    for(int i = 0; i < indices.length; i++) {
 	        int currentIndex = indices[i];
-	        int nextIndex = (i == indices.length - 1) ? traceList.size() : indices[i+1]; //note, here it is traceList.size(), not -1
-	        TraceEventAndPosition traceAndPosition = traceList.get(currentIndex); //XXX traceList.get(i);
-	        //create a new node, add to the model, if it is the last call, connect the current with the destNode
+	        //if the current index is the last one, there is no next (or the next is
+	        //beyond the trace size
+	        int nextIndex = (i == indices.length - 1) ? traceList.size()/*note size() - 1*/ : indices[i+1];
+	        TraceEventAndPosition traceAndPosition = traceList.get(currentIndex/*i*/);
+	        
+	        //create a new model node, add to the model, then connect to an existing node
 	        ModelNode connectingNode = (i == indices.length - 1) ? destNode : new ModelNode(model);
 	        model.addModelNode(connectingNode);
 	        
-	        //add the transition  src --> connectingNode
+	        //add the transition from currentSrc node to connectingNode
 	        Transition srcToConnectingNode = new Transition(currentSrc, connectingNode,
-	            traceAndPosition.event.getClassName(), traceAndPosition.event.getMethodName(), traceAndPosition.event.getMethodDesc());
+	            traceAndPosition.event.getClassName(), traceAndPosition.event.getMethodName(),
+	            traceAndPosition.event.getMethodDesc());
+	        //add decorations
 	        srcToConnectingNode.addDecoration(traceAndPosition.event.getSerializableThisValue(),
 	            traceAndPosition.event.getSerializableParams(), srcToConnectingNode, traceAndPosition.position);
-//	        srcToConnectingNode.addDecoration(traceAndPosition.event.getReceiver(), traceAndPosition.event.getParams(), srcToConnectingNode, traceAndPosition.position);
+	        //add the transitions
 	        model.addTransition(srcToConnectingNode);
 	        
-	        //save the TraceEvent and Transition relations here
+	        //save the TraceEvent and Transition relations here XXX not a good design
 	        TraceTransitionManager.addInitTraceEventTransitionPair(traceAndPosition.event, srcToConnectingNode);
-	        Log.log("adding event to trace-transition map: " + traceAndPosition.event.toString() + " position: " + traceAndPosition.position.toIntValue());
+	        Log.log("adding event to trace-transition map: " + traceAndPosition.event.toString()
+	            + " position: " + traceAndPosition.position.toIntValue());
 	        
+	        //if there is any lower-level trace event
 	        if(nextIndex - currentIndex > 2) {
 	          //we need to do recursion here
 	          buildClassModelRecurisvely(model, currentSrc, connectingNode, traceList.subList(currentIndex + 1, nextIndex - 1));
 	        }
-	        
+	        //sect the current source node to be the new node
 	        currentSrc = connectingNode;
 	    }
 	    
