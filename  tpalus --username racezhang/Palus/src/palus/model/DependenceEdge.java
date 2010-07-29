@@ -1,11 +1,13 @@
 package palus.model;
 
+import java.io.Serializable;
+
 import palus.PalusUtil;
 
 /**
  * This class connect one transition to a model node.
  * */
-public class DependenceEdge {
+public class DependenceEdge implements Serializable {
 	
 	/**A transition depends on a node*/
 	private final Transition transition;

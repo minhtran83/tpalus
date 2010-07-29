@@ -14,6 +14,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.List;
 
@@ -254,10 +255,48 @@ public class PalusUtil implements Opcodes{
 	}
 	
 	public static Object createOneDimenPrimitiveOrStringArrayFromString(Class<?> componentType,
+	    String value) {
+	  String[] values = null;
+	  return createOneDimenPrimitiveOrStringArrayFromStrings(componentType, values);
+	}
+	
+//	public static String convertPrimitiveOrStringArray(Object obj) {
+//	  PalusUtil.checkNull(obj);
+//	  PalusUtil.checkTrue(PalusUtil.isPrimitiveOrStringOneDimensionArrayType(obj.getClass()));
+//	  
+//	}
+	
+	private static String concatenateStrings(String[] values) {
+	  StringBuilder sb = new StringBuilder();
+	  for(int i = 0; i < values.length; i++) {
+	    sb.append(values[i]);
+	    if(i != values.length - 1) {
+	      sb.append(SEP);
+	    }
+	  }
+	  return sb.toString();
+	}
+	
+	private static String SEP = "_P_A__";
+	
+	private static String[] splitValue(String value) {
+	  return value.split(SEP);
+	}
+	
+	private static Object createOneDimenPrimitiveOrStringArrayFromStrings(Class<?> componentType,
 	    String[] values) {
 	  PalusUtil.checkNull(componentType);
-	  PalusUtil.checkTrue(isPrimitiveOrStringType(componentType));	  
-	  throw new RuntimeException("This method has not been implemented!");
+	  PalusUtil.checkTrue(isPrimitiveOrStringType(componentType));
+	  PalusUtil.checkNull(values);
+	  //create the array by reflection
+	  Object array = Array.newInstance(componentType, values.length);
+	  for(int i = 0; i < values.length; i++) {
+	    String value = values[i];
+	    Object item = createPrimitiveOrStringValueFromString(componentType, value);
+	    Array.set(array, i, item);
+	  }
+	  
+	  return array;
 	}
 	
 	public static Object createPrimitiveOrStringValueFromString(Class<?> t, String value) {
@@ -286,4 +325,15 @@ public class PalusUtil implements Opcodes{
 	    
 	    throw new RuntimeException("not string or primitive type: " + t);
 	  }
+	
+	public static void main(String[] args) {
+	  Object o = PalusUtil.createOneDimenPrimitiveOrStringArrayFromStrings(int.class, new String[]{"1", "2", "3"});
+	  System.out.println("type: " + o.getClass());
+	  o = PalusUtil.createOneDimenPrimitiveOrStringArrayFromStrings(String.class, new String[]{"1", "2", "3"});
+      System.out.println("type: " + o.getClass());
+      String[] array = PalusUtil.splitValue("xxx__P_A__sfjslfj");
+      System.out.println("String array: " + array[0]);
+      System.out.println(PalusUtil.concatenateStrings(new String[]{"aa", "bbb", "ccc"}));
+      array = new String[]{"aa", "bbb", "ccc"};
+	}
 }
