@@ -2,7 +2,7 @@ package palus.model;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +12,6 @@ import java.util.Stack;
 
 import palus.Log;
 import palus.PalusUtil;
-import palus.model.serialize.TraceDumper;
 import palus.model.serialize.TraceSerializer;
 import palus.testgen.TestGenMain;
 import palus.trace.ClinitEntryEvent;
@@ -296,7 +295,7 @@ public class TraceAnalyzer {
 	    throws ClassNotFoundException {
 		//the map classifying trace events by instances from different classes
 		Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> retMap =
-			new HashMap<Class<?>, Map<Instance, List<TraceEventAndPosition>>>();
+			new LinkedHashMap<Class<?>, Map<Instance, List<TraceEventAndPosition>>>();
 		
 		//go through every trace
 		for(TraceEvent event : traces) {
@@ -404,7 +403,7 @@ public class TraceAnalyzer {
 		}
 		
 		if(!map.containsKey(type)) {
-			map.put(type, new HashMap<Instance, List<TraceEventAndPosition>>());
+			map.put(type, new LinkedHashMap<Instance, List<TraceEventAndPosition>>());
 		}
 		Map<Instance, List<TraceEventAndPosition>> instanceEventMap = map.get(type);
 		assert instanceEventMap != null;

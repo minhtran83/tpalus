@@ -1,5 +1,6 @@
 package palus.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -7,13 +8,13 @@ import java.util.List;
 import palus.PalusUtil;
 import palus.trace.Stats;
 
-public class ModelNode {
+public class ModelNode implements Serializable {
 	private final int nodeid;
 	private final Class<?> modelledClass;
 	//private final AbstractState state;
 	
-	private final List<Transition> inEdges = new ArrayList<Transition>();
-	private final List<Transition> outEdges = new ArrayList<Transition>();
+	private /*final*/ transient List<Transition> inEdges = new ArrayList<Transition>();
+	private /*final*/ transient List<Transition> outEdges = new ArrayList<Transition>();
 
 	//can not make it final because we need to merge models
     private ClassModel classModel;
@@ -21,6 +22,9 @@ public class ModelNode {
     //a flag for test generation purpose. True means that this could be
     //a terminate node for test generation
     private boolean stopFlag = false;
+    //use for serialization purpose
+    private int[] in_edge_transition_id;
+    private int[] out_edge_transition_id;
 	
 	public ModelNode(ClassModel classModel) {
 		PalusUtil.checkNull(classModel);
@@ -30,6 +34,38 @@ public class ModelNode {
 		
 		//XXX untouched yet
 		//this.state = null;
+	}
+	
+	/**
+	 * called before serialization
+	 * */
+	void saveForSerialization() {
+	  this.in_edge_transition_id = new int[this.inEdges.size()];
+	  this.out_edge_transition_id = new int[this.outEdges.size()];
+	  int i = 0;
+	  for(Transition t : inEdges) {
+	    this.in_edge_transition_id[i++] = t.getTransitionID();
+	  }
+	  i = 0;
+	  for(Transition t : outEdges) {
+	    this.out_edge_transition_id[i++] = t.getTransitionID();
+	  }
+	}
+	
+	void recoverFromDeserialization() {
+	  PalusUtil.checkNull(classModel);
+	  this.inEdges = new ArrayList<Transition>();
+	  for(int in_edge_id : this.in_edge_transition_id) {
+	    Transition t = classModel.findTransitionById(in_edge_id);
+	    PalusUtil.checkNull(t);
+	    this.inEdges.add(t);
+	  }
+	  this.outEdges = new ArrayList<Transition>();
+	  for(int out_edge_id : this.out_edge_transition_id) {
+	    Transition t = classModel.findTransitionById(out_edge_id);
+	    PalusUtil.checkNull(t);
+	    this.outEdges.add(t);
+	  }
 	}
 	
 	public boolean isRootNode() {

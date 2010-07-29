@@ -69,7 +69,9 @@ public abstract class TraceEvent implements Serializable {
 		  } else {
 		    if(PalusUtil.isPrimitiveOrStringType(params[i].getClass())) {
 		      this.serializableParams[i] = params[i].toString();
-		    } else {
+		    } /*else if (PalusUtil.isPrimitiveOrStringOneDimensionArrayType(params[i].getClass())) {
+		      
+		    } */else {
 		      this.serializableParams[i] = null;
 		    }
 		  }

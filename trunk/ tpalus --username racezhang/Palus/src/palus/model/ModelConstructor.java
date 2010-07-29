@@ -1,6 +1,6 @@
 package palus.model;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +26,7 @@ public class ModelConstructor {
 	 * Build class model for each class
 	 * */
 	public Map<Class<?>, ClassModel> buildClassModels() {
-		Map<Class<?>, ClassModel> models = new HashMap<Class<?>, ClassModel>();		
+		Map<Class<?>, ClassModel> models = new LinkedHashMap<Class<?>, ClassModel>();		
 		for(Class<?> clazz : traceByClasses.keySet()) {
 			ClassModel model = this.buildClassModel(clazz, this.traceByClasses.get(clazz));
 			PalusUtil.checkNull(model);

@@ -4,10 +4,11 @@ package palus.testgen;
 
 import palus.PalusUtil;
 import palus.model.ClassModel;
+import palus.model.Transition;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -31,7 +32,6 @@ import randoop.Sequence;
 import randoop.SequenceCollection;
 import randoop.StatementKind;
 import randoop.main.GenInputsAbstract;
-import randoop.main.GenTests;
 import randoop.util.Randomness;
 import randoop.util.Reflection;
 
@@ -40,49 +40,65 @@ import randoop.util.Reflection;
  *
  */
 public class TestGenMain {
-  
+    /**
+     * All the following public static fields could be customized.
+     **/
     //the random seed
     public static int randomseed = (int) Randomness.SEED;
-    
-    //the sequence collection
-    public static SequenceCollection components;
-    
+    //the default output dir
+    public static String outputDir = "./tests";
+    //the default package name
+    public static String packageName = "tests";
+    //the default junit test file name
+    public static String testName = "GeneratedTest";
+    //the number of tests per file
+    public static int testsPerFile = 500;
     //model-based testing or pure random testing
     public static boolean useModel = false;
-    
-    //the default 
+    //add the modelled class automatically or not
+    public static boolean addModelClass = true;
+    //the default time limit
     public static int timelimit = 10;
-    
-    //the size
+    //the output size (max output junit sequence num)
     public static int inputlimit = 100000000;
+    //add relevant classes
+    public static boolean addRelevantClass = true;
+    /**
+     * All internal states
+     * */
+    //the sequence collection storing all temp created sequences
+    private static SequenceCollection components;
     
-    //only for testing
-    private static boolean onlyForTest = true;
-  
     public static void main(String[] args) {
        TestGenMain main = new TestGenMain();
-       main.nonStaticMain(args, null);
+       main.generateTests(args, null);
        System.exit(0);
     }
     
+    /**
+     * Entry for external client
+     * */
     public void generateTests(String[] args, Map<Class<?>, ClassModel> models) {
       this.nonStaticMain(args, models);
     }
-  
-    public void nonStaticMain(String[] args, Map<Class<?>, ClassModel> models) {
-      //TODO try to use args as compatible as Randoop
-      //decide to use model or not
+    
+    /**
+     * The main entry for test generation
+     * TODO the args should be as compatible as Randoop
+     * */
+    private void nonStaticMain(String[] args, Map<Class<?>, ClassModel> models) {
+      // use model-based random testing or not
       if(models != null) {
         useModel = true;
       }
       
       //set the random generation seeds
       Randomness.reset(randomseed);
-      List<Class<?>> allClasses = this.findAllClasses(args, models);
-//      if(onlyForTest) {
-//        allClasses.addAll(this.getSameTestingClass());
-//      }
-      List<Class<?>> classesToTest = this.filterUntestableClasses(allClasses);
+      Set<Class<?>> allClasses = this.findAllClasses(args, models);
+      if(addRelevantClass) {
+          allClasses.addAll(this.getAllRelevantClasses(models));
+      }
+      Set<Class<?>> classesToTest = this.filterUntestableClasses(allClasses);
       
       System.out.println("There are " + allClasses.size() + " classes as input");
       System.out.println(allClasses);
@@ -133,13 +149,12 @@ public class TestGenMain {
       
       //add some visitors, that is execute the method sequence as soon as it is constructed
       List<ExecutionVisitor> visitors = this.getExecutionVisitors();
-      explorer.executionVisitor.visitors.addAll(visitors);
-     
+      explorer.executionVisitor.visitors.addAll(visitors);     
       //start generating tests
       System.out.println("Using explorer: " + explorer.getClass().getName());
       System.out.println("Start generating tests ...");
       
-      //the main entry of test generation
+      /** the main entry of test generation*/
       explorer.explore();
       
       //after generation
@@ -148,37 +163,46 @@ public class TestGenMain {
     }
     
     
-    //private method for setting up environment
-    private List<Class<?>> findAllClasses(String[] args, Map<Class<?>, ClassModel> models) {
+    /**
+     * Find all class-under-test from argument and the input model.
+     * The classes to be test are composed from 2 parts, The first from
+     * the randoop argument, the other one is from the Model
+     * */
+    private Set<Class<?>> findAllClasses(String[] args, Map<Class<?>, ClassModel> models) {
       PalusUtil.checkNull(args);
-      //XXX to be compatiable with randoop
-      List<Class<?>> retClasses = new LinkedList<Class<?>>();
-      if(models != null) {
+      //TODO need to be compatiable with randoop
+      Set<Class<?>> retClasses = new LinkedHashSet<Class<?>>();
+      
+      //add classes from model
+      if(models != null && TestGenMain.addModelClass) {
         Set<Class<?>> clazzSet = models.keySet();
         for(Class<?> clazz : clazzSet) {
           if(Reflection.isVisible(clazz)) {
               retClasses.add(clazz);
           }
         }
-        //retClasses.addAll(models.keySet());
       }
-      
       return retClasses;
     }
     
-    private List<Class<?>> filterUntestableClasses(List<Class<?>> classes) {
-      List<Class<?>> retClasses = new LinkedList<Class<?>>();
-      
+    /**
+     * Filters un-testable classes from the whole list
+     * */
+    private Set<Class<?>> filterUntestableClasses(Set<Class<?>> classes) {
+      Set<Class<?>> retClasses = new LinkedHashSet<Class<?>>();
+      //filter unvisible (non-public) and abstract classes
       for(Class<?> clz : classes) {
-        if(Reflection.isAbstract(clz) || !Reflection.isVisible(clz.getModifiers())/* !Reflection.isVisible(clz)*/) {
+        if(Reflection.isAbstract(clz) || !Reflection.isVisible(clz.getModifiers())) {
           continue;
         }
         retClasses.add(clz);
-      }
-      
+      }      
       return retClasses;
     }
     
+    /**
+     * Add Object.<init>() to the testing method candidates
+     * */
     private void addObjectConstructor(List<StatementKind> model) {
       RConstructor objectConstructor;
       try {
@@ -192,6 +216,9 @@ public class TestGenMain {
         model.add(objectConstructor);
     }
     
+    /**
+     * Get all execution visitors to serve as oracle checking
+     * */
     private List<ExecutionVisitor> getExecutionVisitors() {
       List<ExecutionVisitor> visitors = new ArrayList<ExecutionVisitor>();
       
@@ -203,24 +230,30 @@ public class TestGenMain {
       contracts.add(new EqualsHashcode());
       contracts.add(new EqualsSymmetric());
       ContractCheckingVisitor contractVisitor = new ContractCheckingVisitor(contracts,
-          GenInputsAbstract.offline ? false : true);
-      
+          GenInputsAbstract.offline ? false : true);      
       //add contract visitor of randoop
       visitors.add(contractVisitor);
+      
       //add regression capture visitor
       visitors.add(new RegressionCaptureVisitor());
+      
+      //TODO add theory checking visitors here
       
       return visitors;
     }
     
+    /**
+     * Postprocess all the generated sequence from explorer
+     * */
     private void outputGeneratedTests(AbstractGenerator explorer) {
       System.out.println("Outputing generated tests ... total num: " + explorer.stats.outSeqs.size());
-      
+      //fetch all generated sequence
       List<ExecutableSequence> sequences = new ArrayList<ExecutableSequence>();
       for (ExecutableSequence p : explorer.stats.outSeqs) {
         sequences.add(p);
       }
-      
+      //get an object default constructor, and constructor a "dummy" statement
+      // Object o = new Object();
       RConstructor objectConstructor = null;
       try {
         objectConstructor = RConstructor.getRConstructor(Object.class.getConstructor());
@@ -230,6 +263,7 @@ public class TestGenMain {
         e.printStackTrace();
       }
       Sequence newObj = new Sequence().extend(objectConstructor);
+      //remove all sub sequences
       if (GenInputsAbstract.remove_subsequences) {
         List<ExecutableSequence> unique_seqs 
           = new ArrayList<ExecutableSequence>();
@@ -243,17 +277,20 @@ public class TestGenMain {
                            sequences.size() - unique_seqs.size());
         sequences = unique_seqs;
       }
-      
-      // Write out junit tests
+      // Write all unique junit tests out, only output tests under a limit
       if (GenInputsAbstract.outputlimit < sequences.size()) {
         List<ExecutableSequence> seqs = new ArrayList<ExecutableSequence>();
-        for (int ii = 0; ii < GenInputsAbstract.outputlimit; ii++)
+        for (int ii = 0; ii < GenInputsAbstract.outputlimit; ii++) {
           seqs.add (sequences.get (ii));
+        }
         sequences = seqs;
       }
-      this.write_junit_tests ("./tests", "tests", "GeneratedTest", 500, sequences); //XXX customizable
+      this.write_junit_tests (outputDir, packageName, testName, testsPerFile, sequences);
     }
     
+    /**
+     * Borrowed from Randoop, outputs all generated tests
+     * */
     private void write_junit_tests (String output_dir, String junit_package_name, String junit_classname,
         int testsperfile, List<ExecutableSequence> seq) {
         System.out.printf ("Writing %d junit tests%n", seq.size());
@@ -266,7 +303,23 @@ public class TestGenMain {
        }
     }
     
-    private List<Class<?>> getSameTestingClass() {
+    private Set<Class<?>> getAllRelevantClasses(Map<Class<?>, ClassModel> models) {
+      Set<Class<?>> set = new LinkedHashSet<Class<?>>();
+      for(ClassModel model : models.values()) {
+        for(Transition t : model.getAllTransitions()) {
+          set.add(t.getOwnerClass());
+//          Class[] params = t.getParamClasses();
+//          for(Class<?> param : params) {
+//            set.add(param);
+//          }
+        }
+      }
+      System.out.println("Add " + set.size() + " more classes");
+      return set;
+    }
+    
+    /**Only for testing*/
+    private List<Class<?>> getSampleTestingClass() {
       List<Class<?>> retClasses = new LinkedList<Class<?>>();
 
       String[] classesToTest = new String[]{

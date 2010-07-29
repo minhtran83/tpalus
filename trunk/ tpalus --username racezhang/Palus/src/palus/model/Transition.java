@@ -1,5 +1,6 @@
 package palus.model;
 
+import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -13,7 +14,7 @@ import palus.Log;
 import palus.PalusUtil;
 import palus.trace.Stats;
 
-public class Transition {
+public class Transition implements Serializable {
 	
 	private final int transitionId;
 	private final Class<?> modelledClass;
@@ -28,9 +29,9 @@ public class Transition {
 	public final List<Decoration> decorations = new ArrayList<Decoration>();
 	
 	//is this transition a method or constructor, true -> method, false -> constructor
-	private final boolean isMethodOrConstructor;	
-	private final Method method;
-	private final Constructor<?> constructor;
+	private /*final*/ boolean isMethodOrConstructor;	
+	private transient /*final*/ Method method; /* need to call recover method after deserialization */
+	private transient /*final*/ Constructor<?> constructor; /* need to call recover method after deserialization */
 	
 	//if it is a loop call, indicate how many loops there are
 	private int loopNum = 0;
@@ -61,6 +62,25 @@ public class Transition {
 		this.isMethodOrConstructor = (m == null) ? false : true;
 		this.method = m;
 		this.constructor = c;
+	}
+	
+	void saveForSerialization() {
+	  //empty on purpose
+	}
+	
+	/**
+	 * This method must be called after recovering from serialization, to recover
+	 * objec states
+	 * */
+	void recoverFromDeserialization() {
+	//deciede it is a method or constructor
+      Method m = this.tryToGetMethod();
+      Constructor<?> c = this.tryToGetConstructor();
+      PalusUtil.checkTrue( m != null || c != null);
+      PalusUtil.checkTrue(m == null || c == null);
+      this.isMethodOrConstructor = (m == null) ? false : true;
+      this.method = m;
+      this.constructor = c;
 	}
 	
 	public int getTransitionID() {
@@ -108,10 +128,38 @@ public class Transition {
 	public boolean isPublicTransition() {
 	  PalusUtil.checkTrue(this.method != null || this.constructor != null);
 	  if(this.method != null) {
+//	    if(Modifier.isPublic(this.method.getDeclaringClass().getModifiers())) {
+//	      return false;
+//	    }
 	    return Modifier.isPublic(this.method.getModifiers());
 	  } else {
+//	    if(Modifier.isPublic(this.constructor.getDeclaringClass().getModifiers())) {
+//	      return false;
+//	    }
 	    return Modifier.isPublic(this.constructor.getModifiers());
 	  }
+	}
+	
+	public boolean isOwnerClassPublic() {
+	  PalusUtil.checkTrue(this.method != null || this.constructor != null);
+	  Class<?> ownerClass = null;
+	  if(this.method != null) {
+	    ownerClass = this.method.getDeclaringClass();
+	  } else {
+	    ownerClass = this.constructor.getDeclaringClass();
+	  }
+	  return Modifier.isPublic(ownerClass.getModifiers());
+	}
+	
+	public Class<?> getOwnerClass() {
+	  PalusUtil.checkTrue(this.method != null || this.constructor != null);
+      Class<?> ownerClass = null;
+      if(this.method != null) {
+        ownerClass = this.method.getDeclaringClass();
+      } else {
+        ownerClass = this.constructor.getDeclaringClass();
+      }
+      return ownerClass;
 	}
 	
 	public int getLoopNum() {
@@ -312,7 +360,7 @@ public class Transition {
 	 * stores an dependence edge which leads to the desirable object
 	 * state
 	 * */
-	public static class Decoration {
+	public static class Decoration implements Serializable {
 
 		private final Transition transition;
 		private final DecorationValue thiz;
@@ -402,7 +450,7 @@ public class Transition {
 		}
 	}
 	
-	public static class DecorationValue {
+	public static class DecorationValue implements Serializable {
 		//this field only stores the primitive or string value
 		private final Object objValue;
 		private final Class<?> type;

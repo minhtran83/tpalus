@@ -4,6 +4,7 @@ package palus.testgen;
 
 import palus.Log;
 import palus.PalusUtil;
+import palus.model.BugInPalusException;
 import palus.model.ClassModel;
 import palus.model.ModelNode;
 import palus.model.Transition;
@@ -32,6 +33,7 @@ import randoop.StatementKind;
 import randoop.Variable;
 import randoop.main.GenInputsAbstract;
 import randoop.util.Randomness;
+import randoop.util.Reflection;
 import randoop.util.Timer;
 
 /**
@@ -40,24 +42,28 @@ import randoop.util.Timer;
  */
 public class ModelBasedGenerator extends ForwardGenerator {
 
-  private final Timer random_gen_timer = new Timer();
-  
-  public final Map<Class<?>, ClassModel> models;
-
   /*customizable properties*/
   //the percentage of time in filling the component with random generated tests
   public static float percentage_of_random_gen = 0.4f;
   //the percentage of create of a new object from root
   public static float ratio_start_from_root = 0.3f;
-  
   //the max times in trying to generate a new root sequence
   public static int max_tries_for_new_sequence = 3;
-//the max times in trying to extend an existing sequence
+  //the max times in trying to extend an existing sequence
   public static int max_tries_for_extend_sequence = 5;
+  //delete the extended trace ?
+  public static boolean delete_extended_seq_in_model = true;
+
   
+  //a time to record the time for random test generation
+  private final Timer random_gen_timer = new Timer();
+  //the model for guiding test generation
+  public final Map<Class<?>, ClassModel> models;
   //some internal data structures for keep track of the generated object state
   private final Map<Class<?>, Map<ModelNode, List<Sequence>>> modelSequences
       = new LinkedHashMap<Class<?>, Map<ModelNode, List<Sequence>>>();
+  //the current extended sequence
+  private Sequence currentSeq = null;
   
   /**
    * The only constructor with a model parameter
@@ -68,12 +74,10 @@ public class ModelBasedGenerator extends ForwardGenerator {
     PalusUtil.checkNull(models);
     this.models = models;
     
-    //XXX not a correct place
+    //FIXME not a perfect place here
     this.random_gen_timer.startTiming();
-    
     System.out.println("....First generating tests randomly...");
   }
-  
   
   /**
    * Make a new executable sequence each step
@@ -84,17 +88,17 @@ public class ModelBasedGenerator extends ForwardGenerator {
     if(!randomGenerationStop()) {
       return super.step();
     }
-    
+    //clear the component if needed
     long startTime = System.nanoTime();
     SequenceGeneratorStats.steps ++;
     if(this.components.size() % GenInputsAbstract.clear == 0) {
       this.components.clear();
     }
     
+    //the generated sequence and corresponding transitions
     ExecutableSequence eSeq = null;
     Transition tran = null;
-
-    //generate by model
+    //generate sequence by model. Transition is the current transition been executed
     Pair<ExecutableSequence, Transition> seqTranPair = this.generateSequenceByModel();
     if(seqTranPair == null) {
       return null;
@@ -114,32 +118,37 @@ public class ModelBasedGenerator extends ForwardGenerator {
     }
     
     //randoop detects possible hang, outputs last sequence
-    //under execution
+    //under execution. For debugging purpose, if randoop crashes, the current
+    //sequence could be output for diagnose
     SequenceGeneratorStats.currSeq = eSeq.sequence;
     
+    //record the sequence generation time
     long endTime = System.nanoTime();
     long genTime = endTime - startTime;
     startTime = endTime;
     
+    //execute the statement
     eSeq.execute(this.executionVisitor);
     
+    //record the sequence execution time
     endTime = System.nanoTime();
     eSeq.exectime = endTime - startTime;
     startTime = endTime;
     
-    this.processSequence(eSeq);
+    //process the execution result
+    super.processSequence(eSeq);
     
+    //if the current sequence has active flag, and could be used in the future
     if(eSeq.sequence.hasActiveFlags()) {
-      components.add(eSeq.sequence);
-      
-      //XXX add to the state-keeping hashmap here
-      this.updateModelSequenceMap(eSeq.sequence, tran);
-      
+      components.add(eSeq.sequence);      
+      //update the model sequence map if we have generated a legal one
+      this.updateModelSequenceMap(eSeq.sequence, tran);      
       Log.log("execute pass. updated map size: " + this.modelSequences.size());
     } else {
       Log.log("executing fail: " + eSeq.toCodeString());
     }
     
+    //the total generation time, including creating sequence and executing it
     endTime = System.nanoTime();
     genTime += endTime - startTime;
     eSeq.gentime = genTime;
@@ -165,50 +174,25 @@ public class ModelBasedGenerator extends ForwardGenerator {
     //it has percentage_of_random_gen ratio to create a new sequence
     int nextRandomNum = Randomness.nextRandomInt(10);
     boolean createNewSequence = (nextRandomNum < ((int)(percentage_of_random_gen * 10)));
-    
+    //choose the create a new sequence or extend the existing one
     return createNewSequence ? this.generateSequenceFromModelRoot() : this.extendAnExistingSequence();
   }
   
-  
   /**
-   * generate sequence from root
+   * Generate sequence from root
    * */
   private Pair<ExecutableSequence, Transition> generateSequenceFromModelRoot() {
-    
-    Log.log("Generating sequence from root");
-    
-    int numOfModels = this.models.size();
-    Set<Class<?>> classSet = this.models.keySet();
-    //randomly pick up one
-    Class<?> selectedClass = new LinkedList<Class<?>>(classSet).get(Randomness.nextRandomInt(numOfModels));
-    ClassModel classModel = this.models.get(selectedClass);
-    
-    PalusUtil.checkNull(classModel);
-    PalusUtil.checkNull(classModel.getRoot());
-    
-    ModelNode root = classModel.getRoot();
-    List<Transition> transitions = root.getAllOutgoingEdges();
-    
-    Transition selectedTransition = transitions.get(Randomness.nextRandomInt(transitions.size()));
-    //try several times
-    int numOfTry = 0;
-    while(!this.isTransitionVisible(selectedTransition) && (numOfTry ++) < max_tries_for_new_sequence) {
-      selectedTransition = transitions.get(Randomness.nextRandomInt(transitions.size()));
-    }
-    //return null if it is not visible
-    if(!this.isTransitionVisible(selectedTransition)) {
-      Log.log("    fail to pick up a visible transition from root");
+    //first randomly pick up a transition from root
+    Transition selectedTransition = this.pickUpTransitionFromRoot();
+    if(selectedTransition == null ) {
       return null;
     }
-    
-    //here get a valid transition sequence, so start to extend it be a full sequence
+    //When we get a valid transition sequence, so start to extend it be a full sequence
     StatementKind statement = this.selectStatement(selectedTransition);
     //it can not be null
     if(statement == null) {
-      Log.log("    why statement is null? from selected transition ");
-      return null;
+      throw new BugInPalusException("The statement in transition: " + selectedTransition.toSignature() + " is null!");
     }
-    //PalusUtil.checkNull(statement);
     
     Log.log("    Get a statement: " + statement.toParseableString());
     
@@ -217,14 +201,14 @@ public class ModelBasedGenerator extends ForwardGenerator {
     
     //now start to choose parameters XXX this needs to be changed
     InputsAndSuccessFlag sequences = MethodInputSelector.selectInputsForRoot(statement, selectedTransition, components, this); 
-      //XXX this.selectInputs(statement, this.components);
     
+    //if we can not select desirable inputs
     if(!sequences.success) {
       this.stats.statStatementNoArgs(statement);
       Log.log("    Fail to find inputs");
       return null;
     }
-    
+    //find input, then we concatenate all sequences
     Log.log("    Find inputs for the selected statement");
     //concatenate all sequences
     int[] seqlengths = new int[sequences.sequences.size()];
@@ -246,40 +230,85 @@ public class ModelBasedGenerator extends ForwardGenerator {
     
     //no repeat here XXX
     
+    //if the sequence size is too big or already been created
     if(newSequence.size() > GenInputsAbstract.maxsize) {
       stats.statStatementToBig(statement);
       Log.log("    ignore new sequence size too large: " + newSequence.size());
       return null;
     }
-    
-    super.randoopConsistencyTests(newSequence);
-    
+    super.randoopConsistencyTests(newSequence);    
     if(this.allSequences.contains(newSequence)) {
       stats.statStatementRepeated(statement);
       Log.log("    new sequence is repeated as previously created one. ignore.");
       return null;
     }
     
+    //add to the all sequence set
     this.allSequences.add(newSequence);
     
     for(Sequence s : sequences.sequences) {
       s.lastTimeUsed = java.lang.System.currentTimeMillis();
     }
     
-    super.randoopConsistencyTest2(newSequence);
-    
+    //check and update the statistics
+    super.randoopConsistencyTest2(newSequence);    
     stats.statStatementNotDiscarded(statement);
     stats.checkStatsConsistent();
-    
+    //add its sub-sequence to subsumed sequence set
     for(Sequence is : sequences.sequences) {
       subsumed_sequences.add(is);
     }
     
-    ExecutableSequence eSeq = new ExecutableSequence(newSequence);
-    
+    //success in creating a sequence!
+    ExecutableSequence eSeq = new ExecutableSequence(newSequence);    
     Log.log("    return eseq and transition from root");
     
     return new Pair<ExecutableSequence, Transition>(eSeq, selectedTransition); 
+  }
+  
+  
+  /**
+   * Randomly pick up a transition from root
+   * */
+  private Transition pickUpTransitionFromRoot() {
+    Log.log("Generating sequence from root");    
+    //first, randomly pick up a class model
+    int numOfModels = this.models.size();
+    Set<Class<?>> classSet = this.models.keySet();
+    Class<?> selectedClass = new LinkedList<Class<?>>(classSet).get(Randomness.nextRandomInt(numOfModels));
+    //check the visibility of the class
+    if(!Reflection.isVisible(selectedClass)) {
+      Log.log("When pick up transition from root, " + selectedClass + " is not visible.");
+      return null;
+    }
+    
+    ClassModel classModel = this.models.get(selectedClass);
+    //check it is valid or it is a bug in Palus
+    PalusUtil.checkNull(classModel);
+    PalusUtil.checkNull(classModel.getRoot());
+    
+    //get the root, and randomly pick up a root transition
+    ModelNode root = classModel.getRoot();
+    List<Transition> transitions = root.getAllOutgoingEdges();
+    Transition selectedTransition = transitions.get(Randomness.nextRandomInt(transitions.size()));
+    //try several times
+    int numOfTry = 0;
+    while(!this.isTransitionVisible(selectedTransition) && (numOfTry ++) < max_tries_for_new_sequence) {
+      selectedTransition = transitions.get(Randomness.nextRandomInt(transitions.size()));
+    }
+    //return null if it is not visible
+    if(!selectedTransition.isPublicTransition()) {
+      Log.log("    fail to pick up a visible transition from root");
+      return null;
+    } else {
+      Log.log("   success in pick up a visible transition from root (the owner class might not be public): "
+          + selectedTransition.toSignature());
+      if(!selectedTransition.isOwnerClassPublic()) {
+        Log.log("   the owner class is not public: " + selectedTransition.getOwnerClass());
+        return null;
+      }
+      return selectedTransition;
+    }
   }
   
   /**
@@ -414,15 +443,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
    * */
   private boolean isTransitionVisible(Transition t) {
     PalusUtil.checkNull(t);
-    if(t.isConstructor()) {
-      Constructor<?> con = t.getConstructor();
-      PalusUtil.checkNull(con);
-      return Modifier.isPublic(con.getModifiers());
-    } else {
-      Method method = t.getMethod();
-      PalusUtil.checkNull(method);
-      return Modifier.isPublic(method.getModifiers());
-    }
+    return t.isPublicTransition();
   }
   
   /**
@@ -452,14 +473,15 @@ public class ModelBasedGenerator extends ForwardGenerator {
    * and their current state
    * */
   private void updateModelSequenceMap(Sequence sequence, Transition transition) {
+    //get the source/dest node of the transition
     ModelNode sourceNode = transition.getSourceNode();
     ModelNode destNode = transition.getDestNode();
-    Class<?> clz = transition.getModelledClass();
-    
+    Class<?> clz = transition.getModelledClass();    
     //check null here
     PalusUtil.checkNull(sourceNode);
     PalusUtil.checkNull(destNode);
-    
+   
+    //update the model sequence map
     if(!sourceNode.isRootNode()) { 
       //it is an extension sequence, we need to first delete the original one
       if(!this.modelSequences.containsKey(clz)) {
@@ -470,18 +492,18 @@ public class ModelBasedGenerator extends ForwardGenerator {
       if(!nodeSequencesMap.containsKey(sourceNode)) {
         return;
       }
-      //XXX do we need to remove here?
+      //FIXME do we need to remove here?
       //nodeSequencesMap.get(sourceNode).remove(0); //TODO remove the first?
+    } else {
+      //add the new state to the map
+      if(!this.modelSequences.containsKey(clz)) {
+        this.modelSequences.put(clz, new HashMap<ModelNode, List<Sequence>>());
+      }
+      Map<ModelNode, List<Sequence>> nodeSequencesMap = this.modelSequences.get(clz);
+      if(!nodeSequencesMap.containsKey(destNode)) {
+        nodeSequencesMap.put(destNode, new LinkedList<Sequence>());
+      }
+      nodeSequencesMap.get(destNode).add(sequence);
     }
-    
-    //add the new state to the map
-    if(!this.modelSequences.containsKey(clz)) {
-      this.modelSequences.put(clz, new HashMap<ModelNode, List<Sequence>>());
-    }
-    Map<ModelNode, List<Sequence>> nodeSequencesMap = this.modelSequences.get(clz);
-    if(!nodeSequencesMap.containsKey(destNode)) {
-      nodeSequencesMap.put(destNode, new LinkedList<Sequence>());
-    }
-    nodeSequencesMap.get(destNode).add(sequence);
   }
 }

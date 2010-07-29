@@ -4,6 +4,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -20,8 +21,8 @@ public class ClassModel implements Serializable {
 	
     private final int classModelID;
 	private final Class<?> modelledClass;
-	private final Set<ModelNode> nodes = new HashSet<ModelNode>();
-	private final Set<Transition> transitions = new HashSet<Transition>();
+	private final Set<ModelNode> nodes = new LinkedHashSet<ModelNode>();
+	private final Set<Transition> transitions = new LinkedHashSet<Transition>();
 	
 	//can not make them to be final, need to change during model merging
 	private ModelNode root = null;	
@@ -46,6 +47,31 @@ public class ClassModel implements Serializable {
 		//XXX is it a good idea to put add root/ add exit inside constructor?
 	}
 	
+	/**
+	 * This method needs to be called before serialization
+	 * */
+	public void saveForSerialization() {
+	  for(ModelNode node : nodes) {
+	    node.saveForSerialization();
+	  }
+	  for(Transition transition : transitions) {
+	    transition.saveForSerialization();
+	  }
+	}
+	
+	/**
+	 * This method needs to be called after deserialization
+	 * */
+	public void recoverFromDeserialization() {
+	  //first recover transition
+      for(Transition transition : transitions) {
+        transition.recoverFromDeserialization();
+      }
+	  for(ModelNode node : nodes) {
+	    node.recoverFromDeserialization();
+	  }
+	}
+	
 	public int getClassModelID() {
 	  return this.classModelID;
 	}
@@ -60,6 +86,15 @@ public class ClassModel implements Serializable {
 	
 	public Set<Transition> getAllTransitions() {
 	  return this.transitions;
+	}
+	
+	public Transition findTransitionById(int transitionId) {
+	  for(Transition t : this.transitions) {
+	    if(t.getTransitionID() == transitionId) {
+	      return t;
+	    }
+	  }
+	  return null;
 	}
 	
 	public void addRoot(ModelNode root) {
