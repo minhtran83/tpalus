@@ -44,7 +44,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
 
   /*customizable properties*/
   //the percentage of time in filling the component with random generated tests
-  public static float percentage_of_random_gen = 0.4f;
+  public static float percentage_of_random_gen = 0.4f;//1.0f;
   //the percentage of create of a new object from root
   public static float ratio_start_from_root = 0.3f;
   //the max times in trying to generate a new root sequence
@@ -76,7 +76,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
     
     //FIXME not a perfect place here
     this.random_gen_timer.startTiming();
-    System.out.println("....First generating tests randomly...");
+    System.out.println("\n\n....First generating tests randomly...\n\n");
   }
   
   /**
@@ -191,16 +191,16 @@ public class ModelBasedGenerator extends ForwardGenerator {
     StatementKind statement = this.selectStatement(selectedTransition);
     //it can not be null
     if(statement == null) {
-      throw new BugInPalusException("The statement in transition: " + selectedTransition.toSignature() + " is null!");
+      throw new BugInPalusException("The statement in transition: "
+          + selectedTransition.toSignature() + " is null!");
     }
     
-    Log.log("    Get a statement: " + statement.toParseableString());
-    
+    Log.log("    Get a statement: " + statement.toParseableString());    
     //update the statistics
-    this.stats.statStatementSelected(statement);
-    
+    this.stats.statStatementSelected(statement);    
     //now start to choose parameters XXX this needs to be changed
-    InputsAndSuccessFlag sequences = MethodInputSelector.selectInputsForRoot(statement, selectedTransition, components, this); 
+    InputsAndSuccessFlag sequences =
+      MethodInputSelector.selectInputsForRoot(statement, selectedTransition, components, this); 
     
     //if we can not select desirable inputs
     if(!sequences.success) {
@@ -211,15 +211,14 @@ public class ModelBasedGenerator extends ForwardGenerator {
     //find input, then we concatenate all sequences
     Log.log("    Find inputs for the selected statement");
     //concatenate all sequences
-    int[] seqlengths = new int[sequences.sequences.size()];
-    for(int i = 0; i < sequences.sequences.size(); i++) {
-      Sequence oneseq = sequences.sequences.get(i);
-      PalusUtil.checkTrue(oneseq.size() > 0);
-      seqlengths[i] = oneseq.size();
-    }
+//    int[] seqlengths = new int[sequences.sequences.size()];
+//    for(int i = 0; i < sequences.sequences.size(); i++) {
+//      Sequence oneseq = sequences.sequences.get(i);
+//      PalusUtil.checkTrue(oneseq.size() > 0);
+//      seqlengths[i] = oneseq.size();
+//    }
     
     Sequence concatSeq = Sequence.concatenate(sequences.sequences);
-    
     //Figure out input variables
     List<Variable> inputs = new ArrayList<Variable>();
     for(Integer oneinput : sequences.variables) {
@@ -228,8 +227,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
     }
     Sequence newSequence = concatSeq.extend(statement, inputs);
     
-    //no repeat here XXX
-    
+    //no repeat here XXX    
     //if the sequence size is too big or already been created
     if(newSequence.size() > GenInputsAbstract.maxsize) {
       stats.statStatementToBig(statement);
@@ -244,12 +242,10 @@ public class ModelBasedGenerator extends ForwardGenerator {
     }
     
     //add to the all sequence set
-    this.allSequences.add(newSequence);
-    
+    this.allSequences.add(newSequence);    
     for(Sequence s : sequences.sequences) {
       s.lastTimeUsed = java.lang.System.currentTimeMillis();
-    }
-    
+    }    
     //check and update the statistics
     super.randoopConsistencyTest2(newSequence);    
     stats.statStatementNotDiscarded(statement);
@@ -257,8 +253,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
     //add its sub-sequence to subsumed sequence set
     for(Sequence is : sequences.sequences) {
       subsumed_sequences.add(is);
-    }
-    
+    }    
     //success in creating a sequence!
     ExecutableSequence eSeq = new ExecutableSequence(newSequence);    
     Log.log("    return eseq and transition from root");
@@ -315,25 +310,25 @@ public class ModelBasedGenerator extends ForwardGenerator {
    * Generate sequence from extending the existing one
    * */
   private Pair<ExecutableSequence, Transition> extendAnExistingSequence() {
-    
-    Log.log("Extending an existing sequence");
-    
+    Log.log("Extending an existing sequence");    
     int numOfClassModel = this.modelSequences.keySet().size();
-    
     if(numOfClassModel == 0) {
       Log.log("    there is no sequence for extend currently");
       return null;
     }
     
-    Class<?> modelClass = new ArrayList<Class<?>>(this.modelSequences.keySet()).get(Randomness.nextRandomInt(numOfClassModel));
-    
+    //get a class model randomly
+    List<Class<?>> allClasses = new ArrayList<Class<?>>(this.modelSequences.keySet());
+    Class<?> modelClass = allClasses.get(Randomness.nextRandomInt(numOfClassModel));
+    //get model node and its corresponding sequence list
     Map<ModelNode, List<Sequence>> nodeSequencesMap = this.modelSequences.get(modelClass);
     PalusUtil.checkNull(nodeSequencesMap);
-    
+    //randomly pick up a start node
     int numOfModelNode = nodeSequencesMap.keySet().size();
-    ModelNode startNode = new ArrayList<ModelNode>(nodeSequencesMap.keySet()).get(Randomness.nextRandomInt(numOfModelNode));
+    List<ModelNode> allNodes = new ArrayList<ModelNode>(nodeSequencesMap.keySet());
+    ModelNode startNode = allNodes.get(Randomness.nextRandomInt(numOfModelNode));
     PalusUtil.checkNull(startNode);
-    
+    //get the sequence list which preduce the model node
     List<Sequence> seqList = nodeSequencesMap.get(startNode);
     PalusUtil.checkNull(seqList);
     
@@ -350,30 +345,31 @@ public class ModelBasedGenerator extends ForwardGenerator {
       Log.log("    there is no outgoing edges for the selected ModelNode");
       return null;
     }
-    
+    //get a sequence to extend
     Transition extendTransition = transitions.get(Randomness.nextRandomInt(transitions.size()));
     StatementKind statement = this.selectStatement(extendTransition);
     
-    Log.log("    Select a transition: " + extendTransition);
-    
+    Log.log("    Select a transition: " + extendTransition);    
     if(statement == null) {
-      Log.log("    there is no statement in selected transition");
-      return null;
-    }
-    
+      throw new BugInPalusException("The statement in transition: "
+          + extendTransition.toSignature() + " is null!");
+    }    
     Log.log("    selected statement: " + statement.toParseableString());
     
     //start to extend it
     //problematic  XXX did not use the previous one
-    InputsAndSuccessFlag sequences = super.selectInputs(statement, this.components);
+    InputsAndSuccessFlag sequences
+        = MethodInputSelector.selectInputsForExtend(baseSequence, statement, extendTransition, components, this); 
+      
+//      super.selectInputs(statement, this.components);
     if(!sequences.success) {
       Log.log("    can not selected inputs for statement");
       stats.statStatementNoArgs(statement);
       return null;
     }
     
-    Sequence concatSeq = Sequence.concatenate(sequences.sequences);
-    
+    //FIXME here
+    Sequence concatSeq = Sequence.concatenate(sequences.sequences);    
     //figure out input variables
     List<Variable> inputs = new ArrayList<Variable>();
     for(Integer oneinput : sequences.variables) {
@@ -381,39 +377,30 @@ public class ModelBasedGenerator extends ForwardGenerator {
       inputs.add(v);
     }
     
-    Sequence newSequence = concatSeq.extend(statement, inputs);
-    
+    Sequence newSequence = concatSeq.extend(statement, inputs);    
     if(newSequence.size() > GenInputsAbstract.maxsize) {
       stats.statStatementToBig(statement);
       Log.log("    ignore new sequence too long: " + newSequence.size());
       return null;
-    }
-    
-    super.randoopConsistencyTests(newSequence);
-    
+    }    
+    super.randoopConsistencyTests(newSequence);    
     if(this.allSequences.contains(newSequence)) {
       stats.statStatementRepeated(statement);
       Log.log("    repeated statement, ignore");
       return null;
-    }
-    
-    this.allSequences.add(newSequence);
-    
+    }    
+    this.allSequences.add(newSequence);    
     for(Sequence s : sequences.sequences) {
       s.lastTimeUsed = java.lang.System.currentTimeMillis();
-    }
-    
-    super.randoopConsistencyTest2(newSequence);
-    
+    }    
+    super.randoopConsistencyTest2(newSequence);    
     stats.statStatementNotDiscarded(statement);
-    stats.checkStatsConsistent();
-    
+    stats.checkStatsConsistent();    
     for(Sequence is : sequences.sequences) {
       this.subsumed_sequences.add(is);
     }
     
-    ExecutableSequence eSeq = new ExecutableSequence(newSequence);
-    
+    ExecutableSequence eSeq = new ExecutableSequence(newSequence);    
     Log.log("    return eseq and transition from extending");
     
     return new Pair<ExecutableSequence, Transition>(eSeq, extendTransition);
@@ -430,7 +417,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
     
     long elapsedTime = this.random_gen_timer.getTimeElapsedMillis();
     if(elapsedTime > this.timeMillis * percentage_of_random_gen) {
-      System.out.println("Finshing random generation phase.");
+      System.out.println("Finishing random generation phase.");
       this.random_gen_timer.stopTiming();
       return true;
     } else {
@@ -505,5 +492,18 @@ public class ModelBasedGenerator extends ForwardGenerator {
       }
       nodeSequencesMap.get(destNode).add(sequence);
     }
+  }
+  
+  /**
+   * Get sequences from the map for particular ModelNode
+   * */
+  public List<Sequence> getSequenceFromModelSequence(ModelNode node) {
+    Map<ModelNode, List<Sequence>> nodeSequences = this.modelSequences.get(node.getModelledClass());
+    if(nodeSequences == null) {
+      Log.log("There is no model node sequence for class: " + node.getModelledClass());
+      return null;
+    }
+    List<Sequence> sequences = nodeSequences.get(node);
+    return sequences;
   }
 }

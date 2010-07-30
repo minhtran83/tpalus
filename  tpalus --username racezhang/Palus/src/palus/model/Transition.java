@@ -28,6 +28,9 @@ public class Transition implements Serializable {
 	//the captured values and the position of current class
 	public final List<Decoration> decorations = new ArrayList<Decoration>();
 	
+	//the transition on position, depends on the outcome of a model nodes
+	//private final List<ModelNode> dependence = new ArrayList<ModelNode>();
+	
 	//is this transition a method or constructor, true -> method, false -> constructor
 	private /*final*/ boolean isMethodOrConstructor;	
 	private transient /*final*/ Method method; /* need to call recover method after deserialization */

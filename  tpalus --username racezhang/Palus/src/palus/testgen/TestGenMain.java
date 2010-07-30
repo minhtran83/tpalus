@@ -2,11 +2,19 @@
 
 package palus.testgen;
 
+import org.junit.experimental.theories.Theories;
+import org.junit.experimental.theories.Theory;
+import org.junit.runner.RunWith;
+
 import palus.PalusUtil;
 import palus.model.ClassModel;
 import palus.model.Transition;
+import palus.theory.TheoryContract;
 
 import java.io.File;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -63,6 +71,9 @@ public class TestGenMain {
     public static int inputlimit = 100000000;
     //add relevant classes
     public static boolean addRelevantClass = true;
+    //check the theory oracle or not
+    public static boolean checkTheory = true;
+    
     /**
      * All internal states
      * */
@@ -71,8 +82,14 @@ public class TestGenMain {
     
     public static void main(String[] args) {
        TestGenMain main = new TestGenMain();
-       main.generateTests(args, null);
-       System.exit(0);
+       
+       List<ObjectContract>  contracts
+           = main.getTheoryContractFromAnnotation(main.getSampleTheoryClass());
+       for(ObjectContract contract : contracts) {
+         System.out.println(contract.toCodeString() + "   " + contract.toCommentString());
+       }
+//       main.generateTests(args, null);
+//       System.exit(0);
     }
     
     /**
@@ -148,8 +165,11 @@ public class TestGenMain {
       }
       
       //add some visitors, that is execute the method sequence as soon as it is constructed
-      List<ExecutionVisitor> visitors = this.getExecutionVisitors();
-      explorer.executionVisitor.visitors.addAll(visitors);     
+      //also add the theory contract here
+      List<Class<?>> theoryClasses = this.getSampleTheoryClass(); //FIXME
+      List<ExecutionVisitor> visitors = this.getExecutionVisitors(theoryClasses);
+      explorer.executionVisitor.visitors.addAll(visitors);
+      
       //start generating tests
       System.out.println("Using explorer: " + explorer.getClass().getName());
       System.out.println("Start generating tests ...");
@@ -219,11 +239,15 @@ public class TestGenMain {
     /**
      * Get all execution visitors to serve as oracle checking
      * */
-    private List<ExecutionVisitor> getExecutionVisitors() {
+    private List<ExecutionVisitor> getExecutionVisitors(List<Class<?>> theoryClasses) {
       List<ExecutionVisitor> visitors = new ArrayList<ExecutionVisitor>();
       
       //all default contracts from Randoop
-      List<ObjectContract> contracts = new ArrayList<ObjectContract>();      
+      List<ObjectContract> contracts = new ArrayList<ObjectContract>();
+      if(checkTheory) {
+        List<ObjectContract> theoryContracts = this.getTheoryContractFromAnnotation(theoryClasses);
+        contracts.addAll(theoryContracts);
+      }
       // Now add all of Randoop's default contracts.
       contracts.add(new EqualsReflexive());
       contracts.add(new EqualsToNullRetFalse());
@@ -240,6 +264,42 @@ public class TestGenMain {
       //TODO add theory checking visitors here
       
       return visitors;
+    }
+    
+    /**
+     * Get all theory from class as oracle checking
+     * */
+    private List<ObjectContract> getTheoryContractFromAnnotation(List<Class<?>> classes) {
+      List<ObjectContract> contracts = new ArrayList<ObjectContract>();
+      
+      for(Class<?> clazz : classes) {
+        RunWith annotation = clazz.getAnnotation(RunWith.class);
+        if(annotation.value() != Theories.class) {
+          continue;
+        }
+        //then iterate through each 
+        Method[] methods = clazz.getDeclaredMethods();
+        for(Method method : methods) {
+          int modifier = method.getModifiers();
+          Theory t = method.getAnnotation(Theory.class);
+          if(t == null) {
+            continue;
+          }
+          if(!Modifier.isPublic(modifier) || Modifier.isStatic(modifier)) {
+            continue;
+          }
+          if(method.getReturnType() != void.class) {
+            continue;
+          }
+          if(method.getParameterTypes().length == 0) {
+            continue;
+          }
+          TheoryContract contract = new TheoryContract(method);
+          contracts.add(contract);
+        }
+      }
+      
+      return contracts;
     }
     
     /**
@@ -316,6 +376,16 @@ public class TestGenMain {
       }
       System.out.println("Add " + set.size() + " more classes");
       return set;
+    }
+    
+    private List<Class<?>> getSampleTheoryClass() {
+      List<Class<?>> retClasses = new LinkedList<Class<?>>();
+      try {
+        retClasses.add(Class.forName("tests.SomeTest"));
+      } catch (ClassNotFoundException e) {
+        e.printStackTrace();
+      }
+      return retClasses;
     }
     
     /**Only for testing*/
