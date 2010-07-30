@@ -4,6 +4,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -27,6 +28,11 @@ public class ClassModel implements Serializable {
 	//can not make them to be final, need to change during model merging
 	private ModelNode root = null;	
 	private ModelNode exit = null;
+	
+	//keep track of its dependence information between transitions
+//	private Map<Pair<Transition, Position>, Pair<ModelNode, Position>> dependence
+//	    = new LinkedHashMap<Pair<Transition, Position>, Pair<ModelNode, Position>>();
+	//
 	
 	//the flag to control different strategy in deleting non-public transitions
 	//it could be either:

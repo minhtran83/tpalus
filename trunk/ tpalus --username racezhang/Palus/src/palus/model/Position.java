@@ -1,5 +1,7 @@
 package palus.model;
 
+import java.io.Serializable;
+
 import palus.PalusUtil;
 
 /**
@@ -8,7 +10,7 @@ import palus.PalusUtil;
  * Constructs:     ret-type    this  (param1, param2, .... param n)
  * Positions:        -1         0        1       2    ....   n
  * */
-public final class Position {
+public final class Position implements Serializable {
 	private int i = Integer.MAX_VALUE;
 	
 	//private constructor for purpose

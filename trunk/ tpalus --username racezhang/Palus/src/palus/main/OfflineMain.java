@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import palus.Log;
 import palus.model.ClassModel;
 import palus.model.TraceAnalyzer;
 import palus.model.serialize.ModelSerializer;
@@ -29,6 +30,7 @@ public class OfflineMain {
   private static final String MODEL_FILE = "./model_serialize_bin.model";
   
   public static void main(String[] args) throws IOException, ClassNotFoundException {
+    Log.logConfig("./log_test_gen.txt");
     OfflineMain main = new OfflineMain();
     main.nonStaticMain(args);
   }
