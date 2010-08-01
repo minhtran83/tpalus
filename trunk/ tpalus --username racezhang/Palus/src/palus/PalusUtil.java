@@ -326,6 +326,33 @@ public class PalusUtil implements Opcodes{
 	    throw new RuntimeException("not string or primitive type: " + t);
 	  }
 	
+	/**
+	   * Dump object array to flat string
+	   * */
+	  public static String objectsToString(Object... objects) {
+	    StringBuilder sb = new StringBuilder();
+	    
+	    for(int i = 0; i < objects.length; i++) {
+	      Object o = objects[i];
+	      if(o == null) {
+	        sb.append("null");
+	      } else {
+	        String name = "toString() exception in " + o.getClass();
+	        try {
+	          name = o.toString();
+	        } catch (Throwable e) {
+	          //do nothing
+	        }
+	        sb.append(name);
+	      }
+	      if(i != objects.length - 1) {
+	        sb.append(", ");
+	      }
+	    }
+	    
+	    return sb.toString();
+	  }
+	
 	public static void main(String[] args) {
 	  Object o = PalusUtil.createOneDimenPrimitiveOrStringArrayFromStrings(int.class, new String[]{"1", "2", "3"});
 	  System.out.println("type: " + o.getClass());
