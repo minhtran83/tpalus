@@ -7,6 +7,7 @@ import org.junit.experimental.theories.Theory;
 import org.junit.internal.AssumptionViolatedException;
 import org.junit.runner.RunWith;
 
+import palus.Log;
 import palus.PalusUtil;
 import palus.model.BugInPalusException;
 
@@ -89,10 +90,16 @@ public final class TheoryContract implements ObjectContract {
       Throwable cause = e.getCause();
       if(cause instanceof AssumptionViolatedException) {
         //that is fine
+        Log.log("Assumption violated exception, when executing: " + this.theory.toString()
+            + ", inputs: " + PalusUtil.objectsToString(objects));
         return true;
       } else if(cause instanceof AssertionError) {
+        Log.log("Assertion  exception, when executing: " + this.theory.toString()
+            + ", inputs: " + PalusUtil.objectsToString(objects));
         return false;
       } else {
+        Log.log("Other unexpected exception, when executing: " + this.theory.toString()
+            + ", inputs: " + PalusUtil.objectsToString(objects) + ", exception names: " + cause);
         return false;
       }
     }
@@ -100,6 +107,10 @@ public final class TheoryContract implements ObjectContract {
     return true;
   }
 
+  public Class<?>[] getParameterTypes() {
+    return this.theory.getParameterTypes();
+  }
+  
   @Override
   public int getArity() {
     return this.theory.getParameterTypes().length;
@@ -109,6 +120,9 @@ public final class TheoryContract implements ObjectContract {
   public String toCodeString() {
     StringBuilder sb =  new StringBuilder();
     sb.append(Globals.lineSep);
+    sb.append("try {");
+    sb.append(Globals.lineSep);
+    sb.append("    ");
     sb.append("new ");
     sb.append(this.theory.getDeclaringClass().getName());
     sb.append("()." + this.theory.getName() + "(");
@@ -121,6 +135,24 @@ public final class TheoryContract implements ObjectContract {
     }
     sb.append(");");
     sb.append(Globals.lineSep);
+    sb.append("} catch (java.lang.AssertionError ae) {");
+    sb.append(Globals.lineSep);
+    sb.append("    fail(\"" + this.toCommentString() + "\");");
+    sb.append(Globals.lineSep);
+    sb.append("} catch (java.lang.Exception ex) {");
+    sb.append(Globals.lineSep);
+    if(this.evalExceptionMeansFailure()) {
+      //fail it
+      sb.append("    fail(\"" + this.toCommentString() + "\");");
+      sb.append(Globals.lineSep);
+    } else {
+      //it is ok
+      sb.append("//The exception is ok!");
+      sb.append(Globals.lineSep);
+    }
+    sb.append("}");
+    sb.append(Globals.lineSep);
+    
     return sb.toString();
   }
 

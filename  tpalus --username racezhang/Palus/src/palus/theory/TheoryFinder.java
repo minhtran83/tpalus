@@ -2,9 +2,17 @@
 
 package palus.theory;
 
+import org.junit.experimental.theories.Theories;
+import org.junit.experimental.theories.Theory;
+import org.junit.runner.RunWith;
+
 import palus.PalusUtil;
+import randoop.ObjectContract;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -16,13 +24,53 @@ public class TheoryFinder {
   
   public TheoryFinder(List<Class<?>> classList) {
     PalusUtil.checkNull(classList);
-    this.classList = classList;
+    //this.classList = classList;
+    //for testing
+    this.classList = this.getSampleTheoryClass();
   }
   
-  public Method[] getAllThoeryMethods() {
-    
+  public List<ObjectContract> findAllTheories() {
     //classList.getClass().get
+    List<ObjectContract> contracts = new ArrayList<ObjectContract>();
     
-    return null;
+    for(Class<?> clazz : classList) {
+      RunWith annotation = clazz.getAnnotation(RunWith.class);
+      if(annotation.value() != Theories.class) {
+        continue;
+      }
+      //then iterate through each 
+      Method[] methods = clazz.getDeclaredMethods();
+      for(Method method : methods) {
+        int modifier = method.getModifiers();
+        Theory t = method.getAnnotation(Theory.class);
+        if(t == null) {
+          continue;
+        }
+        if(!Modifier.isPublic(modifier) || Modifier.isStatic(modifier)) {
+          continue;
+        }
+        if(method.getReturnType() != void.class) {
+          continue;
+        }
+        if(method.getParameterTypes().length == 0) {
+          continue;
+        }
+        TheoryContract contract = new TheoryContract(method);
+        contracts.add(contract);
+      }
+    }
+    
+    return contracts;
+  }
+  
+  
+  private List<Class<?>> getSampleTheoryClass() {
+    List<Class<?>> retClasses = new LinkedList<Class<?>>();
+    try {
+      retClasses.add(Class.forName("tests.SomeTest"));
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    }
+    return retClasses;
   }
 }
