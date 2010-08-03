@@ -39,8 +39,6 @@ public class ObjectStateMonitor extends AbstractTransformer implements
 				.transClassNameDotToSlash(className))) {
 			return null;
 		}
-
-		//System.err.println("instrument: " + className);
 		
 		try {
 			// return instrumented class

@@ -474,30 +474,38 @@ public class ClassModel implements Serializable {
 	 * @throws ModelNodeNotFoundException 
 	 * */
 	private void mergeNode(ModelNode destNode,  ModelNode tobeMerged) throws ModelNodeNotFoundException {
+	    //no need to merge
+	    if(destNode == tobeMerged) {
+	      Log.log("Two nodes are identical, we return! dest node: " + destNode.getNodeId()
+	          +", tobeMerged node: " + tobeMerged.getNodeId());
+	      return;
+	    }
 	    //System.out.print("merging...");
 	    //if both are exit nodes, the recursion ends
 	    if(destNode.isExitNode() && tobeMerged.isExitNode()) {
-	      Log.log(" -- both " + destNode.getNodeId() + " exit" + tobeMerged.getNodeId());
+	      Log.log("At the end, dest node: " + destNode.getNodeId() + " and tobeMerged node: "
+	          + tobeMerged.getNodeId() + " are all exits!");
 	      return;
 	    }
 	    //that is OK, we stop merge, the tobeMerged node is actually a part
         //of the destination node
         else if(!destNode.isExitNode() && tobeMerged.isExitNode()) {
           destNode.setStopFlag();
-          Log.log(" -- dest node " + destNode.getNodeId() + " is not exit, tobeMerged node is exit"
-              + tobeMerged.getNodeId());
+          Log.log("We stop merge, dest node: " + destNode.getNodeId() + " is not an exit node,"
+              + " but tobeMerged node: " + tobeMerged.getNodeId() +  "  is an exit node");
           return;
         }
 	    //let's extend destNode with tobeMerged's subtree
 	    else if(destNode.isExitNode() && !tobeMerged.isExitNode()) {
 	      destNode.setStopFlag();
-	      Log.log(" -- dest node " + destNode.getNodeId() + " is exit, tobeMerged node is not exit"
-	          + tobeMerged.getNodeId());
+	      Log.log("Merge proceed, dest node: " + destNode.getNodeId() + " is an exit node, "
+	          + "tobeMerged node: "  + tobeMerged.getNodeId() + " is not an exit node");
           //XXX add all sub nodes, not include this one
 	      List<ModelNode> subNodes = this.getAllSubNodes(tobeMerged);
-	      Log.log("     sub nodes added: " + subNodes.size());
+	      Log.log("    we add all: " + subNodes.size() + " sub nodes below tobeMerged: "
+	          + tobeMerged.getNodeId());
 	      for(ModelNode subNode : subNodes) {
-	        Log.log("            id: " + subNode.getNodeId());
+	        Log.log("          sub node id: " + subNode.getNodeId());
 	      }
           destNode.getClassModel().addModelNodes(subNodes);
           //XXX add all sub transitions
@@ -513,20 +521,24 @@ public class ClassModel implements Serializable {
             //XXX update the repository
             TraceTransitionManager.replaceTransitions(t, newTransition);
           }
-          Log.log("    sub transitions added: " + subTransitions.size());
+          Log.log("    number of sub transitions added: " + subTransitions.size()
+              + ", after tobemerged node: " + tobeMerged.getNodeId());
           for(Transition subT : subTransitions) {
-            Log.log("           " + subT.getSourceNode().getNodeId() + " --> " + subT.getDestNode().getNodeId());
+            Log.log("           added sub transitions: " + subT.getSourceNode().getNodeId()
+                + " --> " + subT.getDestNode().getNodeId());
           }
           destNode.getClassModel().addTransitions(subTransitions);
           
           PalusUtil.checkTrue(destNode.getClassModel() == this);
+          Log.log("Finish merging, dest node is exit, to be merged is not: ");
           Log.log(destNode.getClassModel().getModelInfo());
 	    }	    
 	    else {
-	      Log.log(" -- both dest node " + destNode.getNodeId() + " is not exit, tobeMerged node is not exit "
-	          + tobeMerged.getNodeId());
+	      Log.log(" Both dest node: " + destNode.getNodeId() + " and tobeMerged node: "
+	          + tobeMerged.getNodeId() +  " are not exit nodes.");
 	      //do the recursion here, neither node is exit node, so we need to walk down one level
 	      List<Transition> transitions = tobeMerged.getAllOutgoingEdges();
+	      Log.log("number of outgoing transitions of tobeMerged node: " + transitions.size());
 	      for(Transition transition : transitions) {
 	        //we use the signature for comparison, only concern on the method name, desc, owner class
 	        Transition destT = //destNode.getOutgoingTranisitionBySignature(transition); //XXX
@@ -534,22 +546,24 @@ public class ClassModel implements Serializable {
 	        if(destT != null) {
 	          //we go down one level to continue merging
 	          PalusUtil.checkTrue(destT.getSourceNode() == destNode && transition.getSourceNode() == tobeMerged);
-	          //XXX do the merge here
-	          TraceTransitionManager.mergeTransitions(destT, transition);
+	          //XXX do the merge here, will cause error
+	          //TraceTransitionManager.mergeTransitions(destT, transition);
 	          //merge the decoration
 	          for(Decoration d : transition.getDecorations()) {
 	            destT.addDecoration(d.makeClone(destT));
 	          }
 	          /** merge recursively */
-	          Log.log(" -- recusrive " + destT.getDestNode().getNodeId() + " " + transition.getDestNode().getNodeId());
+	          Log.log(" Find the same transition, so recusrively proceed, dest node/to be merged nodes:  "
+	              + destT.getDestNode().getNodeId() + " " + transition.getDestNode().getNodeId());
 	          this.mergeNode(destT.getDestNode(), transition.getDestNode());
 	        } else {
-	          Log.log(" -- add new edge to dest: " + destNode.getNodeId() + " from tobeMerged node: "
-	              + tobeMerged.getNodeId());
+	          Log.log(" -- add new edge from node: " + destNode.getNodeId() + " to node: "
+	              + transition.getDestNode().getNodeId());
 	          destNode.getClassModel().addModelNode(transition.getDestNode());
 	          destNode.getClassModel().addModelNodes(this.getAllSubNodes(transition.getDestNode()));
 	          List<Transition> subTransitions = this.getAllSubTransitions(transition.getDestNode());
-	          Transition newTransition = new Transition(destNode, transition.getDestNode(), transition.getClassName(), transition.getMethodName(), transition.getMethodDesc());
+	          Transition newTransition = new Transition(destNode, transition.getDestNode(), transition.getClassName(),
+	              transition.getMethodName(), transition.getMethodDesc());
 	          newTransition.addDecorations(transition.makeClones(newTransition));
 	          subTransitions.add(newTransition);
 	          destNode.getClassModel().addTransitions(subTransitions);

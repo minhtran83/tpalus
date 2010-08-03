@@ -11,7 +11,6 @@ import palus.theory.TheoryFinder;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
@@ -69,6 +68,11 @@ public class TestGenMain {
     public static boolean checkTheory = false;
     //exhaustively enumerate all possible objects
     public static boolean exhaustiveTheoryChecking = false;
+    //use param value specified for each method
+    public static boolean useMethodSpecificValue = true;
+    
+    //a collection to store all programmer-specified values
+    private ParamValueCollections paramValueCollection = null;
     
     /**
      * All internal states
@@ -137,6 +141,14 @@ public class TestGenMain {
       // Add user-specified seeds, provided by users
       components.addAll(SeedSequences.getSeedsFromAnnotatedFields(allClasses.toArray(new Class<?>[0])));
       
+      //add method-specific inputs
+      if(useMethodSpecificValue) {
+        ParamValueProcessor processor = new ParamValueProcessor(allClasses);
+        this.paramValueCollection = processor.processAnnotations();
+        //add unclaimed primitive values
+        components.addAll(SeedSequences.objectsToSeeds(this.paramValueCollection.allNonPrimitiveUnclaimedObjects()));
+      }
+      
       //init the test generation explorer
       AbstractGenerator explorer = null;
       if(useModel) {
@@ -148,7 +160,8 @@ public class TestGenMain {
             timelimit * 1000,
             inputlimit,
             components,
-            models);
+            models,
+            paramValueCollection);
       } else {
         //use the explorer of Randoop
         explorer  = new ForwardGenerator(
@@ -199,6 +212,10 @@ public class TestGenMain {
           }
         }
       }
+      
+      //XXXFIXME add a sample class containing all sample param value
+      retClasses.add(tests.SomeParamValues.class);
+      
       return retClasses;
     }
     
@@ -342,44 +359,44 @@ public class TestGenMain {
     }
     
     /**Only for testing*/
-    private List<Class<?>> getSampleTestingClass() {
-      List<Class<?>> retClasses = new LinkedList<Class<?>>();
-
-      String[] classesToTest = new String[]{
-        "japa.parser.ast.type.ReferenceType",
-        "japa.parser.ast.stmt.ReturnStmt",
-        "japa.parser.ast.body.ClassOrInterfaceDeclaration",
-        "japa.parser.ast.CompilationUnit",
-        "japa.parser.JavaCharStream",
-        "japa.parser.ast.body.VariableDeclaratorId",
-        "japa.parser.ast.stmt.ExpressionStmt",
-        "japa.parser.ast.body.Parameter",
-        "japa.parser.ast.expr.VariableDeclarationExpr",
-        "japa.parser.ast.type.Type",
-        "japa.parser.Token",
-        "japa.parser.ast.body.TypeDeclaration",
-        "japa.parser.ast.type.ClassOrInterfaceType",
-        "japa.parser.ast.PackageDeclaration",
-        "japa.parser.ast.body.VariableDeclarator",
-        "japa.parser.ast.ImportDeclaration",
-        "japa.parser.ast.expr.Expression",
-        "japa.parser.ast.body.MethodDeclaration",
-        "japa.parser.ast.type.PrimitiveType",
-        "japa.parser.ast.stmt.Statement",
-        "japa.parser.ast.stmt.TryStmt",
-        "japa.parser.ast.body.BodyDeclaration",
-        "japa.parser.ast.expr.NameExpr",
-        "japa.parser.ast.LineComment",
-        "japa.parser.ASTParser",
-        "japa.parser.ast.stmt.BlockStmt"  
-      };
-      for(String className : classesToTest) {
-        try {
-          retClasses.add(Class.forName(className));
-        } catch (ClassNotFoundException e) {
-          e.printStackTrace();
-        }
-      }
-      return retClasses;
-    }
+//    private List<Class<?>> getSampleTestingClass() {
+//      List<Class<?>> retClasses = new LinkedList<Class<?>>();
+//
+//      String[] classesToTest = new String[]{
+//        "japa.parser.ast.type.ReferenceType",
+//        "japa.parser.ast.stmt.ReturnStmt",
+//        "japa.parser.ast.body.ClassOrInterfaceDeclaration",
+//        "japa.parser.ast.CompilationUnit",
+//        "japa.parser.JavaCharStream",
+//        "japa.parser.ast.body.VariableDeclaratorId",
+//        "japa.parser.ast.stmt.ExpressionStmt",
+//        "japa.parser.ast.body.Parameter",
+//        "japa.parser.ast.expr.VariableDeclarationExpr",
+//        "japa.parser.ast.type.Type",
+//        "japa.parser.Token",
+//        "japa.parser.ast.body.TypeDeclaration",
+//        "japa.parser.ast.type.ClassOrInterfaceType",
+//        "japa.parser.ast.PackageDeclaration",
+//        "japa.parser.ast.body.VariableDeclarator",
+//        "japa.parser.ast.ImportDeclaration",
+//        "japa.parser.ast.expr.Expression",
+//        "japa.parser.ast.body.MethodDeclaration",
+//        "japa.parser.ast.type.PrimitiveType",
+//        "japa.parser.ast.stmt.Statement",
+//        "japa.parser.ast.stmt.TryStmt",
+//        "japa.parser.ast.body.BodyDeclaration",
+//        "japa.parser.ast.expr.NameExpr",
+//        "japa.parser.ast.LineComment",
+//        "japa.parser.ASTParser",
+//        "japa.parser.ast.stmt.BlockStmt"  
+//      };
+//      for(String className : classesToTest) {
+//        try {
+//          retClasses.add(Class.forName(className));
+//        } catch (ClassNotFoundException e) {
+//          e.printStackTrace();
+//        }
+//      }
+//      return retClasses;
+//    }
 }

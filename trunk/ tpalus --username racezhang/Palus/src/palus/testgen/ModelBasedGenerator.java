@@ -10,16 +10,9 @@ import palus.model.ModelNode;
 import palus.model.Transition;
 import plume.Pair;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import randoop.ExecutableSequence;
 import randoop.ForwardGenerator;
@@ -33,7 +26,6 @@ import randoop.StatementKind;
 import randoop.Variable;
 import randoop.main.GenInputsAbstract;
 import randoop.util.Randomness;
-import randoop.util.Reflection;
 import randoop.util.Timer;
 
 /**
@@ -60,19 +52,33 @@ public class ModelBasedGenerator extends ForwardGenerator {
   //the model for guiding test generation
   public final Map<Class<?>, ClassModel> models;
   //some internal data structures for keep track of the generated object state
-  private final Map<Class<?>, Map<ModelNode, List<Sequence>>> modelSequences
-      = new LinkedHashMap<Class<?>, Map<ModelNode, List<Sequence>>>();
-  //the current extended sequence
-  private Sequence currentSeq = null;
+//  private final Map<Class<?>, Map<ModelNode, List<Sequence>>> modelSequences
+//      = new LinkedHashMap<Class<?>, Map<ModelNode, List<Sequence>>>();
+  
+  private final ModelSequences modelSequences;
+  
+  private final ParamValueCollections valueCollections;
+  
+  private final MethodInputSelector inputSelector;
   
   /**
    * The only constructor with a model parameter
    * */
   public ModelBasedGenerator(List<StatementKind> statements, List<Class<?>> covClasses,
-      long timeMillis, int maxSequences, SequenceCollection seeds, Map<Class<?>, ClassModel> models) {
+      long timeMillis, int maxSequences, SequenceCollection seeds, Map<Class<?>, ClassModel> models,
+      ParamValueCollections valueCollections) {
     super(statements, covClasses, timeMillis, maxSequences, seeds);
     PalusUtil.checkNull(models);
+    //initialize the model and model sequences
     this.models = models;
+    modelSequences = new ModelSequences(models);
+    //initialize the value collection
+    if(valueCollections == null) {
+      this.valueCollections = new ParamValueCollections();
+    } else {
+      this.valueCollections = valueCollections;
+    }
+    this.inputSelector = new MethodInputSelector(this.valueCollections);
     
     //log the statement
     Log.log("All statements:");
@@ -149,7 +155,8 @@ public class ModelBasedGenerator extends ForwardGenerator {
     if(eSeq.sequence.hasActiveFlags()) {
       components.add(eSeq.sequence);      
       //update the model sequence map if we have generated a legal one
-      this.updateModelSequenceMap(eSeq.sequence, tran);      
+      //this.updateModelSequenceMap(eSeq.sequence, tran);
+      this.modelSequences.updateModelSequences(eSeq.sequence, tran);
       Log.log("execute pass. updated map size: " + this.modelSequences.size());
     } else {
       Log.log("executing fail: " + eSeq.toCodeString());
@@ -207,7 +214,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
     this.stats.statStatementSelected(statement);    
     //now start to choose parameters XXX this needs to be changed
     InputsAndSuccessFlag sequences =
-      MethodInputSelector.selectInputsForRoot(statement, selectedTransition, components, this); 
+      inputSelector.selectInputsForRoot(statement, selectedTransition, components, this); 
     
     //if we can not select desirable inputs
     if(!sequences.success) {
@@ -277,30 +284,17 @@ public class ModelBasedGenerator extends ForwardGenerator {
    * Randomly pick up a transition from root
    * */
   private Transition pickUpTransitionFromRoot() {
-    Log.log("Generating sequence from root");    
-    //first, randomly pick up a class model
-    int numOfModels = this.models.size();
-    Set<Class<?>> classSet = this.models.keySet();
-    Class<?> selectedClass = new LinkedList<Class<?>>(classSet).get(Randomness.nextRandomInt(numOfModels));
-    //check the visibility of the class
-    if(!Reflection.isVisible(selectedClass)) {
-      Log.log("When pick up transition from root, " + selectedClass + " is not visible.");
+    Log.log("Generating sequence from root");
+    if(this.modelSequences.isEmptyClassModel()) {
+      Log.log("Empty modes, we return!");
       return null;
     }
-    
-    ClassModel classModel = this.models.get(selectedClass);
-    //check it is valid or it is a bug in Palus
-    PalusUtil.checkNull(classModel);
-    PalusUtil.checkNull(classModel.getRoot());
-    
-    //get the root, and randomly pick up a root transition
-    ModelNode root = classModel.getRoot();
-    List<Transition> transitions = root.getAllOutgoingEdges();
-    Transition selectedTransition = transitions.get(Randomness.nextRandomInt(transitions.size()));
+    //first, randomly pick up a class model
+    Transition selectedTransition = this.modelSequences.nextRandomTransitionFromRoot();
     //try several times
     int numOfTry = 0;
     while(!this.isTransitionVisible(selectedTransition) && (numOfTry ++) < max_tries_for_new_sequence) {
-      selectedTransition = transitions.get(Randomness.nextRandomInt(transitions.size()));
+      selectedTransition = this.modelSequences.nextRandomTransitionFromRoot();
     }
     //return null if it is not visible
     if(!selectedTransition.isPublicTransition()) {
@@ -323,43 +317,17 @@ public class ModelBasedGenerator extends ForwardGenerator {
    * */
   private Pair<ExecutableSequence, Transition> extendAnExistingSequence() {
     Log.log("Extending an existing sequence");    
-    int numOfClassModel = this.modelSequences.keySet().size();
-    if(numOfClassModel == 0) {
-      Log.log("    there is no sequence for extend currently");
+    Pair<Sequence,Transition> seqTransPair = this.modelSequences.nextRandomSequenceToExtend();
+    if(seqTransPair == null) {
       return null;
     }
     
-    //get a class model randomly
-    List<Class<?>> allClasses = new ArrayList<Class<?>>(this.modelSequences.keySet());
-    Class<?> modelClass = allClasses.get(Randomness.nextRandomInt(numOfClassModel));
-    //get model node and its corresponding sequence list
-    Map<ModelNode, List<Sequence>> nodeSequencesMap = this.modelSequences.get(modelClass);
-    PalusUtil.checkNull(nodeSequencesMap);
-    //randomly pick up a start node
-    int numOfModelNode = nodeSequencesMap.keySet().size();
-    List<ModelNode> allNodes = new ArrayList<ModelNode>(nodeSequencesMap.keySet());
-    ModelNode startNode = allNodes.get(Randomness.nextRandomInt(numOfModelNode));
-    PalusUtil.checkNull(startNode);
-    //get the sequence list which preduce the model node
-    List<Sequence> seqList = nodeSequencesMap.get(startNode);
-    PalusUtil.checkNull(seqList);
+    Sequence baseSequence = seqTransPair.a;
+    Transition extendTransition = seqTransPair.b;
     
-    if(seqList.isEmpty()) {
-      Log.log("    there is no sequence for the ModelNode");
-      return null;
-    }
+    PalusUtil.checkNull(baseSequence);
+    PalusUtil.checkNull(extendTransition);
     
-    //get the base sequence, and start to extend it
-    Sequence baseSequence = seqList.get(Randomness.nextRandomInt(seqList.size()));
-    //pick up a transition from the startNode
-    List<Transition> transitions = startNode.getAllOutgoingEdges();
-    if(transitions.isEmpty()) {
-      Log.log("    there is no outgoing edges for the selected ModelNode");
-      Log.log("      " + startNode.getNodeInfo());
-      return null;
-    }
-    //get a sequence to extend
-    Transition extendTransition = transitions.get(Randomness.nextRandomInt(transitions.size()));
     StatementKind statement = this.selectStatement(extendTransition);
     
     Log.log("    in extension Select a transition: " + extendTransition);    
@@ -372,7 +340,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
     //start to extend it
     //problematic  XXX did not use the previous one
     InputsAndSuccessFlag sequences
-        = MethodInputSelector.selectInputsForExtend(baseSequence, statement, extendTransition, components, this); 
+        = inputSelector.selectInputsForExtend(baseSequence, statement, extendTransition, components, this); 
       
 //      super.selectInputs(statement, this.components);
     if(!sequences.success) {
@@ -479,57 +447,10 @@ public class ModelBasedGenerator extends ForwardGenerator {
   }
   
   /**
-   * When creating a sequence, we need to update the map which stores the sequence
-   * and their current state
-   * */
-  private void updateModelSequenceMap(Sequence sequence, Transition transition) {
-    //get the source/dest node of the transition
-    ModelNode sourceNode = transition.getSourceNode();
-    ModelNode destNode = transition.getDestNode();
-    Class<?> clz = transition.getModelledClass();    
-    //check null here
-    PalusUtil.checkNull(sourceNode);
-    PalusUtil.checkNull(destNode);
-   
-    //update the model sequence map
-    if(!sourceNode.isRootNode()) { 
-      //it is an extension sequence, we need to first delete the original one
-      if(!this.modelSequences.containsKey(clz)) {
-        return;
-      }
-      Map<ModelNode, List<Sequence>> nodeSequencesMap = this.modelSequences.get(clz);
-      PalusUtil.checkNull(nodeSequencesMap);
-      if(!nodeSequencesMap.containsKey(sourceNode)) {
-        return;
-      }
-      
-      //FIXME do we need to remove here?
-      //nodeSequencesMap.get(sourceNode).remove(0); //TODO remove the first?
-      
-      //then add it
-      if(!nodeSequencesMap.containsKey(destNode)) {
-        nodeSequencesMap.put(destNode, new LinkedList<Sequence>());
-      }
-      nodeSequencesMap.get(destNode).add(sequence);
-      
-    } else {
-      //add the new state to the map
-      if(!this.modelSequences.containsKey(clz)) {
-        this.modelSequences.put(clz, new HashMap<ModelNode, List<Sequence>>());
-      }
-      Map<ModelNode, List<Sequence>> nodeSequencesMap = this.modelSequences.get(clz);
-      if(!nodeSequencesMap.containsKey(destNode)) {
-        nodeSequencesMap.put(destNode, new LinkedList<Sequence>());
-      }
-      nodeSequencesMap.get(destNode).add(sequence);
-    }
-  }
-  
-  /**
    * Get sequences from the map for particular ModelNode
    * */
   public List<Sequence> getSequenceFromModelSequence(ModelNode node) {
-    Map<ModelNode, List<Sequence>> nodeSequences = this.modelSequences.get(node.getModelledClass());
+    Map<ModelNode, List<Sequence>> nodeSequences = this.modelSequences.getSequenceMap(node.getModelledClass());
     if(nodeSequences == null) {
       Log.log("There is no model node sequence for class: " + node.getModelledClass());
       return null;

@@ -149,7 +149,7 @@ public abstract class AbstractTransformer {
     ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
     cn.accept(cw);
     
-    if (true) {
+    if (false) { //note that it will affect the class loading
       StringWriter sw = new StringWriter();
       PrintWriter pw = new PrintWriter(sw);
       CheckClassAdapter.verify(new ClassReader(cw.toByteArray()), false, pw);
