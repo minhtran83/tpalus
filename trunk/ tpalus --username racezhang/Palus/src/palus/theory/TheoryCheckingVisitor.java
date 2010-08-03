@@ -5,9 +5,15 @@ package palus.theory;
 import palus.Log;
 import palus.PalusUtil;
 import palus.model.BugInPalusException;
+import palus.testgen.TestGenMain;
+import plume.Pair;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import randoop.Check;
 import randoop.ExceptionalExecution;
@@ -92,6 +98,14 @@ public class TheoryCheckingVisitor implements ExecutionVisitor {
     for(TheoryContract contract : this.contracts) {
       //check whether the contract could be applied
       Class<?>[] requiredTypes = contract.getParameterTypes();
+      
+      //check every output from the sequence
+      if(TestGenMain.exhaustiveTheoryChecking) {
+        this.checkContractExhaustively(contract, sequence, index, requiredTypes);
+        continue;
+      }
+      
+      //the provide types at the last statement
       List<Class<?>> provideTypes = //sequence.sequence.getLastStatementTypes();
           sequence.sequence.getStatementKind(index).getInputTypes();
       
@@ -117,7 +131,7 @@ public class TheoryCheckingVisitor implements ExecutionVisitor {
         continue;
       }
       
-      Log.log("Find input objects: " + PalusUtil.objectsToString(inputObjects));
+      //Log.log("Find input objects: " + PalusUtil.objectsToString(inputObjects));
       
       //do contract checking if we found suitable object
       ExecutionOutcome exprOutcome = ObjectContractUtils.execute(contract, inputObjects);
@@ -125,14 +139,13 @@ public class TheoryCheckingVisitor implements ExecutionVisitor {
       if(exprOutcome instanceof NormalExecution) {
         NormalExecution e = (NormalExecution)exprOutcome;
         if(e.getRuntimeValue().equals(true)) {
-          Log.log("Correct behavior of contract execution: " + contract.toCodeString());
+          //Log.log("Correct behavior of contract execution: " + contract.toCodeString());
           //behavior is OK, so continue
           continue;
         } else {
-          
-          //XXXX the contract fails here
+          //check the contract here
           Check check = null;
-          Log.log("!!!Incorrect behavior of contract execution: " + contract.toCodeString());
+          //Log.log("!!!Incorrect behavior of contract execution: " + contract.toCodeString());
               //+ "  but have not implements how to add the check to the code yet.\n");
           check = new TheoryCheck(contract, variables);
           //the index-th statement did not pass the check, add the failed check to the sequence
@@ -140,11 +153,11 @@ public class TheoryCheckingVisitor implements ExecutionVisitor {
           continue;
         }
       } else {
-        Log.log("in theory checking visitor, contract evaluation: " + contract.toCodeString()
-            + " throws an exception");
+        //Log.log("in theory checking visitor, contract evaluation: " + contract.toCodeString()
+        //    + " throws an exception");
         PalusUtil.checkTrue(exprOutcome instanceof ExceptionalExecution);
         ExceptionalExecution exceptionExecution = (ExceptionalExecution)exprOutcome;
-        Log.log("exception name: " + exceptionExecution.getException());
+        //Log.log("exception name: " + exceptionExecution.getException());
         if(!contract.evalExceptionMeansFailure()) {
           continue;
         } else {
@@ -156,6 +169,129 @@ public class TheoryCheckingVisitor implements ExecutionVisitor {
     
     return true;
   }
+  
+  /**
+   * Check contract for all objects created before the index-th (inclusive) statement
+   * */
+  private void checkContractExhaustively(TheoryContract contract, ExecutableSequence sequence,
+      int index, Class<?>[] requiredTypes) {
+    Map<Class<?>, List<Pair<Variable, Object>>> objectMap = this.findRuntimeObjectsByClass(sequence, index);    
+    //nothing for check
+    if(objectMap.isEmpty()) {
+      return;
+    }    
+    //classify the objects
+    Map<Class<?>, List<Pair<Variable, Object>>> inputMap = new LinkedHashMap<Class<?>, List<Pair<Variable, Object>>>();
+    //find objects for each type
+    for(Class<?> requiredType : requiredTypes) {
+      boolean find = false;
+      for(Entry<Class<?>, List<Pair<Variable, Object>>> entry : objectMap.entrySet()) {
+        if(requiredType.isAssignableFrom(entry.getKey())) {
+          find = true;
+          if(!inputMap.containsKey(requiredType)) {
+            inputMap.put(requiredType, new LinkedList<Pair<Variable, Object>>());
+          }
+          inputMap.get(requiredType).addAll(entry.getValue());
+        }
+      }
+      //check the find
+      if(!find) {
+        Log.log("Can not find inputs for type: " + requiredType);
+        break;
+      }
+    }
+    
+    //can not find enough inputs
+    if(inputMap.size() != requiredTypes.length) {
+      Log.log("Can not find inputs for all required types.");
+      return;
+    }
+    
+    //exhaustively enumerate all possible input combinations (by cross-product)
+    List<List<Pair<Variable, Object>>> allInputs = computeCrossProductOfInput(inputMap, requiredTypes);
+    Log.log("Get all inputs: " + allInputs.size() + " in exhaustive enumeration all possible inputs");
+    
+    //evaluate each input
+    for(List<Pair<Variable, Object>> input : allInputs) {
+      Object[] inputObjects = new Object[input.size()];
+      Variable[] inputVariables = new Variable[input.size()];
+      for(int i = 0; i < input.size(); i++) {
+        inputVariables[i] = input.get(i).a;
+        inputObjects[i] = input.get(i).b;
+      }
+      
+    //evaluate the contracts
+      Log.log("Evaluating input objects for contracts in exhaustive mode: " + PalusUtil.objectsToString(inputObjects));
+      ExecutionOutcome exprOutcome = ObjectContractUtils.execute(contract, inputObjects);
+      //XXXFIXME the following code is redundant
+      if(exprOutcome instanceof NormalExecution) {
+        NormalExecution e = (NormalExecution)exprOutcome;
+        if(e.getRuntimeValue().equals(true)) {
+          Log.log("Correct behavior of contract execution in exhaustive mode: " + contract.toCodeString());
+          //behavior is OK, so continue
+          continue;
+        } else {
+          //check the contract here
+          Check check = null;
+          Log.log("!!!Incorrect behavior of contract execution in exhaustive mode: " + contract.toCodeString());
+              //+ "  but have not implements how to add the check to the code yet.\n");
+          check = new TheoryCheck(contract, inputVariables);
+          //the index-th statement did not pass the check, add the failed check to the sequence
+          sequence.addCheck(index, check, false);
+          continue;
+        }
+      } else {
+        Log.log("in theory checking visitor, contract evaluation: " + contract.toCodeString()
+            + " throws an exception in exhaustive mode");
+        PalusUtil.checkTrue(exprOutcome instanceof ExceptionalExecution);
+        ExceptionalExecution exceptionExecution = (ExceptionalExecution)exprOutcome;
+        Log.log("exception name: " + exceptionExecution.getException());
+        if(!contract.evalExceptionMeansFailure()) {
+          continue;
+        } else {
+          throw new BugInPalusException("Exception in evaluating theory in exhaustive mode: "
+              + exceptionExecution.getException());
+        }
+      }
+      //FIXME redudnat end
+    }
+  }
+  
+  
+  /**
+   * Find and classify all runtime objects before the index-th statement in the
+   * executable sequence
+   * */
+  private Map<Class<?>, List<Pair<Variable, Object>>> findRuntimeObjectsByClass(ExecutableSequence sequence,
+      int index) {
+    PalusUtil.checkTrue(index < sequence.sequence.size());
+    Map<Class<?>, List<Pair<Variable, Object>>> retMap = new LinkedHashMap<Class<?>, List<Pair<Variable, Object>>>();
+    ExecutionOutcome[] allOutcomes = sequence.getAllResults();
+    for(int i = 0; i <= index /*we only care about */; i++) {
+      ExecutionOutcome outcome = allOutcomes[i];
+      if(!(outcome instanceof NormalExecution)) {
+        continue;
+      }
+      StatementKind statement = sequence.sequence.getStatementKind(i);
+      if((statement instanceof RMethod) && ((RMethod)statement).getOutputType() == void.class) {
+        continue;
+      }
+      //add variable and its corresponding objects to the map
+      NormalExecution ne = (NormalExecution)outcome;
+      Object obj = ne.getRuntimeValue();
+      Variable var = sequence.sequence.getVariable(i);
+      if(obj != null) {
+        Class<?> outputType = obj.getClass();
+        if(!retMap.containsKey(outputType)) {
+          retMap.put(outputType, new LinkedList<Pair<Variable, Object>>());
+        }
+        retMap.get(outputType).add(new Pair<Variable, Object>(var, obj));
+      }
+    }
+    
+    return retMap;
+  }
+  
   
   /**
    * This method get the runtime object in the index-th statement. Including:
@@ -219,5 +355,61 @@ public class TheoryCheckingVisitor implements ExecutionVisitor {
     }
     
     return null;
+  }
+  
+  /**
+   * Calculate all cross product
+   * */
+  private List<List<Pair<Variable, Object>>> computeCrossProductOfInput(Map<Class<?>, List<Pair<Variable, Object>>> inputMap,
+      Class<?>[] requiredTypes) {
+    PalusUtil.checkTrue(requiredTypes.length > 0);
+    PalusUtil.checkTrue(inputMap.size() > 0);
+    
+    //get a list of input values, each element is a list of inputs (variable, object pair)
+    List<List<Pair<Variable, Object>>> crossProducts = new LinkedList<List<Pair<Variable, Object>>>();
+    
+    //calcuate the cross product, the initial list
+    
+    crossProducts.add(new LinkedList<Pair<Variable, Object>>());
+    //then iterate through each type
+    for(int i = 0; i < requiredTypes.length; i++) {
+      crossProducts = this.cross(crossProducts, inputMap.get(requiredTypes[i]));
+    }
+    
+    //check the correctness
+    int num = 1;
+    for(Class<?> requiredType : requiredTypes) {
+      num = num * inputMap.get(requiredType).size();
+    }
+    //System.out.println("num: " + num + ", cross product size: " + crossProducts.size());
+    //PalusUtil.checkTrue(crossProducts.size() == num);
+    //the size of each list should be the same
+    for(List<Pair<Variable, Object>> list : crossProducts) {
+      //System.out.println("list.size: " + list.size() + ",  require type length: " + requiredTypes.length);
+      PalusUtil.checkTrue(list.size() == requiredTypes.length);
+    }
+    
+    //System.out.println("\n\n");
+    
+    return crossProducts;
+  }
+  
+  private List<List<Pair<Variable, Object>>> cross(List<List<Pair<Variable, Object>>> existed, List<Pair<Variable, Object>> newAdded) {
+    
+    List<List<Pair<Variable, Object>>> retList = new LinkedList<List<Pair<Variable, Object>>>();
+    
+    for(List<Pair<Variable, Object>> exist : existed) {
+      for(Pair<Variable, Object> pair : newAdded) {
+        //exist.add(pair);
+        //copy a new one
+        List<Pair<Variable, Object>> extended = new LinkedList<Pair<Variable, Object>>();
+        extended.addAll(exist);
+        extended.add(pair);
+        //add to the list
+        retList.add(extended);
+      }
+    }
+    
+    return retList;
   }
 }

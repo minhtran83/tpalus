@@ -31,13 +31,16 @@ public class TraceAnalyzer {
 	private final List<TraceEvent> traces;
 	//the log file for debugging during model construction and test generation
 	public static final String LOG_FILE = "log.txt";
-	//dump the trace to human readable txt
-	public static final String TRACE_FILE = "trace.txt";
-	//dump the trace event as object stream for reuse
-	public static final String TRACE_OBJECT_FILE = "trace_obj.model";
 	
+	//dump the trace to human readable txt
+	public static final String TRACE_FILE = "toy_db_trace.txt";//"trace.txt";
+	//dump the trace event as object stream for reuse
+	public static final String TRACE_OBJECT_FILE = "toy_db_trace.model";//"trace_obj.model";
+	
+	public static final String MODEL_FILE = "toy_db_model.txt";
+	public static final String MODEL_OBJECT_FILE = "toy_db_model.model";
 	//testing purpose
-	private static final String TRACE_DUMP_FILE = "trace_dump_by_class.txt";
+	//private static final String TRACE_DUMP_FILE = "trace_dump_by_class.txt";
 	
 	//turn on the log
 	static {
@@ -173,7 +176,9 @@ public class TraceAnalyzer {
 		    = TraceDependenceRepository.findModelDependence();
 		
 		//enhance the built class model with dependence information
-		ClassModel.enhanceClassModel(models, dependences);
+		if(dependences != null) {
+		    ClassModel.enhanceClassModel(models, dependences);
+		}
 		
 		return models;		
 	}

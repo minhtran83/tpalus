@@ -191,7 +191,7 @@ public class ModelNode implements Serializable {
 	 * */
 	public String getNodeInfo() {
 	  StringBuilder sb = new StringBuilder();
-	  sb.append(this.nodeid);
+	  sb.append("Node id: " + this.nodeid + ", Model: " + this.getModelledClass());
 	  sb.append(" \n    ");
 	  sb.append("incoming transitions: ");
 	  for(Transition t : this.inEdges) {

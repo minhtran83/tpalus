@@ -79,10 +79,6 @@ public abstract class AbstractTransformer {
 
   /**
    * Transform a jar file
-   *
-   * @param in
-   * @param out
-   * @throws IOException
    */
   private void transformJarFile(File in, File out) throws IOException {
     // jar file
@@ -121,13 +117,6 @@ public abstract class AbstractTransformer {
     inJar.close();
   }
 
-  /**
-   * Transform a class file
-   *
-   * @param classFile
-   * @param transformedClassFile
-   * @throws IOException
-   */
   private void transformClassFile(File classFile, File transformedClassFile) throws IOException {
     FileInputStream classFileInputStream = new FileInputStream(classFile);
 
@@ -137,13 +126,6 @@ public abstract class AbstractTransformer {
     fout.close();
   }
 
-  /**
-   * Transform class stream
-   *
-   * @param classFileInputStream
-   * @param fout
-   * @throws IOException
-   */
   private void transformClassStream(InputStream classFileInputStream, OutputStream fout)
       throws IOException {
     byte[] transformcledClassByte = treeAPITransform(classFileInputStream);
@@ -166,7 +148,7 @@ public abstract class AbstractTransformer {
     transformClassNode(cn);
     ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
     cn.accept(cw);
-//
+    
     if (true) {
       StringWriter sw = new StringWriter();
       PrintWriter pw = new PrintWriter(sw);
@@ -179,8 +161,6 @@ public abstract class AbstractTransformer {
 
   /**
    * The main class transformation method
-   *
-   * @param cn
    */
   @SuppressWarnings("unchecked")
   protected abstract void transformClassNode(ClassNode cn);

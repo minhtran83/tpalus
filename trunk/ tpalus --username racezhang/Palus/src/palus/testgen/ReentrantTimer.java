@@ -20,6 +20,7 @@ public class ReentrantTimer extends Timer {
     super();
   }
 
+  @Override
   public void startTiming() {
     if (this.running)
       return; //the major different
@@ -35,6 +36,7 @@ public class ReentrantTimer extends Timer {
     return this.active;
   }
 
+  @Override
   public void stopTiming() {
     if (!this.running)
       return;
