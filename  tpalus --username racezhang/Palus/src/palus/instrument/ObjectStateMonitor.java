@@ -28,24 +28,20 @@ import java.util.List;
 public class ObjectStateMonitor extends AbstractTransformer implements
 		ClassFileTransformer, Opcodes {
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * java.lang.instrument.ClassFileTransformer#transform(java.lang.ClassLoader
-	 * , java.lang.String, java.lang.Class, java.security.ProtectionDomain,
-	 * byte[])
-	 */
 	@Override
 	public byte[] transform(ClassLoader loader, String className,
 			Class<?> classBeingRedefined, ProtectionDomain protectionDomain,
 			byte[] classfileBuffer) {
+	    //System.err.println("---- load class: " + className);
+	  
 		// return null if we don't have to instrument the given class
 		if (!PalusUtil.shouldInstrumentThisClass(PalusUtil
 				.transClassNameDotToSlash(className))) {
 			return null;
 		}
 
+		//System.err.println("instrument: " + className);
+		
 		try {
 			// return instrumented class
 			return this.treeAPITransform(classfileBuffer);
@@ -55,14 +51,8 @@ public class ObjectStateMonitor extends AbstractTransformer implements
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * test.instrument.AbstractTransformer#transformClassNode(org.objectweb.asm
-	 * .tree.ClassNode)
-	 */
-	@Override
+	@SuppressWarnings("unchecked")
+    @Override
 	protected void transformClassNode(ClassNode cn) {
 		if (this.shouldSkipClass(cn)) {
 			return;
@@ -89,6 +79,9 @@ public class ObjectStateMonitor extends AbstractTransformer implements
 		}
 	}
 
+	/**
+	 * Skip classes we do not want to instrument
+	 * */
 	private boolean shouldSkipClass(ClassNode cn) {
 		if ((cn.access & ACC_INTERFACE) > 0) {
 			return true;
@@ -103,12 +96,16 @@ public class ObjectStateMonitor extends AbstractTransformer implements
 		return false;
 	}
 
+	/**
+	 * Instrument each method node in class
+	 * */
 	private void instrumentMethod(ClassNode cn, MethodNode method) {
 		InsnList mlist = method.instructions;
 		if (mlist.size() == 0) {
 			return;
 		}
 		// modify the instruction list
+//		System.out.println("instrument method: " + cn.name + ":" + method.name);
 
 		boolean isStatic = ((method.access & ACC_STATIC) != 0);
 
@@ -188,10 +185,7 @@ public class ObjectStateMonitor extends AbstractTransformer implements
 		insnPlace++;
 
 		
-		
-		
-		
-		// trace this object after method calls
+		/** trace this object after method calls*/
 		mlist = method.instructions;
 		for (insnPlace = 0; insnPlace < mlist.size(); insnPlace++) {
 			AbstractInsnNode insn = mlist.get(insnPlace);

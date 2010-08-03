@@ -44,7 +44,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
 
   /*customizable properties*/
   //the percentage of time in filling the component with random generated tests
-  public static float percentage_of_random_gen = 0.4f;//1.0f;
+  public static float percentage_of_random_gen = 0.0f;//1.0f;
   //the percentage of create of a new object from root
   public static float ratio_start_from_root = 0.3f;
   //the max times in trying to generate a new root sequence
@@ -73,6 +73,13 @@ public class ModelBasedGenerator extends ForwardGenerator {
     super(statements, covClasses, timeMillis, maxSequences, seeds);
     PalusUtil.checkNull(models);
     this.models = models;
+    
+    //log the statement
+    Log.log("All statements:");
+    for(StatementKind statement : statements) {
+      Log.log("   " + statement);
+    }
+    Log.log("\n\n");
     
     //FIXME not a perfect place here
     this.random_gen_timer.startTiming();
@@ -173,7 +180,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
     
     //it has percentage_of_random_gen ratio to create a new sequence
     int nextRandomNum = Randomness.nextRandomInt(10);
-    boolean createNewSequence = (nextRandomNum < ((int)(percentage_of_random_gen * 10)));
+    boolean createNewSequence = (nextRandomNum < ((int)(ratio_start_from_root * 10)));
     //choose the create a new sequence or extend the existing one
     return createNewSequence ? this.generateSequenceFromModelRoot() : this.extendAnExistingSequence();
   }
@@ -236,20 +243,24 @@ public class ModelBasedGenerator extends ForwardGenerator {
     }
     super.randoopConsistencyTests(newSequence);    
     if(this.allSequences.contains(newSequence)) {
+//      this.allSequences.remove(newSequence);
+//      this.allSequences.add(newSequence);
       stats.statStatementRepeated(statement);
-      Log.log("    new sequence is repeated as previously created one. ignore.");
-      return null;
-    }
+      Log.log("    though new sequence is repeated as previously created one. we do not ignore.");
+//      return null;
+      ExecutableSequence eSeq = new ExecutableSequence(newSequence);
+      return new Pair<ExecutableSequence, Transition>(eSeq, selectedTransition);
+    } 
     
     //add to the all sequence set
-    this.allSequences.add(newSequence);    
+    this.allSequences.add(newSequence); 
     for(Sequence s : sequences.sequences) {
       s.lastTimeUsed = java.lang.System.currentTimeMillis();
     }    
     //check and update the statistics
     super.randoopConsistencyTest2(newSequence);    
     stats.statStatementNotDiscarded(statement);
-    stats.checkStatsConsistent();
+    //FIXME stats.checkStatsConsistent();
     //add its sub-sequence to subsumed sequence set
     for(Sequence is : sequences.sequences) {
       subsumed_sequences.add(is);
@@ -302,6 +313,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
         Log.log("   the owner class is not public: " + selectedTransition.getOwnerClass());
         return null;
       }
+      Log.log("the owner is public, transition is public? " + selectedTransition.isPublicTransition());
       return selectedTransition;
     }
   }
@@ -343,13 +355,14 @@ public class ModelBasedGenerator extends ForwardGenerator {
     List<Transition> transitions = startNode.getAllOutgoingEdges();
     if(transitions.isEmpty()) {
       Log.log("    there is no outgoing edges for the selected ModelNode");
+      Log.log("      " + startNode.getNodeInfo());
       return null;
     }
     //get a sequence to extend
     Transition extendTransition = transitions.get(Randomness.nextRandomInt(transitions.size()));
     StatementKind statement = this.selectStatement(extendTransition);
     
-    Log.log("    Select a transition: " + extendTransition);    
+    Log.log("    in extension Select a transition: " + extendTransition);    
     if(statement == null) {
       throw new BugInPalusException("The statement in transition: "
           + extendTransition.toSignature() + " is null!");
@@ -395,7 +408,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
     }    
     super.randoopConsistencyTest2(newSequence);    
     stats.statStatementNotDiscarded(statement);
-    stats.checkStatsConsistent();    
+    //XXXFIXME stats.checkStatsConsistent();    
     for(Sequence is : sequences.sequences) {
       this.subsumed_sequences.add(is);
     }
@@ -437,9 +450,15 @@ public class ModelBasedGenerator extends ForwardGenerator {
    * Fetch the statement from transition
    * */
   private StatementKind selectStatement(Transition transition) {
+//    Log.log("\n\n");
+//    Log.log("Looking for transition: " + transition.toSignature() + ", is constructor: " + transition.isConstructor());
+    
     for(StatementKind statement : this.statements) {
       if(statement instanceof RConstructor && transition.isConstructor()) {
          RConstructor constructor = (RConstructor)statement;
+         
+         //Log.log("    - constructor: " + constructor.getConstructor().toGenericString());
+         
          //for safety, do not use == for comparison
          if(constructor.getConstructor().toGenericString().equals(transition.getConstructor().toGenericString())) {
            return statement;
@@ -447,11 +466,15 @@ public class ModelBasedGenerator extends ForwardGenerator {
       }
       if(statement instanceof RMethod && transition.isMethod()) {
         RMethod method = (RMethod)statement;
+        
+        //Log.log("    - method: " + method.getMethod().toGenericString());
+        
         if(method.getMethod().toGenericString().equals(transition.getMethod().toGenericString())) {
           return statement;
         }
       }
     }
+    //did not find
     return null;
   }
   
@@ -479,8 +502,16 @@ public class ModelBasedGenerator extends ForwardGenerator {
       if(!nodeSequencesMap.containsKey(sourceNode)) {
         return;
       }
+      
       //FIXME do we need to remove here?
       //nodeSequencesMap.get(sourceNode).remove(0); //TODO remove the first?
+      
+      //then add it
+      if(!nodeSequencesMap.containsKey(destNode)) {
+        nodeSequencesMap.put(destNode, new LinkedList<Sequence>());
+      }
+      nodeSequencesMap.get(destNode).add(sequence);
+      
     } else {
       //add the new state to the map
       if(!this.modelSequences.containsKey(clz)) {

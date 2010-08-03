@@ -66,7 +66,9 @@ public class TestGenMain {
     //add relevant classes
     public static boolean addRelevantClass = true;
     //check the theory oracle or not
-    public static boolean checkTheory = true;
+    public static boolean checkTheory = false;
+    //exhaustively enumerate all possible objects
+    public static boolean exhaustiveTheoryChecking = false;
     
     /**
      * All internal states
@@ -87,6 +89,7 @@ public class TestGenMain {
     public void generateTests(String[] args, Map<Class<?>, ClassModel> models) {
       //use long format
       GenInputsAbstract.long_format = true;
+      GenInputsAbstract.no_args_statement_heuristic = false;
       
       this.nonStaticMain(args, models);
     }

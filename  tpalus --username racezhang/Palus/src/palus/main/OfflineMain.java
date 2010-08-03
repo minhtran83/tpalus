@@ -25,24 +25,33 @@ import palus.trace.TraceEvent;
 public class OfflineMain {
 
   //the file
-  private static final String TRACE_FILE = TraceAnalyzer.TRACE_OBJECT_FILE;
+  public static final String TRACE_OBJECT_FILE = TraceAnalyzer.TRACE_OBJECT_FILE;
   
-  private static final String MODEL_FILE = "./model_serialize_bin.model";
+  private static final String MODEL_OBJECT_FILE = TraceAnalyzer.MODEL_OBJECT_FILE;//"./model_serialize_bin.model";
+  
+  private static final String DUMP_MODEL_AS_TXT = "./models_dump.txt";
+  
+  private static final boolean buildFromTrace = true;
   
   public static void main(String[] args) throws IOException, ClassNotFoundException {
     Log.logConfig("./log_test_gen.txt");
+    Log.log("Start logging....");
     OfflineMain main = new OfflineMain();
     main.nonStaticMain(args);
   }
   
   public void nonStaticMain(String[] args) throws IOException, ClassNotFoundException {
-//    List<TraceEvent> events = TraceSerializer.deserializeObjectsFromTrace(new File(TRACE_FILE));
-//    TraceAnalyzer analyzer = new TraceAnalyzer(events);
-//    Map<Class<?>, ClassModel> models = analyzer.createModels();
-//    //for testing purpose
-//    dumpModels(models, "./models.txt");
+    List<TraceEvent> events = TraceSerializer.deserializeObjectsFromTrace(new File(TRACE_OBJECT_FILE));
+    TraceAnalyzer analyzer = new TraceAnalyzer(events);
+    Map<Class<?>, ClassModel> models = null;
     
-    Map<Class<?>, ClassModel> models = ModelSerializer.deserializeObjectsFromFile(new File(MODEL_FILE));
+    if(buildFromTrace) {
+      models = analyzer.createModels();
+    } else {
+      models = ModelSerializer.deserializeObjectsFromFile(new File(MODEL_OBJECT_FILE));
+    }
+    //for testing purpose
+    dumpModels(models, DUMP_MODEL_AS_TXT);
     
     //start to generate tests
     TestGenMain main = new TestGenMain();
@@ -56,5 +65,7 @@ public class OfflineMain {
       bw.write(entry.getValue().getModelInfo() + "\n");
       bw.write("\n\n\n");
     }
+    bw.flush();
+    bw.close();
   }
 }

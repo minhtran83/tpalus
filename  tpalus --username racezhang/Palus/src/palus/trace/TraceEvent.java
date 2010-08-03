@@ -240,14 +240,14 @@ public abstract class TraceEvent implements Serializable {
         sb.append("  ");
       }
       sb.append(toString());
-      sb.append(",,,, id:");
-      sb.append(this.id + ",");
-      sb.append("pair_id:");
-      sb.append(this.unique_trace_pair_id + ",");
-      sb.append("seq_id:");
-      sb.append(this.traceEventSequenceId + ",");
-      sb.append("stack_depth:");
-      sb.append(this.stackDepth + ",");
+//      sb.append(",,,, id:");
+//      sb.append(this.id + ",");
+//      sb.append("pair_id:");
+//      sb.append(this.unique_trace_pair_id + ",");
+//      sb.append("seq_id:");
+//      sb.append(this.traceEventSequenceId + ",");
+//      sb.append("stack_depth:");
+//      sb.append(this.stackDepth + ",");
       //sb.append("pair_trace:" + this.pair);
       
       return sb.toString();
