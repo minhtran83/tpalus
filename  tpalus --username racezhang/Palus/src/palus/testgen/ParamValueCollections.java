@@ -4,12 +4,17 @@ package palus.testgen;
 
 
 import palus.Log;
+import palus.PalusUtil;
+import randoop.util.Randomness;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -49,6 +54,76 @@ public class ParamValueCollections {
     } else {
       unclaimed.add(obj);
     }
+  }
+  
+  /**
+   * Pick up randomly a value of a given type for a method
+   * */
+  public Object nextRandomObject(String className, String methodName, Class<?> type) {
+    if(!this.methodValues.containsKey(className)) {
+      return null;
+    }
+    
+    Map<String, Set<Object>> methodObjects = this.methodValues.get(className);
+    if(!methodObjects.containsKey(methodName)) {
+      return null;
+    }
+    
+    Set<Object> objects = methodObjects.get(methodName);
+    if(objects.isEmpty()) {
+      return null;
+    }
+    
+    List<Object> allObjects = new LinkedList<Object>();
+    for(Object obj : objects) {
+      if(obj != null && type.isAssignableFrom(obj.getClass())) {
+        allObjects.add(obj);
+      }
+    }
+    
+    if(allObjects.isEmpty()) {
+      return null;
+    }
+    
+    //XXXX problem with primitive type, boxing and unboxing
+    
+    return allObjects.get(Randomness.nextRandomInt(allObjects.size()));
+  }
+  
+  /**
+   * Get a set of all primitive unclaimed fields
+   * */
+  public Collection<Object> allUnclaimedPrimitiveObjects() {
+    Set<Object> primitiveObjects = new HashSet<Object>();
+    
+    for(Object obj : this.unclaimed) {
+      if(obj != null) {
+        Class<?> clazz = obj.getClass();
+        if(PalusUtil.isPrimitiveOrStringType(clazz)) {
+          primitiveObjects.add(obj);
+        }
+      }
+    }
+    
+    return primitiveObjects;
+  }
+  
+  /**
+   * Get a set of non-primitive unclaimed fields
+   * */
+  public Collection<Object> allNonPrimitiveUnclaimedObjects() {
+    Set<Object> nonPrimitives = new HashSet<Object>();
+    
+    for(Object obj : this.unclaimed) {
+      if(obj != null) {
+        Class<?> clazz = obj.getClass();
+        if(!PalusUtil.isPrimitiveOrStringType(clazz)) {
+          nonPrimitives.add(obj);
+        }
+      }
+    }
+    
+    return nonPrimitives;
   }
   
   /**

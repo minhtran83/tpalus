@@ -37,15 +37,25 @@ import randoop.util.SimpleList;
  */
 public class MethodInputSelector {
   
+  private final ParamValueCollections collections;
+  
+  private final boolean useMethodSpecificInput;
+  
+  public MethodInputSelector(ParamValueCollections collections) {
+    PalusUtil.checkNull(collections);
+    this.collections = collections;
+    this.useMethodSpecificInput = TestGenMain.useMethodSpecificValue;
+  }
+  
   /**
    * Select inputs for create a new sequence from the model root.
    * @param statement is the method inside the transition parameter
    * @param transition the selected transition from the model
-   * @param component the sequence collection, from which to select inputs
+   * @param components the sequence collection, from which to select inputs
    * @param generator the test generator which needs the inputs
    * @return selected inputs from the component pool as well as a success/fail flag
    * */
-  public static InputsAndSuccessFlag selectInputsForRoot(StatementKind statement,
+  public  InputsAndSuccessFlag selectInputsForRoot(StatementKind statement,
       Transition transition, SequenceCollection components, ModelBasedGenerator generator) {
     
     //add new types to the statement list
@@ -99,6 +109,9 @@ public class MethodInputSelector {
           //get the value
           Object o = value.getValue();
           Log.log("Decoration values: " + value + ", object: " + o + ", type: " + o.getClass());
+          
+          //fuzz it with user provided one FIXME not a good place
+          
           //here we need to create new staffs
           ArrayListSimpleList<Sequence> arrayList = new ArrayListSimpleList<Sequence>();
           if (PrimitiveTypes.isBoxedOrPrimitiveOrStringType(t)) {
@@ -204,7 +217,7 @@ public class MethodInputSelector {
   /**
    * Select inputs for extending a transition in the model
    * */
-  public static InputsAndSuccessFlag selectInputsForExtend(Sequence baseSequence, 
+  public InputsAndSuccessFlag selectInputsForExtend(Sequence baseSequence, 
       StatementKind statement, Transition transition, SequenceCollection components,
       ModelBasedGenerator generator) {
     PalusUtil.checkTrue(transition.hasUniqueDecorationPosition());
@@ -271,6 +284,17 @@ public class MethodInputSelector {
           //get the value
           Object o = value.getValue();
           Log.log("Decoration values: " + value + ", object: " + o + ", type: " + o.getClass());
+          
+          //fuzz it with user provided values FIXME not a good place, just try
+          if(this.useMethodSpecificInput) {
+            String className = this.getClassName(statement);
+            String methodName = this.getMethodName(statement);
+            Object userProvided = this.collections.nextRandomObject(className, methodName, t);
+            if(userProvided != null && Randomness.nextRandomBool()) {
+              o = userProvided;
+            }
+          }
+          
           //here we need to create new staffs
           ArrayListSimpleList<Sequence> arrayList = new ArrayListSimpleList<Sequence>();
           if (PrimitiveTypes.isBoxedOrPrimitiveOrStringType(t)) {
@@ -376,7 +400,7 @@ public class MethodInputSelector {
   /**
    * Get the first non-visible class from the list
    * */
-  private static Class<?> getFirstNonVisibleClass(List<Class<?>> classes) {
+  private Class<?> getFirstNonVisibleClass(List<Class<?>> classes) {
     for(Class<?> clz : classes) {
       if(!Reflection.isVisible(clz)) {
         return clz;
@@ -388,7 +412,7 @@ public class MethodInputSelector {
   /**
    * Get the decoration value from the index-th position of a statement
    * */
-  private static DecorationValue getDecorationValue(StatementKind statement, Decoration decoration, int index) {
+  private DecorationValue getDecorationValue(StatementKind statement, Decoration decoration, int index) {
       DecorationValue value = null;
       if(statement instanceof RConstructor) {
         //constructor
@@ -403,5 +427,29 @@ public class MethodInputSelector {
       }
     }
     return value;
+  }
+  
+  /**
+   * Get the class name
+   * */
+  private String getClassName(StatementKind statement) {
+    if(statement instanceof RConstructor) {
+      return ((RConstructor)statement).getConstructor().getDeclaringClass().getName();
+    } else if(statement instanceof RMethod) {
+      return ((RMethod)statement).getMethod().getDeclaringClass().getName();
+    }
+    throw new RuntimeException("Unexpected type: " + statement);
+  }
+  
+  /**
+   * Get the method name
+   * */
+  private String getMethodName(StatementKind statement) {
+    if(statement instanceof RConstructor) {
+      return ((RConstructor)statement).getConstructor().getName();
+    } else if(statement instanceof RMethod) {
+      return ((RMethod)statement).getMethod().getName();
+    }
+    throw new RuntimeException("Unexpected type: " + statement);
   }
 }

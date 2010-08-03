@@ -7,6 +7,7 @@ import palus.model.BugInPalusException;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -18,7 +19,7 @@ public class ParamValueProcessor {
   
   private final List<Class<?>> classes = new LinkedList<Class<?>>();
   
-  public ParamValueProcessor(List<Class<?>> classes) {
+  public ParamValueProcessor(Collection<Class<?>> classes) {
     PalusUtil.checkNull(classes);
     this.classes.addAll(classes);
   }
@@ -79,6 +80,9 @@ public class ParamValueProcessor {
     return Modifier.isPublic(modifier) && Modifier.isStatic(modifier);
   }
   
+  /**
+   * A simple test driver
+   * */
   public static void main(String[] args) throws ClassNotFoundException {
     List<Class<?>> classes = new LinkedList<Class<?>>();
     classes.add(Class.forName("tests.SomeParamValues"));
