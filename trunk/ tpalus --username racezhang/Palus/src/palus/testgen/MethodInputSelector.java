@@ -329,7 +329,7 @@ public class MethodInputSelector {
       if(l == null) {
         if (GenInputsAbstract.always_use_ints_as_objects && t.equals(Object.class)) {
           l = components.getSequencesForType(int.class, false);
-        } else if (t.isArray()) {
+        } else if (t.isArray()) { //array type
           l = HelperSequenceCreator.createSequence(t, components);
         } else {
           l = components.getSequencesForType(t, false);
@@ -354,6 +354,7 @@ public class MethodInputSelector {
         }
       }
 
+      //could ignore here
       if (!isReceiver && GenInputsAbstract.null_ratio != null
           && Randomness.weighedCoinFlip(GenInputsAbstract.null_ratio)) {
         Log.log("null-ratio option given. Randomly decided to use null as input.");

@@ -189,15 +189,15 @@ public class ModelBasedGenerator extends ForwardGenerator {
     int nextRandomNum = Randomness.nextRandomInt(10);
     boolean createNewSequence = (nextRandomNum < ((int)(ratio_start_from_root * 10)));
     //choose the create a new sequence or extend the existing one
-    return createNewSequence ? this.generateSequenceFromModelRoot() : this.extendAnExistingSequence();
+    return createNewSequence ? this.createSequenceFromModelRoot() : this.extendAnExistingSequence();
   }
   
   /**
    * Generate sequence from root
    * */
-  private Pair<ExecutableSequence, Transition> generateSequenceFromModelRoot() {
+  private Pair<ExecutableSequence, Transition> createSequenceFromModelRoot() {
     //first randomly pick up a transition from root
-    Transition selectedTransition = this.pickUpTransitionFromRoot();
+    Transition selectedTransition = this.nextRandomTransitionFromRoot();
     if(selectedTransition == null ) {
       return null;
     }
@@ -224,13 +224,6 @@ public class ModelBasedGenerator extends ForwardGenerator {
     }
     //find input, then we concatenate all sequences
     Log.log("    Find inputs for the selected statement");
-    //concatenate all sequences
-//    int[] seqlengths = new int[sequences.sequences.size()];
-//    for(int i = 0; i < sequences.sequences.size(); i++) {
-//      Sequence oneseq = sequences.sequences.get(i);
-//      PalusUtil.checkTrue(oneseq.size() > 0);
-//      seqlengths[i] = oneseq.size();
-//    }
     
     Sequence concatSeq = Sequence.concatenate(sequences.sequences);
     //Figure out input variables
@@ -283,7 +276,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
   /**
    * Randomly pick up a transition from root
    * */
-  private Transition pickUpTransitionFromRoot() {
+  private Transition nextRandomTransitionFromRoot() {
     Log.log("Generating sequence from root");
     if(this.modelSequences.isEmptyClassModel()) {
       Log.log("Empty modes, we return!");
@@ -418,25 +411,15 @@ public class ModelBasedGenerator extends ForwardGenerator {
    * Fetch the statement from transition
    * */
   private StatementKind selectStatement(Transition transition) {
-//    Log.log("\n\n");
-//    Log.log("Looking for transition: " + transition.toSignature() + ", is constructor: " + transition.isConstructor());
-    
     for(StatementKind statement : this.statements) {
       if(statement instanceof RConstructor && transition.isConstructor()) {
          RConstructor constructor = (RConstructor)statement;
-         
-         //Log.log("    - constructor: " + constructor.getConstructor().toGenericString());
-         
-         //for safety, do not use == for comparison
          if(constructor.getConstructor().toGenericString().equals(transition.getConstructor().toGenericString())) {
            return statement;
          }
       }
       if(statement instanceof RMethod && transition.isMethod()) {
         RMethod method = (RMethod)statement;
-        
-        //Log.log("    - method: " + method.getMethod().toGenericString());
-        
         if(method.getMethod().toGenericString().equals(transition.getMethod().toGenericString())) {
           return statement;
         }
@@ -448,8 +431,10 @@ public class ModelBasedGenerator extends ForwardGenerator {
   
   /**
    * Get sequences from the map for particular ModelNode
+   * 
+   * used by MethodInputSelector
    * */
-  public List<Sequence> getSequenceFromModelSequence(ModelNode node) {
+  List<Sequence> getSequenceFromModelSequence(ModelNode node) {
     Map<ModelNode, List<Sequence>> nodeSequences = this.modelSequences.getSequenceMap(node.getModelledClass());
     if(nodeSequences == null) {
       Log.log("There is no model node sequence for class: " + node.getModelledClass());
