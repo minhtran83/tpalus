@@ -71,6 +71,10 @@ public class TraceDependenceRepository {
     //check the sequence number validity of the trace
     checkTraceSeqNumberValidity(traces);
     
+    if(true) {
+      return;
+    }
+    
     Log.log("start to compute trace dependence. trace size: " + traces.size()
         + ", trace map size: " + traceMap.size());
     

@@ -70,6 +70,10 @@ public class TestGenMain {
     public static boolean exhaustiveTheoryChecking = false;
     //use param value specified for each method
     public static boolean useMethodSpecificValue = true;
+    //remove all IsNull checkers
+    public static boolean removeIsNotNullChecker = true;
+    //append related method? the gencc approach
+    public static boolean appendRelatedMethods = false;
     
     //a collection to store all programmer-specified values
     private ParamValueCollections paramValueCollection = null;
@@ -324,6 +328,10 @@ public class TestGenMain {
           seqs.add (sequences.get (ii));
         }
         sequences = seqs;
+      }
+      //remove all NotNull checker
+      if(removeIsNotNullChecker) {
+        SequenceCheckFilters.removeIsNotNullChecks(sequences);
       }
       this.write_junit_tests (outputDir, packageName, testName, testsPerFile, sequences);
     }

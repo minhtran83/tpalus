@@ -283,6 +283,9 @@ public abstract class TraceEvent implements Serializable {
 	  //type name looks like the classname[][][][] 
 	  int bracketIndex = typeName.indexOf("[]");
 	  if(bracketIndex == -1) {
+	    if(PalusUtil.isPrimitive(typeName)) {
+	      return PalusUtil.getClassForPrimitiveType(typeName);
+	    }
 	    return Class.forName(typeName);
 	  } else {
 	    while(bracketIndex != -1) {
@@ -290,7 +293,16 @@ public abstract class TraceEvent implements Serializable {
 	      typeName = typeName.substring(0, bracketIndex);
 	      bracketIndex = typeName.indexOf("[]");
 	    }
-	    Class<?> baseType = Class.forName(typeName);
+	    //get the base type of an array
+	    Class<?> baseType = null;
+	    if(PalusUtil.isPrimitive(typeName)) {
+	      //if it is a primitive type
+	      baseType = PalusUtil.getClassForPrimitiveType(typeName);
+	    } else {
+	      //not a primitive type
+	      baseType = Class.forName(typeName);
+	    }
+	    PalusUtil.checkNull(baseType);
 	    //XXX not a good way!
 	    return Array.newInstance(baseType, dimension).getClass();
 	  }

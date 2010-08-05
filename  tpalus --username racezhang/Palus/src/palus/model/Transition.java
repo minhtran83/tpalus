@@ -500,7 +500,8 @@ public class Transition implements Serializable {
 		}
 		
 		public DependenceEdge getDependenceEdge() {
-			PalusUtil.checkNull(edge);
+		  //XXX have not touched
+			//PalusUtil.checkNull(edge);
 			return this.edge;
 		}
 		

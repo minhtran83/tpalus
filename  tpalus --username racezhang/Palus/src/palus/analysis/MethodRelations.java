@@ -29,6 +29,8 @@ import java.util.Set;
 class MethodRelations implements Opcodes {
   private final List<Class<?>> classes;
   
+  private static int MAX_NUM = 3;
+  
   private final Map<Class<?>, Map<Method, ReadWriteFields>> fieldReadWrites =
     new LinkedHashMap<Class<?>, Map<Method, ReadWriteFields>>();
   
@@ -48,17 +50,17 @@ class MethodRelations implements Opcodes {
       Map<Method, ReadWriteFields> methodReadWrites = analyzeClass(cls, cn);
       this.fieldReadWrites.put(cls, methodReadWrites);
     }
-    //using if-idf to compute dependences
+    //using if-idf to compute dependences, and fill in the dependence map
     this.computeDependence();
   }
   
   List<Method> getRelatedMethods(Method method) {
     Class<?> owner = method.getDeclaringClass();
     if(this.dependences.containsKey(owner)) {
-      return null;
+      return new LinkedList<Method>();
     }
     if(!this.dependences.get(owner).containsKey(method)) {
-      return null;
+      return new LinkedList<Method>();
     }
     return this.dependences.get(owner).get(method);
   }
@@ -218,6 +220,18 @@ class MethodRelations implements Opcodes {
   
   //using if-idf to compute
   private void computeDependence() {
-    
+    for(Entry<Class<?>, Map<Method, ReadWriteFields>> entry : this.fieldReadWrites.entrySet()) {
+      Class<?> clazz = entry.getKey();
+      Map<Method, ReadWriteFields> methodAndReadWrites = entry.getValue();
+      
+      //the most naive way
+      Map<Method, List<Method>> methodMap = new LinkedHashMap<Method, List<Method>>();      
+      for(Method m : methodAndReadWrites.keySet()) {
+        methodMap.put(m, new LinkedList<Method>(methodAndReadWrites.keySet()));
+        
+      }
+      
+      this.dependences.put(clazz, methodMap);
+    }
   }
 }

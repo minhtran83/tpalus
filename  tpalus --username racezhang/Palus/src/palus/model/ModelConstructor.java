@@ -29,6 +29,10 @@ public class ModelConstructor {
 		Map<Class<?>, ClassModel> models = new LinkedHashMap<Class<?>, ClassModel>();		
 		for(Class<?> clazz : traceByClasses.keySet()) {
 			ClassModel model = this.buildClassModel(clazz, this.traceByClasses.get(clazz));
+			if(model == null) {
+			  Log.log("Skip an empty model for class: " + clazz);
+			  continue;
+			}
 			PalusUtil.checkNull(model);
 			models.put(clazz, model);
 		}		
@@ -62,10 +66,10 @@ public class ModelConstructor {
                 }
                 System.out.print("+");
                 //for debugging purpose
-//                Log.log("############### Intermediate merging result #############");
-//                Log.log("Class model for :" + clazz.getName());
-//                Log.log(classModel.getModelInfo() + "\n");
-//                Log.log("#########################################################");
+                Log.log("############### Intermediate merging result #############");
+                Log.log("Class model for :" + clazz.getName());
+                Log.log(classModel.getModelInfo() + "\n");
+                Log.log("#########################################################");
             } catch (ModelNodeNotFoundException e) {
                  throw new RuntimeException(e);
             } catch (MethodNotExistInTransitionException e) {
@@ -87,6 +91,11 @@ public class ModelConstructor {
 		Log.log("Class model for: " + clazz.getName());
 		Log.log(classModel.getModelInfo() + "\n");
 		Log.log(" ------------------------------------------------------");
+		
+		if(classModel.getAllNodes().size() == 2
+		    && classModel.getAllTransitions().isEmpty()) {
+		  classModel = null;
+		}
 		
 		return classModel;
 	}

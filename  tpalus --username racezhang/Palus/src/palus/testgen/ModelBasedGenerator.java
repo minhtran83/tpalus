@@ -289,6 +289,10 @@ public class ModelBasedGenerator extends ForwardGenerator {
     while(!this.isTransitionVisible(selectedTransition) && (numOfTry ++) < max_tries_for_new_sequence) {
       selectedTransition = this.modelSequences.nextRandomTransitionFromRoot();
     }
+    if(selectedTransition == null) {
+      Log.log("    fail to pick up a non-null transition from root");
+      return null;
+    }
     //return null if it is not visible
     if(!selectedTransition.isPublicTransition()) {
       Log.log("    fail to pick up a visible transition from root");
@@ -403,7 +407,9 @@ public class ModelBasedGenerator extends ForwardGenerator {
    * Check whether a transition is visible or not
    * */
   private boolean isTransitionVisible(Transition t) {
-    PalusUtil.checkNull(t);
+    if(t == null) {
+      return false;
+    }
     return t.isPublicTransition();
   }
   
