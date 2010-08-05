@@ -109,6 +109,11 @@ public class ModelSequences {
     //get the root, and randomly pick up a root transition
     ModelNode root = classModel.getRoot();
     List<Transition> transitions = root.getAllOutgoingEdges();
+    if(transitions.isEmpty()) {
+      Log.log("The model is empty for: " + classModel.getModelledClass());
+      return null;
+    }
+    
     Transition transition = transitions.get(Randomness.nextRandomInt(transitions.size()));
     
     return transition;

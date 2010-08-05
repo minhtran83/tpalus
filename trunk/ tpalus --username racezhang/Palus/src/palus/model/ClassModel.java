@@ -280,6 +280,9 @@ public class ClassModel implements Serializable {
 	  
 	  Log.log("In class model: " + this.getModelledClass() + ", remove: "
 	      + nonPublicTransitions.size() + " transitions out of " + this.transitions.size());
+	  for(Transition nonPublic : nonPublicTransitions) {
+	    Log.log("    removed non public transition: " + nonPublic.getTransitionID());
+	  }
 	  
 	  //to unify the exit nodes
 	  //two possibilities: 1) the original exit has no incoming edges
@@ -320,7 +323,10 @@ public class ClassModel implements Serializable {
           this.deleteModelNode(modelNode);
       }
       Log.log("In class model: " + this.getModelledClass() + ", remove: "
-          + danglingNodes.size() + " dangling nodes.");      
+          + danglingNodes.size() + " dangling nodes.");
+      for(ModelNode dangling : danglingNodes) {
+        Log.log("      removed dangling node id: " + dangling.getNodeId());
+      }
 	}
 
 	
@@ -385,10 +391,13 @@ public class ClassModel implements Serializable {
 	    PalusUtil.checkTrue(this.getAllSubNodes(this.root).size() + 1 == this.nodes.size());
 	    //only one root, one exit
 	    for(ModelNode node : this.nodes) {
-	      if(node.isExitNode()) {
+	      //at the beginning of this model, there is no transition.
+	      //so in this sense, root, exit nodes are all isolated, thus
+	      //root id could also be exit, and vice verse.
+	      if(node.isExitNode() && node != root) {
 	        PalusUtil.checkTrue(node == exit);
 	      }
-	      if(node.isRootNode()) {
+	      if(node.isRootNode() && node != exit) {
 	        PalusUtil.checkTrue(node == root);
 	      }
 	    }
@@ -530,7 +539,7 @@ public class ClassModel implements Serializable {
           
           PalusUtil.checkTrue(destNode.getClassModel() == this);
           Log.log("Finish merging, dest node is exit, to be merged is not: ");
-          Log.log(destNode.getClassModel().getModelInfo());
+          //Log.log(destNode.getClassModel().getModelInfo());
 	    }	    
 	    else {
 	      Log.log(" Both dest node: " + destNode.getNodeId() + " and tobeMerged node: "
@@ -656,9 +665,17 @@ public class ClassModel implements Serializable {
      * exit nodes,, which violates the invariants defined in this class.
      * We will unify all these exit nodes */
 	private void unifyAllExitNodes() throws ModelNodeNotFoundException {
+	  //#XXX be careful, the model could be empty then
 	  //check the root invariant does not violate
 	  PalusUtil.checkNull(this.root);
 	  PalusUtil.checkNull(this.root.isRootNode());
+	  
+	  //check that the Class Model could be only one node remaining
+	  if(this.nodes.size() == 1) {
+	    Log.log("There is only the root node exists. (all other nodes has been removed)");
+	    return;
+	  }
+	  
 	  //first get all exit nodes
 	  List<ModelNode> exitNodes = new LinkedList<ModelNode>();
 	  for(ModelNode node : this.nodes) {
@@ -705,7 +722,7 @@ public class ClassModel implements Serializable {
 	        newTransition.addDecorations(transition.makeClones(newTransition));
 	        this.addTransition(newTransition);
 	        //XXX update the trace transition mappings
-	        TraceTransitionManager.replaceTransitions(transition, newTransition);
+	        //TraceTransitionManager.replaceTransitions(transition, newTransition);
 	    }
 	    //delete other exit node (and its connecting edges)
 	    this.deleteModelNode(otherExit);

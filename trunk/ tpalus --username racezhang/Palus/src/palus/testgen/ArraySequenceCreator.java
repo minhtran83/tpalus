@@ -48,26 +48,33 @@ public class ArraySequenceCreator {
     }
     //get the component type
     Class<?> componentType = type.getComponentType();
-    //should the array contains duplicate, purely random selection
-//    boolean hasDuplicate = Randomness.nextRandomBool();
+    
+    SimpleList<Sequence> candidatesFromComponent = components.getSequencesForType(componentType, false);
     
     //the array declaration statement
     ArrayDeclaration decl = new ArrayDeclaration(componentType, expectedLength);
     
-    //no way to create an array differently
+    //if there is no way to create an array differently
     SimpleList<Sequence> candidateFromExists = getSequencesForType(sequences, componentType);
-    if(candidateFromExists.isEmpty()) {
+    if(candidateFromExists.isEmpty() && candidatesFromComponent.isEmpty()) {
       return HelperSequenceCreator.createSequence(type, components);
+    } else {
+      //System.err.println("Create the array in a new way!");
     }
     
     //the sequence to produce array declaration
+
+    List<Sequence> sequencePool = new ArrayList<Sequence>();
+    sequencePool.addAll(candidateFromExists.toJDKList());
+    sequencePool.addAll(candidatesFromComponent.toJDKList());
+    
     Sequence s = null;
     
     List<Integer> variableIndices  = new ArrayList<Integer>();
     List<Sequence> arrayElements = new ArrayList<Sequence>();
     int toStatement = 0;
     for(int i = 0; i < expectedLength; i++) {
-      Sequence arrayElement = candidateFromExists.get(Randomness.nextRandomInt(candidateFromExists.size()));
+      Sequence arrayElement = sequencePool.get(Randomness.nextRandomInt(sequencePool.size()));
       arrayElements.add(arrayElement);
       toStatement += arrayElement.size();
       variableIndices.add(toStatement);
@@ -75,13 +82,18 @@ public class ArraySequenceCreator {
     
     //get all element
     s = Sequence.concatenate(arrayElements);
+     
+   // System.out.println("s size: " + s.size() + ",  var list size: " + variableIndices.size());
     
     List<Variable> varList = new ArrayList<Variable>();
     for(Integer idex : variableIndices) {
-      varList.add(s.getVariable(idex));
+      //System.out.println("   index: " + idex);
+      varList.add(s.getVariable(idex - 1));
     }
+    
+    
     //create the array declaration
-    s.extend(decl, varList);
+    s = s.extend(decl, varList);
     
     //create the array simple list
     ArrayListSimpleList<Sequence> l = new ArrayListSimpleList<Sequence>();

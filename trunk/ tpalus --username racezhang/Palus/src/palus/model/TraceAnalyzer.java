@@ -27,18 +27,21 @@ import palus.visualization.ClassModelViewer;
 import plume.Pair;
 
 public class TraceAnalyzer {
+  
+    public static String PROJECT_NAME = "array_example";
+  
 	//the raw traces from program execution
 	private final List<TraceEvent> traces;
 	//the log file for debugging during model construction and test generation
 	public static final String LOG_FILE = "log.txt";
 	
 	//dump the trace to human readable txt
-	public static final String TRACE_FILE = "toy_db_trace.txt";//"trace.txt";
+	public static final String TRACE_FILE = PROJECT_NAME + "_trace.txt";
 	//dump the trace event as object stream for reuse
-	public static final String TRACE_OBJECT_FILE = "toy_db_trace.model";//"trace_obj.model";
+	public static final String TRACE_OBJECT_FILE = PROJECT_NAME + "_trace.model";
 	
-	public static final String MODEL_FILE = "toy_db_model.txt";
-	public static final String MODEL_OBJECT_FILE = "toy_db_model.model";
+	public static final String MODEL_FILE = PROJECT_NAME + "_model.txt";
+	public static final String MODEL_OBJECT_FILE = PROJECT_NAME + "_model.model";
 	//testing purpose
 	//private static final String TRACE_DUMP_FILE = "trace_dump_by_class.txt";
 	

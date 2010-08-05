@@ -147,7 +147,10 @@ public class MethodInputSelector {
         if (GenInputsAbstract.always_use_ints_as_objects && t.equals(Object.class)) {
           l = components.getSequencesForType(int.class, false);
         } else if (t.isArray()) {
-          l = HelperSequenceCreator.createSequence(t, components);
+          //l = HelperSequenceCreator.createSequence(t, components);
+          //l = ArraySequenceCreator.createEmptyArray(t);
+          //l = ArraySequenceCreator.createNullElementArray(t);
+          l = ArraySequenceCreator.createArray(t, components, sequences, Randomness.nextRandomInt(5)); //FIXME, hardcode
         } else {
           l = components.getSequencesForType(t, false);
         }
@@ -331,6 +334,9 @@ public class MethodInputSelector {
           l = components.getSequencesForType(int.class, false);
         } else if (t.isArray()) { //array type
           l = HelperSequenceCreator.createSequence(t, components);
+          //l = ArraySequenceCreator.createArray(t, components, sequences, 2);
+          //l = ArraySequenceCreator.createEmptyArray(t);
+          
         } else {
           l = components.getSequencesForType(t, false);
         }
