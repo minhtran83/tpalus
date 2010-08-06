@@ -42,7 +42,7 @@ public class ArraySequenceCreator {
     if(!type.isArray()) {
       return new ArrayListSimpleList<Sequence>();
     }
-    if(sequences == null || sequences.isEmpty()) {
+    if(sequences == null || sequences.isEmpty() || type.getComponentType().isPrimitive()) {
       // Delegates to the existing implementation
       return HelperSequenceCreator.createSequence(type, components);
     }

@@ -2,7 +2,9 @@
 
 package palus.testgen;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import palus.Log;
@@ -13,6 +15,7 @@ import palus.model.ModelNode;
 import palus.model.Transition;
 import palus.model.Transition.Decoration;
 import palus.model.Transition.DecorationValue;
+import randoop.ArrayDeclaration;
 import randoop.BugInRandoopException;
 import randoop.HelperSequenceCreator;
 import randoop.InputsAndSuccessFlag;
@@ -120,6 +123,15 @@ public class MethodInputSelector {
           arrayList.add(Sequence.create(new PrimitiveOrStringOrNullDecl(t,
               PalusUtil.createPrimitiveOrStringValueFromString(t, o.toString()))));
           l = arrayList;
+        }
+      }else if(PalusUtil.isPrimitiveOrStringOneDimensionArrayType(t)) {
+        //get value for primitive
+        value = getDecorationValue(statement, decoration, i);
+        if(value != null && value.getArrayValue() !=null && value.isPrimitiveOrStringOneDimensionArray()) {
+          //get the array value
+          Object arrayValue = value.getArrayValue();
+          Log.log("Find array values: " + PalusUtil.convertArrayToFlatString(arrayValue));
+          l = this.constructPrimitiveOrStringArray(arrayValue, t.getComponentType());
         }
       }
       
@@ -307,6 +319,14 @@ public class MethodInputSelector {
               PalusUtil.createPrimitiveOrStringValueFromString(t, o.toString()))));
           l = arrayList;
         }
+      } else if(PalusUtil.isPrimitiveOrStringOneDimensionArrayType(t)) {
+        value = getDecorationValue(statement, selectedDecoration, i);
+        if(value != null && value.getArrayValue() !=null && value.isPrimitiveOrStringOneDimensionArray()) {
+          //get the array value
+          Object arrayValue = value.getArrayValue();
+          Log.log("Find array values: " + PalusUtil.convertArrayToFlatString(arrayValue));
+          l = this.constructPrimitiveOrStringArray(arrayValue, t.getComponentType());
+        }
       }
       
     //XXX select from the dependence edge
@@ -458,5 +478,39 @@ public class MethodInputSelector {
       return ((RMethod)statement).getMethod().getName();
     }
     throw new RuntimeException("Unexpected type: " + statement);
+  }
+  
+  /**
+   * Construct a sequence for constructing a primitive or string type array
+   * */
+  private SimpleList<Sequence> constructPrimitiveOrStringArray(Object array, Class<?> componentType) {
+    PalusUtil.checkNull(array);
+    PalusUtil.checkNull(componentType);
+    PalusUtil.checkTrue(PalusUtil.isPrimitiveOrStringOneDimensionArrayType(array.getClass()));
+    
+    //get the length
+    int length = Array.getLength(array);
+    List<Sequence> arrayElements = new LinkedList<Sequence>();
+    for(int i = 0; i < length; i++) {
+      Object obj = Array.get(array, i);
+      Sequence seq = Sequence.create(new PrimitiveOrStringOrNullDecl(componentType,
+            PalusUtil.createPrimitiveOrStringValueFromString(componentType, obj.toString())));
+      arrayElements.add(seq);
+    }
+    
+    Sequence s = Sequence.concatenate(arrayElements);
+    //init the array declaration
+    ArrayDeclaration decl = new ArrayDeclaration(componentType, length);
+    List<Variable> vars = new LinkedList<Variable>();
+    for(int i = 0; i < length; i++) {
+      vars.add(s.getVariable(i));
+    }
+    s = s.extend(decl, vars);
+    
+    //teh sequence list to return
+    ArrayListSimpleList<Sequence> arrayList = new ArrayListSimpleList<Sequence>();
+    arrayList.add(s);
+    
+    return arrayList;
   }
 }

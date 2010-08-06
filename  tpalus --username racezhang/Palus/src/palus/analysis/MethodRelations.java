@@ -12,8 +12,13 @@ import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import randoop.RConstructor;
+import randoop.RMethod;
+import randoop.StatementKind;
+
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -26,22 +31,25 @@ import java.util.Set;
  * @author saizhang@google.com (Your Name Here)
  *
  */
-class MethodRelations implements Opcodes {
-  private final List<Class<?>> classes;
+final class MethodRelations implements Opcodes {
+  private final Collection<Class<?>> classes;
   
-  private static int MAX_NUM = 3;
+  //private static int MAX_NUM = 3;
   
-  private final Map<Class<?>, Map<Method, ReadWriteFields>> fieldReadWrites =
+  protected final Map<Class<?>, Map<Method, ReadWriteFields>> fieldReadWrites =
     new LinkedHashMap<Class<?>, Map<Method, ReadWriteFields>>();
   
-  private final Map<Class<?>, Map<Method, List<Method>>> dependences =
+  protected final Map<Class<?>, Map<Method, List<Method>>> dependences =
     new LinkedHashMap<Class<?>, Map<Method, List<Method>>>();
   
-  MethodRelations(List<Class<?>> classes) {
+  protected final Map<Class<?>, Map<StatementKind, List<StatementKind>>> statementDependences =
+    new LinkedHashMap<Class<?>, Map<StatementKind, List<StatementKind>>>();
+  
+  MethodRelations(Collection<Class<?>> classes) {
     this.classes = classes;
   }
 
-  void buildRelations() throws IOException {
+  void buildRelations(List<StatementKind> models) throws IOException {
     //analyze each class
     for(Class<?> cls : classes) {
       ClassReader cr = new ClassReader(cls.getName());
@@ -52,17 +60,32 @@ class MethodRelations implements Opcodes {
     }
     //using if-idf to compute dependences, and fill in the dependence map
     this.computeDependence();
+    this.copyDependenceToStatements(models);
   }
   
   List<Method> getRelatedMethods(Method method) {
     Class<?> owner = method.getDeclaringClass();
-    if(this.dependences.containsKey(owner)) {
+    if(!this.dependences.containsKey(owner)) {
       return new LinkedList<Method>();
     }
     if(!this.dependences.get(owner).containsKey(method)) {
       return new LinkedList<Method>();
     }
     return this.dependences.get(owner).get(method);
+  }
+  
+  List<StatementKind> getRelatedStatements(StatementKind statement) {
+    if(statement instanceof RConstructor) {
+      return new LinkedList<StatementKind>();
+    }
+    Class<?> owner = this.getDeclaringClass(statement);
+    if(!this.statementDependences.containsKey(owner)) {
+      return new LinkedList<StatementKind>();
+    }
+    if(!this.statementDependences.get(owner).containsKey(statement)) {
+      return new LinkedList<StatementKind>();
+    }
+    return this.statementDependences.get(owner).get(statement);
   }
   
   String showFieldReadWrites() {
@@ -227,11 +250,68 @@ class MethodRelations implements Opcodes {
       //the most naive way
       Map<Method, List<Method>> methodMap = new LinkedHashMap<Method, List<Method>>();      
       for(Method m : methodAndReadWrites.keySet()) {
-        methodMap.put(m, new LinkedList<Method>(methodAndReadWrites.keySet()));
-        
+        List<Method> allMethods = new LinkedList<Method>(methodAndReadWrites.keySet());
+        allMethods.remove(m);
+        //add all
+        methodMap.put(m, allMethods);        
       }
       
       this.dependences.put(clazz, methodMap);
+    }
+  }
+  
+  private Class<?> getDeclaringClass(StatementKind statement) {
+    if(statement instanceof RMethod) {
+      RMethod rmethod = (RMethod)statement;
+      return rmethod.getMethod().getDeclaringClass();
+    } else if(statement instanceof RConstructor) {
+      RConstructor rconstructor = (RConstructor)statement;
+      return rconstructor.getConstructor().getDeclaringClass();
+    } else {
+      throw new RuntimeException("Unexpected statement type here: " + statement);
+    }
+  }
+  
+  private StatementKind getStatement(List<StatementKind> models, Method m) {
+    for(StatementKind statement : models) {
+      if(statement instanceof RMethod) {
+        RMethod rmethod = (RMethod)statement;
+        if(rmethod.getMethod() == m) {
+          return statement;
+        }
+      }
+    }
+    return null;
+  }
+  
+  private void copyDependenceToStatements(List<StatementKind> models) {
+    //System.err.println("~~~~~~~~~~~~~~~~");
+    
+    for(Entry<Class<?>, Map<Method, List<Method>>> entry : dependences.entrySet()) {
+      //System.err.println("~~~~~~~~~~~~~~~~");
+      Class<?> clazz = entry.getKey();
+      Map<StatementKind, List<StatementKind>> statementMap =
+        new LinkedHashMap<StatementKind, List<StatementKind>>();
+      
+      Map<Method, List<Method>> methodMap = entry.getValue();
+      for(Entry<Method, List<Method>> methodEntry : methodMap.entrySet()) {
+        StatementKind key = this.getStatement(models, methodEntry.getKey());
+        if(key == null) {
+          continue;
+        }
+        statementMap.put(key, new LinkedList<StatementKind>());
+        
+        List<Method> methods = methodEntry.getValue();
+        for(Method method : methods) {
+          StatementKind mValue = this.getStatement(models, method);
+          if(mValue != null) {
+            System.err.println("~~~~~~~~~~~~~~~~");
+            statementMap.get(key).add(mValue);
+          }
+        }
+      }
+      
+      this.statementDependences.put(clazz, statementMap);
     }
   }
 }

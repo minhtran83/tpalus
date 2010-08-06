@@ -3,6 +3,7 @@
 package palus.testgen;
 
 import palus.PalusUtil;
+import palus.analysis.MethodRecommender;
 import palus.model.ClassModel;
 import palus.model.Transition;
 import palus.theory.TheoryCheckingVisitor;
@@ -73,16 +74,17 @@ public class TestGenMain {
     //remove all IsNull checkers
     public static boolean removeIsNotNullChecker = true;
     //append related method? the gencc approach
-    public static boolean appendRelatedMethods = false;
-    
-    //a collection to store all programmer-specified values
-    private ParamValueCollections paramValueCollection = null;
+    public static boolean diversifySequence = false;
     
     /**
-     * All internal states
+     * Some private internal states
      * */
+    //a collection to store all programmer-specified values
+    private ParamValueCollections paramValueCollection = null;
     //the sequence collection storing all temp created sequences
     private static SequenceCollection components;
+    //the method recommender for get related methods
+    private MethodRecommender recommender = null;
     
     public static void main(String[] args) {
        TestGenMain main = new TestGenMain();
@@ -138,6 +140,12 @@ public class TestGenMain {
         System.out.println("Num of all public methods under test: " + model.size());
       }
       
+      //initialize the method recommender
+      this.recommender = new MethodRecommender(classesToTest);
+      if(diversifySequence) {
+        recommender.buildDependence(model);
+      }
+      
       //init the component
       components = new SequenceCollection();
       //add some default seeds
@@ -165,7 +173,8 @@ public class TestGenMain {
             inputlimit,
             components,
             models,
-            paramValueCollection);
+            paramValueCollection,
+            recommender);
       } else {
         //use the explorer of Randoop
         explorer  = new ForwardGenerator(
