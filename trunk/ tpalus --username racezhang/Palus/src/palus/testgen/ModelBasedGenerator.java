@@ -12,8 +12,10 @@ import palus.model.Transition;
 import plume.Pair;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import randoop.ExecutableSequence;
 import randoop.ForwardGenerator;
@@ -96,7 +98,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
     Log.log("\n\n");
     
     //initialize the sequence diversifier, and recommender
-    this.diversifier = new SequenceDiversifier(this);
+    this.diversifier = new SequenceDiversifier(this, recommender);
     this.recommender = recommender;
 
     //FIXME not a perfect place here
@@ -187,6 +189,17 @@ public class ModelBasedGenerator extends ForwardGenerator {
     eSeq.gentime = genTime;
     
     return eSeq;
+  }
+  
+  /**
+   * Get all diversified tests
+   * */
+  public Set<ExecutableSequence> getAllDiversifiedSequences() {
+    if(!TestGenMain.diversifySequence) {
+      return new LinkedHashSet<ExecutableSequence>();
+    } else {
+      return this.diversifier.allDiversifedExecutableSequences();
+    }
   }
 
   /**

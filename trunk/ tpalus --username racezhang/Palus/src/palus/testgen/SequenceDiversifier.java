@@ -8,15 +8,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import palus.Log;
 import palus.PalusUtil;
 import palus.analysis.MethodRecommender;
+import randoop.ExecutableSequence;
 import randoop.RConstructor;
 import randoop.RMethod;
 import randoop.Sequence;
 import randoop.SequenceCollection;
 import randoop.StatementKind;
 import randoop.Variable;
-import randoop.util.Log;
 import randoop.util.Randomness;
 import randoop.util.Reflection.Match;
 import randoop.util.SimpleList;
@@ -36,16 +37,19 @@ public class SequenceDiversifier {
   //all generated sequence from diversify
   protected final Set<Sequence> diversifiedSequences
       = new LinkedHashSet<Sequence>();
+//all generated sequence from diversify
+  protected final Set<ExecutableSequence> diversifiedValidSequence
+      = new LinkedHashSet<ExecutableSequence>();
   
   //how to diversifier the existing sequence
   //1. append the most related method
   //2. append all method in this class
   
-  public SequenceDiversifier(ModelBasedGenerator generator) {
+  public SequenceDiversifier(ModelBasedGenerator generator, MethodRecommender recommender) {
     PalusUtil.checkNull(generator);
     this.generator = generator;
     this.components = generator.components;
-    this.recommender = generator.recommender;
+    this.recommender = recommender;
   }
   
   /**
@@ -54,6 +58,9 @@ public class SequenceDiversifier {
   public void diversifySequence(Sequence sequence, StatementKind statement) {
     PalusUtil.checkNull(sequence);
     PalusUtil.checkNull(statement);
+    
+    Log.log("Statement type: " + statement.getClass() + ", " + statement);
+    
     //statement could be eitehr a constructor or a method
     Collection<StatementKind> related = null;
     if(statement instanceof RConstructor) {
@@ -67,7 +74,10 @@ public class SequenceDiversifier {
     }
     
     if(related != null) {
+      Log.log("Related sequence is not null: for " + statement);
       this.diversifySequence(sequence, related);
+    } else {
+      Log.log("Related sequence is null");
     }
   }
   
@@ -123,7 +133,18 @@ public class SequenceDiversifier {
     //update the statistics
     if(!generatedBeforeDiversifying(s)) {
       this.diversifiedSequences.add(s);
+      Log.log("Succeed in Diversify ...");
+      
+      ExecutableSequence eSeq = new ExecutableSequence(s);
+      eSeq.execute(null);
+      if(!eSeq.hasFailure() && !eSeq.hasNonExecutedStatements()) {
+        this.diversifiedValidSequence.add(eSeq);
+      }
     }
+  }
+  
+  public Set<ExecutableSequence> allDiversifedExecutableSequences() {
+    return this.diversifiedValidSequence;
   }
   
   public Set<Sequence> allDiversifiedSequences() {
