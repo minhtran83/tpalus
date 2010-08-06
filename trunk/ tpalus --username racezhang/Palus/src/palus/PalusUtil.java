@@ -102,6 +102,52 @@ public class PalusUtil implements Opcodes{
       }
     }
     
+    public static boolean isNonPrimitiveOrStringOneDimensionArray(Class<?> clz) {
+      if(!clz.isArray()) {
+        return false;
+      } else {
+        Class<?> componentType = clz.getComponentType();
+        return !isPrimitiveOrStringType(componentType);
+      }
+    }
+    
+    public static int[] computeObjectIdInArray(Object array) {
+      PalusUtil.checkNull(array);
+      PalusUtil.checkTrue(array.getClass().isArray());
+      
+      int length = Array.getLength(array);
+      int[] retIDs = new int[length];
+      for(int i = 0; i < length; i++) {
+        Object obj = Array.get(array, i);
+        retIDs[i] = System.identityHashCode(obj);
+      }
+      
+      return retIDs;
+    }
+    
+    public static String convertArrayToFlatString(Object array) {
+      PalusUtil.checkNull(array);
+      PalusUtil.checkTrue(array.getClass().isArray());
+      StringBuilder sb = new StringBuilder();
+      
+      int length = Array.getLength(array);
+      sb.append("[");
+      for(int i = 0; i < length; i++) {
+        Object obj = Array.get(array, i);
+        if(obj == null) {
+          sb.append("null");
+        } else {
+          sb.append(obj);
+        }
+        if(i != length - 1) {
+          sb.append(", ");
+        }
+      }
+      sb.append("]");
+      
+      return sb.toString();
+    }
+    
 	public static boolean isPrimitive(Type type) {
 		if (type.equals(Type.BOOLEAN_TYPE)|| type.equals(Type.CHAR_TYPE) || type.equals(Type.BYTE_TYPE)
 			||type.equals(Type.SHORT_TYPE)|| type.equals(Type.INT_TYPE) || type.equals(Type.FLOAT_TYPE)

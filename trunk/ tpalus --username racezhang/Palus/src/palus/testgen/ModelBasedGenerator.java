@@ -4,6 +4,7 @@ package palus.testgen;
 
 import palus.Log;
 import palus.PalusUtil;
+import palus.analysis.MethodRecommender;
 import palus.model.BugInPalusException;
 import palus.model.ClassModel;
 import palus.model.ModelNode;
@@ -55,20 +56,27 @@ public class ModelBasedGenerator extends ForwardGenerator {
 //  private final Map<Class<?>, Map<ModelNode, List<Sequence>>> modelSequences
 //      = new LinkedHashMap<Class<?>, Map<ModelNode, List<Sequence>>>();
   
-  private final ModelSequences modelSequences;
-  
-  private final ParamValueCollections valueCollections;
-  
-  private final MethodInputSelector inputSelector;
+  //Keep the relations between generated sequence with model node
+  protected final ModelSequences modelSequences;
+  //Values collected from method annotation
+  protected final ParamValueCollections valueCollections;
+  //Helper class for selecting method inputs
+  protected final MethodInputSelector inputSelector;
+  //The sequence diversifier which diversifies the sequence by adding additional
+  //related sequence
+  protected final SequenceDiversifier diversifier;
+  //a method recommender which recommends related method
+  protected final MethodRecommender recommender;
   
   /**
    * The only constructor with a model parameter
    * */
   public ModelBasedGenerator(List<StatementKind> statements, List<Class<?>> covClasses,
       long timeMillis, int maxSequences, SequenceCollection seeds, Map<Class<?>, ClassModel> models,
-      ParamValueCollections valueCollections) {
+      ParamValueCollections valueCollections, MethodRecommender recommender) {
     super(statements, covClasses, timeMillis, maxSequences, seeds);
     PalusUtil.checkNull(models);
+    PalusUtil.checkNull(recommender);
     //initialize the model and model sequences
     this.models = models;
     modelSequences = new ModelSequences(models);
@@ -87,6 +95,10 @@ public class ModelBasedGenerator extends ForwardGenerator {
     }
     Log.log("\n\n");
     
+    //initialize the sequence diversifier, and recommender
+    this.diversifier = new SequenceDiversifier(this);
+    this.recommender = recommender;
+
     //FIXME not a perfect place here
     this.random_gen_timer.startTiming();
     System.out.println("\n\n....First generating tests randomly...\n\n");
@@ -158,6 +170,13 @@ public class ModelBasedGenerator extends ForwardGenerator {
       //this.updateModelSequenceMap(eSeq.sequence, tran);
       this.modelSequences.updateModelSequences(eSeq.sequence, tran);
       Log.log("execute pass. updated map size: " + this.modelSequences.size());
+      
+      //diversify the legal sequence
+      if(TestGenMain.diversifySequence) {
+        //diverse the method
+        this.diversifier.diversifySequence(eSeq.sequence, this.selectStatement(tran));
+      }
+      
     } else {
       Log.log("executing fail: " + eSeq.toCodeString());
     }

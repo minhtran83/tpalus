@@ -19,20 +19,30 @@ public abstract class TraceEvent implements Serializable {
 	private final int thizID;
 	//private transient final Object[] params; /*can not serialize it, because you do not know what the runtime type it is*/
 	private final int[] paramIDs;
+	
+	//the following two are only used for keeping values of primitive types
 	//serialization thiz
 	private final String serializableThis;
 	//serialization params
 	private final String[] serializableParams;
+	//The structure for keeping the content of 1-dimension primitive or string array
+	//or keep the object id of non-primitive or string array
+	//for example, the content of this array is all NULL initially, if there are
+	//two parameters:
+	//  param 1:  {"hello", "world"}
+	//  param 2:  {object1, object2}
+	//The content of this array will be:
+	//  serializableArrays[1] = {"hello", "world"}
+	//  serializableArrays[2] = {objectid(object1), objectid(object2)}
+	private final Object[] serializableArrays;
 	
 	//a unique trace pair id, for quick matching the pair (entry vs exit)
 	private int unique_trace_pair_id = -1;
 	//currently each TraceEvent is paired with one entry and one exit
-	private TraceEvent pair = null;
-	
+	private TraceEvent pair = null;	
 	//a unique trace sequence id based on occurrence time stamp,
 	//for quick identify the consequences. The field is designed as final
-	private int traceEventSequenceId = -1;
-	
+	private int traceEventSequenceId = -1;	
 	//a positive id representing the stack of depth when this trace event
 	//is recorded
 	private int stackDepth = -1;
@@ -63,16 +73,24 @@ public abstract class TraceEvent implements Serializable {
 		}
 		//for serialization purpose we keep a copy of serializable param value
 		this.serializableParams = new String[params.length];
+		this.serializableArrays = new Object[params.length];
 		for(int i = 0; i < params.length; i++) {
 		  if(params[i] == null) {
 		    this.serializableParams[i] = null;
 		  } else {
 		    if(PalusUtil.isPrimitiveOrStringType(params[i].getClass())) {
+		      //primitive or string value
 		      this.serializableParams[i] = params[i].toString();
-		    } /*else if (PalusUtil.isPrimitiveOrStringOneDimensionArrayType(params[i].getClass())) {
-		      
-		    } */else {
+		    } else {
+		      //object value
 		      this.serializableParams[i] = null;
+		      //save the array object
+		      if(PalusUtil.isPrimitiveOrStringOneDimensionArrayType(params[i].getClass())) {
+		        this.serializableArrays[i] = params[i];
+		      }
+		      if(PalusUtil.isNonPrimitiveOrStringOneDimensionArray(params[i].getClass())) {
+		        this.serializableArrays[i] = PalusUtil.computeObjectIdInArray(params[i]);
+		      }
 		    }
 		  }
 		}
@@ -164,6 +182,10 @@ public abstract class TraceEvent implements Serializable {
 	public String[] getSerializableParams() {
 	  return this.serializableParams;
 	}
+    
+    public Object[] getSerializableArray() {
+      return this.serializableArrays;
+    }
 	
 	public int[] getParamObjectIDs() {
 	  return this.paramIDs;
@@ -265,7 +287,12 @@ public abstract class TraceEvent implements Serializable {
 	  for(int i = 0; i < ids.length; i++) {
 	    sb.append(ids[i]);
 	    sb.append(":");
-	    sb.append(this.serializableParams[i]);
+	    //print out the content of params
+	    if(this.serializableParams[i] == null && this.serializableArrays[i] != null) {
+	      sb.append(PalusUtil.convertArrayToFlatString(this.serializableArrays[i]));
+	    } else {
+	      sb.append(this.serializableParams[i]);
+	    }
 	    if( i != ids.length - 1) {
 	      sb.append(",");
 	    }

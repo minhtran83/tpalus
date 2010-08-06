@@ -195,8 +195,9 @@ public class Transition implements Serializable {
 	}
 	
 	public void addDecoration(String serializableThiz, String[] serializableParams,
-	    Transition transition, Position p) {
-	  Decoration decoration = new Decoration(serializableThiz, serializableParams, transition, p.toIntValue());
+	    Object[] serializableArray, Transition transition, Position p) {
+	  Decoration decoration = new Decoration(serializableThiz, serializableParams, serializableArray,
+	      transition, p.toIntValue());
 	  this.addDecoration(decoration);
 	}
 	
@@ -373,12 +374,14 @@ public class Transition implements Serializable {
 		 * represents the corresponding parameter value */
 		private final int position;
 		
-		public Decoration(String seriazableThisValue, String [] seriazableParamValues,
-		    Transition transition, int position) {
+		Decoration(String seriazableThisValue, String [] seriazableParamValues,
+		    Object[] serializableArray, Transition transition, int position) {
 			//check the input first
 			PalusUtil.checkNull(transition);
 			PalusUtil.checkNull(seriazableParamValues);
+			PalusUtil.checkNull(serializableArray);
 			//System.out.println("position: " + position + ",  param length: " + params.length);
+			PalusUtil.checkTrue(seriazableParamValues.length == serializableArray.length);
 			PalusUtil.checkTrue(position >= -1 && position <= seriazableParamValues.length);
 			//get the type
 			Class<?> thizType = transition.getModelledClass();
@@ -387,7 +390,12 @@ public class Transition implements Serializable {
 			this.thiz = new DecorationValue(seriazableThisValue, thizType);
 			this.params = new DecorationValue[seriazableParamValues.length];
 			for(int i = 0; i < this.params.length; i++) {
-				this.params[i] = new DecorationValue(seriazableParamValues[i], paramTypes[i]);
+			    if(PalusUtil.isPrimitiveOrStringOneDimensionArrayType(paramTypes[i])) {
+			      //the one dimension primitive or string array
+			      this.params[i] = new DecorationValue(serializableArray[i], paramTypes[i]);
+			    } else {
+				  this.params[i] = new DecorationValue(seriazableParamValues[i], paramTypes[i]);
+			    }
 			}
 			this.transition = transition;
 			this.position = position;
@@ -396,7 +404,7 @@ public class Transition implements Serializable {
 		/**
 		 * Copy constructor
 		 * */
-		public Decoration(DecorationValue thizValue, DecorationValue[] paramValues, Transition transition,
+		Decoration(DecorationValue thizValue, DecorationValue[] paramValues, Transition transition,
 		    int position) {
 		  PalusUtil.checkNull(thizValue);
 		  PalusUtil.checkNull(paramValues);
@@ -462,13 +470,17 @@ public class Transition implements Serializable {
 		//can not set this final, edge need to change during model creation
 		private DependenceEdge edge = null;
 		
-		public DecorationValue(String objStr, Class<?> type) {
+		//objStr could only be string and serializable primitive/string array
+		DecorationValue(Object obj, Class<?> type) {
 			PalusUtil.checkNull(type);
 			this.type = type;
 			isPrimitiveOrStringType = type.isPrimitive() || PalusUtil.isPrimitive(type)
 				|| type == java.lang.String.class;
-			if(isPrimitiveOrStringType && objStr != null) {
-				objValue = objStr;
+			if(isPrimitiveOrStringType && obj != null) {
+				objValue = obj;
+			} else if(PalusUtil.isPrimitiveOrStringOneDimensionArrayType(type) && obj != null) {
+			    //save the object of primitive or string one dimension array
+			    objValue = obj;
 			} else {
 				objValue = null; //either non-primitive, non-string, or null value
 			}
@@ -480,6 +492,27 @@ public class Transition implements Serializable {
 		
 		public Class<?> getDecorationType() {
 		  return this.type;
+		}
+		
+		public boolean isArray() {
+		  return this.type.isArray();
+		}
+		
+		public boolean isPrimitiveOrStringOneDimensionArray() {
+		  if(!isArray()) {
+		    return false;
+		  } else {
+		    Class<?> componentType = this.type.getComponentType();
+		    return PalusUtil.isPrimitiveOrStringType(componentType);
+		  }
+		}
+		
+		public Object getArrayValue() {
+		  if(this.isPrimitiveOrStringOneDimensionArray()) {
+		    return objValue;
+		  } else {
+		    return null;
+		  }
 		}
 		
 		public Object getValue() {
