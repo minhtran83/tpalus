@@ -2,6 +2,7 @@
 
 package palus.testgen;
 
+import palus.Log;
 import palus.PalusUtil;
 import palus.analysis.MethodRecommender;
 import palus.model.ClassModel;
@@ -12,6 +13,7 @@ import palus.theory.TheoryFinder;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
@@ -74,7 +76,7 @@ public class TestGenMain {
     //remove all IsNull checkers
     public static boolean removeIsNotNullChecker = true;
     //append related method? the gencc approach
-    public static boolean diversifySequence = false;
+    public static boolean diversifySequence = true;
     
     /**
      * Some private internal states
@@ -144,6 +146,9 @@ public class TestGenMain {
       this.recommender = new MethodRecommender(classesToTest);
       if(diversifySequence) {
         recommender.buildDependence(model);
+        Log.log("---- all method dependence ----");
+        Log.log(recommender.showDependence());
+        //return;
       }
       
       //init the component
@@ -203,6 +208,12 @@ public class TestGenMain {
       //after generation
       System.out.println("Finish generating tests.");
       this.outputGeneratedTests(explorer);
+      
+      
+      if(diversifySequence && explorer instanceof ModelBasedGenerator) {
+        Set<ExecutableSequence> diversifiedSequence = ((ModelBasedGenerator)explorer).getAllDiversifiedSequences();
+        this.write_junit_tests (outputDir, "tests", "Diversified", testsPerFile, new LinkedList<ExecutableSequence>(diversifiedSequence));
+      }
     }
     
     

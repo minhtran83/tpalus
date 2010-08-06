@@ -88,6 +88,51 @@ final class MethodRelations implements Opcodes {
     return this.statementDependences.get(owner).get(statement);
   }
   
+  String showDependence() {
+    StringBuilder sb = new StringBuilder();
+    
+    for(Entry<Class<?>, Map<StatementKind, List<StatementKind>>> entry : this.statementDependences.entrySet()) {
+      sb.append("Class: ");
+      sb.append(entry.getKey());
+      sb.append("\n");
+      Map<StatementKind, List<StatementKind>> methodMap = entry.getValue();
+      for(Entry<StatementKind, List<StatementKind>> mfields: methodMap.entrySet()) {
+        sb.append("  method: ");
+        sb.append(mfields.getKey());
+        sb.append("\n");
+        List<StatementKind> fields = mfields.getValue();
+        sb.append("      " + fields.size());
+        sb.append("\n");
+        for(StatementKind s : fields) {
+          sb.append("              " + s);
+          sb.append("\n");
+        }
+      }
+      sb.append("\n\n");
+    }
+    
+    
+    sb.append("\n\n\n\n\n");
+    
+    for(Entry<Class<?>, Map<Method, List<Method>>> entry : this.dependences.entrySet()) {
+      sb.append("Class: ");
+      sb.append(entry.getKey());
+      sb.append("\n");
+      Map<Method, List<Method>> methodMap = entry.getValue();
+      for(Entry<Method, List<Method>> mfields: methodMap.entrySet()) {
+        sb.append("  method: ");
+        sb.append(mfields.getKey());
+        sb.append("\n");
+        List<Method> fields = mfields.getValue();
+        sb.append("      " + fields.size());
+        sb.append("\n");
+      }
+      sb.append("\n\n");
+    }
+     
+     return sb.toString();
+  }
+  
   String showFieldReadWrites() {
     StringBuilder sb = new StringBuilder();
     
@@ -130,6 +175,9 @@ final class MethodRelations implements Opcodes {
     List<MethodNode> methodNodes = cn.methods;    
     for(MethodNode methodNode : methodNodes) {
       Method method = this.getMethod(cls, methodNode);
+      if(method == null) {
+        continue;
+      }
       ReadWriteFields readWrites = this.getReadWriteFields(cls, methodNode);
       methodReadWrites.put(method, readWrites);
     }
@@ -276,7 +324,7 @@ final class MethodRelations implements Opcodes {
     for(StatementKind statement : models) {
       if(statement instanceof RMethod) {
         RMethod rmethod = (RMethod)statement;
-        if(rmethod.getMethod() == m) {
+        if(rmethod.getMethod().toGenericString().equals(m.toGenericString())) {
           return statement;
         }
       }
@@ -297,6 +345,7 @@ final class MethodRelations implements Opcodes {
       for(Entry<Method, List<Method>> methodEntry : methodMap.entrySet()) {
         StatementKind key = this.getStatement(models, methodEntry.getKey());
         if(key == null) {
+          //System.err.println("No key? " + methodEntry.getKey());
           continue;
         }
         statementMap.put(key, new LinkedList<StatementKind>());
@@ -305,7 +354,7 @@ final class MethodRelations implements Opcodes {
         for(Method method : methods) {
           StatementKind mValue = this.getStatement(models, method);
           if(mValue != null) {
-            System.err.println("~~~~~~~~~~~~~~~~");
+            //System.err.println("~~~~~~~~~~~~~~~~");
             statementMap.get(key).add(mValue);
           }
         }

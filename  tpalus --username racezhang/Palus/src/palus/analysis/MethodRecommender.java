@@ -63,6 +63,10 @@ public class MethodRecommender {
     return Randomness.randomSetMember(set);
   }
   
+  public String showDependence() {
+    return this.relations.showDependence();
+  }
+  
   public static void main(String[] args) {
     List<Class<?>> list = new LinkedList<Class<?>>();
     list.add(java.util.Vector.class);
