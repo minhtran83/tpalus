@@ -62,7 +62,7 @@ public class TestGenMain {
     //add the modelled class automatically or not
     public static boolean addModelClass = true;
     //the default time limit
-    public static int timelimit = 10;
+    public static int timelimit = 20;
     //the output size (max output junit sequence num)
     public static int inputlimit = 100000000;
     //add relevant classes
@@ -145,10 +145,12 @@ public class TestGenMain {
       //initialize the method recommender
       this.recommender = new MethodRecommender(classesToTest);
       if(diversifySequence) {
+        System.out.println("\nBuilding up method dependence model for diversifying...");
         recommender.buildDependence(model);
         Log.log("---- all method dependence ----");
         Log.log(recommender.showDependence());
         //return;
+        System.out.println("Finishing method dependence model building");
       }
       
       //init the component
@@ -239,6 +241,9 @@ public class TestGenMain {
       
       //XXXFIXME add a sample class containing all sample param value
       retClasses.add(tests.SomeParamValues.class);
+      
+      //add from command
+      retClasses.addAll(this.getSampleTestingClass());
       
       return retClasses;
     }
@@ -387,44 +392,49 @@ public class TestGenMain {
     }
     
     /**Only for testing*/
-//    private List<Class<?>> getSampleTestingClass() {
-//      List<Class<?>> retClasses = new LinkedList<Class<?>>();
-//
-//      String[] classesToTest = new String[]{
-//        "japa.parser.ast.type.ReferenceType",
-//        "japa.parser.ast.stmt.ReturnStmt",
-//        "japa.parser.ast.body.ClassOrInterfaceDeclaration",
-//        "japa.parser.ast.CompilationUnit",
-//        "japa.parser.JavaCharStream",
-//        "japa.parser.ast.body.VariableDeclaratorId",
-//        "japa.parser.ast.stmt.ExpressionStmt",
-//        "japa.parser.ast.body.Parameter",
-//        "japa.parser.ast.expr.VariableDeclarationExpr",
-//        "japa.parser.ast.type.Type",
-//        "japa.parser.Token",
-//        "japa.parser.ast.body.TypeDeclaration",
-//        "japa.parser.ast.type.ClassOrInterfaceType",
-//        "japa.parser.ast.PackageDeclaration",
-//        "japa.parser.ast.body.VariableDeclarator",
-//        "japa.parser.ast.ImportDeclaration",
-//        "japa.parser.ast.expr.Expression",
-//        "japa.parser.ast.body.MethodDeclaration",
-//        "japa.parser.ast.type.PrimitiveType",
-//        "japa.parser.ast.stmt.Statement",
-//        "japa.parser.ast.stmt.TryStmt",
-//        "japa.parser.ast.body.BodyDeclaration",
-//        "japa.parser.ast.expr.NameExpr",
-//        "japa.parser.ast.LineComment",
-//        "japa.parser.ASTParser",
-//        "japa.parser.ast.stmt.BlockStmt"  
-//      };
-//      for(String className : classesToTest) {
-//        try {
-//          retClasses.add(Class.forName(className));
-//        } catch (ClassNotFoundException e) {
-//          e.printStackTrace();
-//        }
-//      }
-//      return retClasses;
-//    }
+    private List<Class<?>> getSampleTestingClass() {
+      List<Class<?>> retClasses = new LinkedList<Class<?>>();
+
+      String[] classesToTest = new String[]{
+          "com.sqlmagic.tinysql.DBFHeader",
+          "com.sqlmagic.tinysql.FieldTokenizer",
+          "com.sqlmagic.tinysql.SimpleXMLTag",
+          "com.sqlmagic.tinysql.UtilString",
+          "com.sqlmagic.tinysql.Utils",
+          "com.sqlmagic.tinysql.dbfFile",
+          "com.sqlmagic.tinysql.dbfFileConnection",
+          "com.sqlmagic.tinysql.dbfFileDatabaseMetaData",
+          "com.sqlmagic.tinysql.dbfFileDriver",
+          "com.sqlmagic.tinysql.dbfFileTable",
+          "com.sqlmagic.tinysql.textFile",
+          "com.sqlmagic.tinysql.textFileConnection",
+          "com.sqlmagic.tinysql.textFileDriver",
+          "com.sqlmagic.tinysql.textFileTable",
+          "com.sqlmagic.tinysql.tinySQL",
+          "com.sqlmagic.tinysql.tinySQLCmd",
+          "com.sqlmagic.tinysql.tinySQLConnection",
+          "com.sqlmagic.tinysql.tinySQLDatabaseMetaData",
+          "com.sqlmagic.tinysql.tinySQLDriver",
+          "com.sqlmagic.tinysql.tinySQLException",
+          "com.sqlmagic.tinysql.tinySQLGlobals",
+          "com.sqlmagic.tinysql.tinySQLParser",
+          "com.sqlmagic.tinysql.tinySQLPreparedStatement",
+          "com.sqlmagic.tinysql.tinySQLResultSet",
+          "com.sqlmagic.tinysql.tinySQLResultSetMetaData",
+          "com.sqlmagic.tinysql.tinySQLStatement",
+          "com.sqlmagic.tinysql.tinySQLTable",
+          "com.sqlmagic.tinysql.tinySQLWhere",
+          "com.sqlmagic.tinysql.tsColumn",
+          "com.sqlmagic.tinysql.tsResultSet",
+          "com.sqlmagic.tinysql.tsRow"
+      };
+      for(String className : classesToTest) {
+        try {
+          retClasses.add(Class.forName(className));
+        } catch (ClassNotFoundException e) {
+          e.printStackTrace();
+        }
+      }
+      return retClasses;
+    }
 }

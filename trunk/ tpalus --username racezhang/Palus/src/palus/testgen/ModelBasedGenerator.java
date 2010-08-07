@@ -39,7 +39,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
 
   /*customizable properties*/
   //the percentage of time in filling the component with random generated tests
-  public static float percentage_of_random_gen = 0.0f;//1.0f;
+  public static float percentage_of_random_gen = 0.4f;//1.0f;
   //the percentage of create of a new object from root
   public static float ratio_start_from_root = 0.3f;
   //the max times in trying to generate a new root sequence

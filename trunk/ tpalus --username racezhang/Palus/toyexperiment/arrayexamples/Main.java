@@ -19,6 +19,8 @@ public class Main {
       
       VarComparability comp = VarComparability.parse(0, "22", inttype);
       
+      comp = VarComparability.parse(0, "232", inttype);
+      
       VarInfo v1 = new VarInfo(namex, inttype, floattype, comp, aux);
       VarInfo v2 = new VarInfo(namey, inttype, floattype, comp, aux);
       
@@ -26,12 +28,22 @@ public class Main {
       
       PptTopLevel ppt = new PptTopLevel("Stack:::Exit", slices);
       
+      ppt = new PptTopLevel("Stack:::Entry", slices);
+      
+      ppt = new PptTopLevel("Stack::Test:Exit", slices);
+      
+      ppt = new PptTopLevel("Stack::Test-Again:Exit", slices);
+      
       PptSlice2 slice = new PptSlice2(ppt, slices);
       
       Invariant proto = LinearBinary.getproto();
       Invariant inv = proto.instatiate(slice);
       
       BinaryCore core = new BinaryCore(inv);
+      
+      BinaryCore core2 = new BinaryCore(new String[]{"hello", "world"}, new int[]{2,3});
+      
+      core2 = new BinaryCore(new String[]{"say", "hi"}, new int[]{5,9});
   }
   
 }

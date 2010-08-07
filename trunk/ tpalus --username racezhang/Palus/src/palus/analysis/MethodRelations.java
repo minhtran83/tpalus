@@ -57,9 +57,13 @@ final class MethodRelations implements Opcodes {
       cr.accept(cn, ClassReader.SKIP_FRAMES);
       Map<Method, ReadWriteFields> methodReadWrites = analyzeClass(cls, cn);
       this.fieldReadWrites.put(cls, methodReadWrites);
+      System.out.print(".+");
     }
+    System.out.println();
     //using if-idf to compute dependences, and fill in the dependence map
+    System.out.println("Compute method dependence ...");
     this.computeDependence();
+    System.out.println("Compute statement dependence ...");
     this.copyDependenceToStatements(models);
   }
   
