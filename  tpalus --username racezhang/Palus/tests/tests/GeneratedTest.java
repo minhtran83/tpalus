@@ -19,6 +19,7 @@ public class GeneratedTest extends TestCase {
   public static Test suite() {
     TestSuite result = new TestSuite();
     result.addTest(new TestSuite(GeneratedTest0.class));
+    result.addTest(new TestSuite(GeneratedTest1.class));
     return result;
   }
 

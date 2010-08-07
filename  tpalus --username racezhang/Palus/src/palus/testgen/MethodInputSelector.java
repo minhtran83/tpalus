@@ -76,7 +76,8 @@ public class MethodInputSelector {
     
     //for the root transition, its position could only be the this position or the return type
     //XXX not sure
-    PalusUtil.checkTrue(position == 0 || position == -1);
+    //Log.log("For transition: " + transition + ",  position: " + position);
+    //PalusUtil.checkTrue(position == 0 || position == -1);
     
     //the required class type (including the receiver)
     List<Class<?>> inputClasses = statement.getInputTypes();

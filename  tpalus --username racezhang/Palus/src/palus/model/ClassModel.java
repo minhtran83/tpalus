@@ -576,7 +576,7 @@ public class ClassModel implements Serializable {
 	          subTransitions.add(newTransition);
 	          destNode.getClassModel().addTransitions(subTransitions);
 	          //XXX update the transition repository
-	          TraceTransitionManager.replaceTransitions(transition, newTransition);
+	          //TraceTransitionManager.replaceTransitions(transition, newTransition);
 	        }
 	      }
 	    }

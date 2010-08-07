@@ -8,6 +8,8 @@ package arrayexamples;
  */
 public class Invariant {
   
+  private String name = null;
+  
   public Invariant instatiate(PptSlice2 slice) {
     return new Invariant(10);
   }
@@ -15,5 +17,13 @@ public class Invariant {
   private Invariant(int i) {}
   
    Invariant() {}
+   
+   public String getName() {
+     return name;
+   }
+   
+   public void setName(String n) {
+     this.name = n;
+   }
 
 }

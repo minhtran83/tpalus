@@ -28,7 +28,7 @@ import plume.Pair;
 
 public class TraceAnalyzer {
   
-    public static String PROJECT_NAME = "array_example";
+    public static String PROJECT_NAME = "tiny_sql";
   
 	//the raw traces from program execution
 	private final List<TraceEvent> traces;

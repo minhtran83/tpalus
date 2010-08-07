@@ -24,8 +24,31 @@ import randoop.util.SimpleList;
 
 /**
  * @author saizhang@google.com (Your Name Here)
- *
  */
+
+//TODO
+//how to diversify the existing sequence
+//1. append the most related method
+//2. append all method in this class
+//3. append multiple method?
+//4. about argument choosing. using the object profile?
+
+//limitations:
+//1. the statistcs is problematic
+//2. there might be redundant
+//3. there are no dependence information on parameter constrains
+//4. associate parameter values from execution to specific method
+
+//using value replacement to find suspicious transition
+//use dynamic tainting to find out irrelevant
+//use adapative testing to wisely choose parameter
+//record constrains during execution to guide parameter choosing
+
+/***
+ * 
+ * 
+ * **/
+
 public class SequenceDiversifier {
 
   private final ModelBasedGenerator generator;
@@ -40,10 +63,7 @@ public class SequenceDiversifier {
 //all generated sequence from diversify
   protected final Set<ExecutableSequence> diversifiedValidSequence
       = new LinkedHashSet<ExecutableSequence>();
-  
-  //how to diversifier the existing sequence
-  //1. append the most related method
-  //2. append all method in this class
+
   
   public SequenceDiversifier(ModelBasedGenerator generator, MethodRecommender recommender) {
     PalusUtil.checkNull(generator);
@@ -115,7 +135,7 @@ public class SequenceDiversifier {
       
       
       Variable var = seq.randomVariableForTypeLastStatement(inputType, Match.COMPATIBLE_TYPE);
-      varIndex[i] = totalseqlines + var.index - 1;
+      varIndex[i] = totalseqlines + var.index;
       
       totalseqlines += seq.size();
     }
@@ -136,8 +156,11 @@ public class SequenceDiversifier {
       Log.log("Succeed in Diversify ...");
       
       ExecutableSequence eSeq = new ExecutableSequence(s);
-      eSeq.execute(null);
-      if(!eSeq.hasFailure() && !eSeq.hasNonExecutedStatements()) {
+      
+      //execute it,using the same executor
+      eSeq.execute(generator.executionVisitor);
+      
+      if(/*!eSeq.hasFailure() &&*/ !eSeq.hasNonExecutedStatements()) {
         this.diversifiedValidSequence.add(eSeq);
       }
     }

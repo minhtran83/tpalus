@@ -19,6 +19,7 @@ public class TinySQLUnitTest extends TestCase {
   public static Test suite() {
     TestSuite result = new TestSuite();
     result.addTest(new TestSuite(TinySQLUnitTest0.class));
+    result.addTest(new TestSuite(TinySQLUnitTest1.class));
     return result;
   }
 

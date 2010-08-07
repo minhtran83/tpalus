@@ -10,4 +10,6 @@ public class BinaryCore {
   
   public BinaryCore(Invariant inv) {}
   
+  public BinaryCore(String[] strArray, int[] array) {}
+  
 }

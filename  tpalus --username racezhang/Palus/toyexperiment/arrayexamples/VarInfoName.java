@@ -11,7 +11,7 @@ public class VarInfoName {
   String name = "name";
   
   public VarInfoName(String str) {
-    
+    check(str);
   }
   
   public static VarInfoName parse(String str) {
@@ -27,7 +27,7 @@ public class VarInfoName {
   }
 
   private void check(String str) {
-    if(!str.startsWith("return") || !str.startsWith("var")) {
+    if(!str.startsWith("return") && !str.startsWith("var")) {
       throw new Error();
     }
   }

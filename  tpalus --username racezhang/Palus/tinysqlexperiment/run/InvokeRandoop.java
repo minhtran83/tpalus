@@ -13,7 +13,7 @@ public class InvokeRandoop {
     //java -classpath randoop.jar randoop.main.Main gentests --classlist=myclasses.txt --timelimit=60
     args = new String[]{"gentests", "--classlist=./tinysqlexperiment/tinysqlclass.txt",
         "--junit-classname=TinySQLUnitTest", "--junit-output-dir=./tinysqlexperiment",
-        "--junit-package-name=generatedtest", "--timelimit=10"};
+        "--junit-package-name=generatedtest", "--timelimit=20"};
     randoop.main.Main.main(args);
   }
   
