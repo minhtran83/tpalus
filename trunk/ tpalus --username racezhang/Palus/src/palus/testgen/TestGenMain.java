@@ -131,6 +131,7 @@ public class TestGenMain {
       
       //get statement under test for each class
       List<StatementKind> model = Reflection.getStatements(classesToTest, null);
+      
       //add Object constructor
       this.addObjectConstructor(model);
       

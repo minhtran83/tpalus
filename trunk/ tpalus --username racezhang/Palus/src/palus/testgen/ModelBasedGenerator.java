@@ -13,6 +13,7 @@ import plume.Pair;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,7 +40,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
 
   /*customizable properties*/
   //the percentage of time in filling the component with random generated tests
-  public static float percentage_of_random_gen = 0.4f;//1.0f;
+  public static float percentage_of_random_gen = 0.0f;//1.0f;
   //the percentage of create of a new object from root
   public static float ratio_start_from_root = 0.3f;
   //the max times in trying to generate a new root sequence
@@ -48,15 +49,17 @@ public class ModelBasedGenerator extends ForwardGenerator {
   public static int max_tries_for_extend_sequence = 5;
   //delete the extended trace ?
   public static boolean delete_extended_seq_in_model = true;
+  //do random testing before or after systematic testing?
+  public static boolean random_test_before_model = true;
 
   
   //a time to record the time for random test generation
-  private final Timer random_gen_timer = new Timer();
+  private final Timer random_gen_timer_before = new Timer();
+  private final Timer random_gen_timer_after = new Timer();
   //the model for guiding test generation
   public final Map<Class<?>, ClassModel> models;
-  //some internal data structures for keep track of the generated object state
-//  private final Map<Class<?>, Map<ModelNode, List<Sequence>>> modelSequences
-//      = new LinkedHashMap<Class<?>, Map<ModelNode, List<Sequence>>>();
+  //keep track of all model uncovered statement, which should be tested afterwards
+  public final List<StatementKind> modelUncovered;
   
   //Keep the relations between generated sequence with model node
   protected final ModelSequences modelSequences;
@@ -89,6 +92,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
       this.valueCollections = valueCollections;
     }
     this.inputSelector = new MethodInputSelector(this.valueCollections);
+    this.modelUncovered = this.getModelUncoveredStatements(statements, models);
     
     //log the statement
     Log.log("All statements:");
@@ -97,13 +101,23 @@ public class ModelBasedGenerator extends ForwardGenerator {
     }
     Log.log("\n\n");
     
+    //log all uncovered statements
+    Log.log("All uncovered statements: ");
+    for(StatementKind statement : modelUncovered) {
+      Log.log("    " + statement);
+    }
+    Log.log("\n\n");
+    
     //initialize the sequence diversifier, and recommender
     this.diversifier = new SequenceDiversifier(this, recommender);
     this.recommender = recommender;
 
     //FIXME not a perfect place here
-    this.random_gen_timer.startTiming();
-    System.out.println("\n\n....First generating tests randomly...\n\n");
+    this.random_gen_timer_before.startTiming();
+    this.random_gen_timer_after.startTiming();
+    if(random_test_before_model) {
+        System.out.println("\n\n....First generating tests randomly...\n\n");
+    }
   }
   
   /**
@@ -112,8 +126,13 @@ public class ModelBasedGenerator extends ForwardGenerator {
   @Override
   public ExecutableSequence step() {
     //we first try to generate a few sequences randomly
-    if(!randomGenerationStop()) {
+    if(random_test_before_model && !randomGenerationStop()) {
       return super.step();
+    }
+    if(!random_test_before_model && randomGenerationStart()) {
+      //System.out.println("random");
+      //return super.step();
+      return sequenceForModelUncoveredStatements();
     }
     //clear the component if needed
     long startTime = System.nanoTime();
@@ -421,18 +440,52 @@ public class ModelBasedGenerator extends ForwardGenerator {
    * */
   private boolean randomGenerationStop() {
     
-    if(!this.random_gen_timer.isRunning()) {
+    if(!this.random_gen_timer_before.isRunning()) {
       return true;
     }
     
-    long elapsedTime = this.random_gen_timer.getTimeElapsedMillis();
+    long elapsedTime = this.random_gen_timer_before.getTimeElapsedMillis();
     if(elapsedTime > this.timeMillis * percentage_of_random_gen) {
       System.out.println("Finishing random generation phase.");
-      this.random_gen_timer.stopTiming();
+      this.random_gen_timer_before.stopTiming();
       return true;
     } else {
       return false;
     }
+  }
+  
+  private boolean randomGenerationStart() {
+    if((!this.random_gen_timer_after.isRunning())) {
+      return false;
+    }
+    long elapsedTime = this.random_gen_timer_after.getTimeElapsedMillis();
+    if(elapsedTime > this.timeMillis * (1- percentage_of_random_gen)) {
+      //System.out.println("Start random generation phase.");
+      //this.random_gen_timer_after.stopTiming();
+      return true;
+    } else {
+      return false;
+    }
+  }
+  
+  
+  /**
+   * Filter all model uncovered method statement 
+   **/
+  private List<StatementKind> getModelUncoveredStatements(List<StatementKind> statements,
+      Map<Class<?>, ClassModel> model) {
+    List<StatementKind> uncovered = new LinkedList<StatementKind>();
+    
+    Set<Class<?>> modelledClasses = model.keySet();
+    for(StatementKind statement : statements) {
+      Class<?> declaringClass = PalusUtil.getDeclaringClass(statement);
+      PalusUtil.checkTrue(declaringClass != null);
+      if(!modelledClasses.contains(declaringClass)) {
+        uncovered.add(statement);
+      }
+    }
+    
+    return uncovered;
   }
   
   /**
@@ -465,6 +518,122 @@ public class ModelBasedGenerator extends ForwardGenerator {
     }
     //did not find
     return null;
+  }
+  
+  /**
+   * Random test model uncovered statements
+   * */
+  private ExecutableSequence sequenceForModelUncoveredStatements() {
+    
+    long startTime = System.nanoTime();
+    SequenceGeneratorStats.steps++;
+    
+    if(components.size() % GenInputsAbstract.clear == 0) {
+      components.clear();
+    }
+    
+    ExecutableSequence eSeq = createSeqForUncoveredStatements(this.modelUncovered);
+    
+    //create here FIXME
+    
+    if(eSeq == null) {
+      return null;
+    }
+    
+    SequenceGeneratorStats.currSeq = eSeq.sequence;
+    long endTime = System.nanoTime();
+    long genTime = endTime - startTime;
+    startTime = endTime;
+    
+    eSeq.execute(this.executionVisitor);
+    
+    endTime = System.nanoTime();
+    
+    eSeq.exectime = endTime - startTime;
+    startTime = endTime;
+    
+    super.processSequence(eSeq);
+    if(eSeq.sequence.hasActiveFlags()) {
+      components.add(eSeq.sequence);
+    }
+    
+    endTime = System.nanoTime();
+    genTime += endTime - startTime;
+    eSeq.gentime = genTime;
+    
+    
+    return eSeq;
+  }
+  
+  /**
+   * Create executable sequence for uncovered statements
+   * XXX the following code is highly redundant!
+   * */
+  private ExecutableSequence createSeqForUncoveredStatements(List<StatementKind> statementCandidates) {
+    StatementKind statement = null;
+    
+    if(statementCandidates.isEmpty()) {
+      return null;
+    }
+    
+    statement = Randomness.randomMember(statementCandidates);
+    
+    stats.statStatementSelected(statement);
+    
+    InputsAndSuccessFlag sequences = super.selectInputs(statement, this.components);
+    
+    if(!sequences.success) {
+      return null;
+    }
+    
+    int[] seqlengths = new int[sequences.sequences.size()];
+    for(int i = 0; i < sequences.sequences.size(); i++) {
+      Sequence oneseq = sequences.sequences.get(i);
+      PalusUtil.checkTrue(oneseq.size() > 0);
+      seqlengths[i] = oneseq.size();
+    }
+    
+    Sequence concatSeq = Sequence.concatenate(sequences.sequences);
+    
+    List<Variable> inputs = new ArrayList<Variable>();
+    for(Integer oneinput : sequences.variables) {
+      Variable v = concatSeq.getVariable(oneinput);
+      inputs.add(v);
+    }
+    
+    Sequence newSequence = concatSeq.extend(statement, inputs);
+    if(GenInputsAbstract.repeat_heuristic && Randomness.nextRandomInt(10) == 0) {
+      int times = Randomness.nextRandomInt(10);
+      newSequence = newSequence.repeatLast(times);
+    }
+    
+    if(newSequence.size() > GenInputsAbstract.maxsize) {
+      stats.statStatementToBig(statement);
+      return null;
+    }
+    
+    super.randoopConsistencyTests(newSequence);
+    
+    if(this.allSequences.contains(newSequence)) {
+      stats.statStatementRepeated(statement);
+      return null;
+    }
+    
+    for(Sequence s : sequences.sequences) {
+      s.lastTimeUsed = java.lang.System.currentTimeMillis();
+    }
+    
+    super.randoopConsistencyTest2(newSequence);
+    
+    stats.statStatementNotDiscarded(statement);
+    
+    //FIXME did not check statistics
+    
+    for(Sequence is : sequences.sequences) {
+      this.subsumed_sequences.add(is);
+    }
+    
+    return new ExecutableSequence(newSequence);
   }
   
   /**

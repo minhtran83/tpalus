@@ -50,9 +50,20 @@ import randoop.util.SimpleList;
  * **/
 
 public class SequenceDiversifier {
-
-  private final ModelBasedGenerator generator;
   
+  /**
+   * If this option is true, it will append every method to an existing sequence.
+   * That is "replicating every generated sequence"
+   * */
+  public static boolean exhaustiveDiversifyModel = true;
+  
+  public static boolean addReturnTypeRelatedStatement = false;
+  
+  
+  /**
+   * Internal states
+   * */
+  private final ModelBasedGenerator generator;
   /**this collection will never be mutated*/
   private final SequenceCollection components;
   private final MethodRecommender recommender;
@@ -74,6 +85,7 @@ public class SequenceDiversifier {
   
   /**
    * it diversify the existence sequence, which just calls statement
+   * @param statement is the method call it just extends
    * */
   public void diversifySequence(Sequence sequence, StatementKind statement) {
     PalusUtil.checkNull(sequence);
@@ -88,6 +100,11 @@ public class SequenceDiversifier {
       this.diversifySequence(sequence, related);
     } else if (statement instanceof RMethod) {
       related = this.recommender.recommend(statement);
+      //also consider the return type FIXME be aware of a null value here
+      if(addReturnTypeRelatedStatement) {
+        Class<?> retType = statement.getOutputType();
+        related.addAll(this.recommender.recommendAll(retType));
+      }
     } else {
       //do nothing here
       return;
@@ -105,8 +122,21 @@ public class SequenceDiversifier {
     if(statementsToAppend.isEmpty()) {
       return;
     }
-    //choose different divisify strategy
-    StatementKind statement = Randomness.randomSetMember(statementsToAppend);
+    if(exhaustiveDiversifyModel) {
+      //extend it with all related one
+      for(StatementKind statement : statementsToAppend) {
+        this.diversifyOneSequence(sequence, statement);
+      }
+    } else  {
+      //random extension
+      StatementKind statement = Randomness.randomSetMember(statementsToAppend);
+      this.diversifyOneSequence(sequence, statement);
+    }
+  }
+  
+  protected void diversifyOneSequence(Sequence sequence, StatementKind statement) {
+    PalusUtil.checkNull(sequence);
+    PalusUtil.checkNull(statement);
     
     List<Class<?>> inputClasses = statement.getInputTypes();
     int[] varIndex = new int[inputClasses.size()];
@@ -132,7 +162,6 @@ public class SequenceDiversifier {
       
       Sequence seq = Randomness.randomMember(sequences);
       extraSequences.add(seq);
-      
       
       Variable var = seq.randomVariableForTypeLastStatement(inputType, Match.COMPATIBLE_TYPE);
       varIndex[i] = totalseqlines + var.index;

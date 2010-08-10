@@ -2,6 +2,9 @@
 
 package palus;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -12,12 +15,14 @@ import java.util.List;
  * @author saizhang@google.com (Your Name Here)
  *
  */
-public final class AbstractState {
+public final class AbstractState implements java.io.Serializable {
   
   private final Class<?> clz;
   
-  private final Field[] fields;
+  private transient /*final*/ Field[] fields; //field could not be serialized
   private final State[] states;
+  
+  private final String[] serializableFields;
   
   public boolean isPrimtiveOrString = false;
   public Object valueOfPrimitiveOrString = null;
@@ -26,11 +31,13 @@ public final class AbstractState {
     this(obj, false);
   }
   
+  /** init indicates whether the object is before creation */
   public AbstractState(Object obj, boolean init) throws IllegalArgumentException, IllegalAccessException {
     //check for null
     if(obj == null) {
       clz = null;
       fields = new Field[0];
+      serializableFields = new String[0];
       states = new State[0];
       return;
     }
@@ -40,6 +47,7 @@ public final class AbstractState {
     if(this.clz.isPrimitive() || PalusUtil.isPrimitive(this.clz)
         || this.clz == java.lang.String.class) {
       fields = new Field[0];
+      serializableFields = new String[0];
       states = new State[0];
       isPrimtiveOrString = true;
       valueOfPrimitiveOrString = obj;
@@ -47,6 +55,7 @@ public final class AbstractState {
       //deal with non-primitive, and non-string
       Field[] allMutableClassFields = this.getNonStaticNonFinalFields(obj.getClass());
       this.fields = allMutableClassFields;
+      this.serializableFields = new String[this.fields.length];
       if(!init) {
         this.states = this.extractStates(this.fields, obj);
       } else {
@@ -55,6 +64,43 @@ public final class AbstractState {
           this.states[i] = State.INIT;
         }
       }
+    }
+  }
+  
+  public static void serialize(ObjectOutputStream oos, AbstractState abState) throws IOException {
+    abState.saveFieldStates();
+    oos.writeObject(abState);
+  }
+  
+  public static AbstractState deserialize(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+    Object obj = ois.readObject();
+    PalusUtil.checkTrue(obj instanceof AbstractState);
+    AbstractState abState = (AbstractState)obj;
+    abState.recoverFieldStates();
+    return abState;
+  }
+  
+  private void saveFieldStates() {
+    for(int i = 0; i < this.fields.length; i++) {
+      this.serializableFields[i] = this.fields[i].toGenericString();
+    }
+  }
+  
+  private void recoverFieldStates() {
+    PalusUtil.checkNull(this.clz);
+    Field[] declaredFields = this.clz.getDeclaredFields();
+    this.fields = new Field[this.serializableFields.length];
+    for(int i = 0; i < this.serializableFields.length; i++) {
+      String signature = this.serializableFields[i];
+      Field field = null;
+      for(Field f : declaredFields) {
+        if(f.toGenericString().equals(signature)) {
+          field = f;
+          break;
+        }
+      }
+      PalusUtil.checkNull(field);
+      this.fields[i] = field;
     }
   }
   

@@ -15,6 +15,8 @@ import palus.model.ClassModel;
 import palus.model.TraceAnalyzer;
 import palus.model.serialize.ModelSerializer;
 import palus.model.serialize.TraceSerializer;
+import palus.testgen.ModelBasedGenerator;
+import palus.testgen.SequenceDiversifier;
 import palus.testgen.TestGenMain;
 import palus.trace.TraceEvent;
 
@@ -24,6 +26,7 @@ import palus.trace.TraceEvent;
  */
 public class OfflineMain {
 
+ 
   //the file
   public static final String TRACE_OBJECT_FILE = TraceAnalyzer.TRACE_OBJECT_FILE;
   
@@ -36,8 +39,18 @@ public class OfflineMain {
   public static void main(String[] args) throws IOException, ClassNotFoundException {
     Log.logConfig("./log_test_gen.txt");
     Log.log("Start logging....");
+    
+    configure_options();
+    
     OfflineMain main = new OfflineMain();
     main.nonStaticMain(args);
+  }
+  
+  private static void configure_options() {
+    TestGenMain.timelimit = 50;
+    ModelBasedGenerator.percentage_of_random_gen = 0.4f;
+    ModelBasedGenerator.random_test_before_model = false;
+    SequenceDiversifier.exhaustiveDiversifyModel = true;
   }
   
   public void nonStaticMain(String[] args) throws IOException, ClassNotFoundException {

@@ -6,7 +6,7 @@ package palus;
  * @author saizhang@google.com (Your Name Here)
  *
  */
-public enum State {
+public enum State implements java.io.Serializable {
 
   //the init state of every field
   INIT,
