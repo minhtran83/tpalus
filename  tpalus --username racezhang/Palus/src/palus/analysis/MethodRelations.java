@@ -32,16 +32,14 @@ import java.util.Set;
  *
  */
 final class MethodRelations implements Opcodes {
+  //all classes
   private final Collection<Class<?>> classes;
   
-  //private static int MAX_NUM = 3;
-  
+  //collections to keep method dependence
   protected final Map<Class<?>, Map<Method, ReadWriteFields>> fieldReadWrites =
-    new LinkedHashMap<Class<?>, Map<Method, ReadWriteFields>>();
-  
+    new LinkedHashMap<Class<?>, Map<Method, ReadWriteFields>>();  
   protected final Map<Class<?>, Map<Method, List<Method>>> dependences =
-    new LinkedHashMap<Class<?>, Map<Method, List<Method>>>();
-  
+    new LinkedHashMap<Class<?>, Map<Method, List<Method>>>();  
   protected final Map<Class<?>, Map<StatementKind, List<StatementKind>>> statementDependences =
     new LinkedHashMap<Class<?>, Map<StatementKind, List<StatementKind>>>();
   
@@ -228,6 +226,10 @@ final class MethodRelations implements Opcodes {
     
     return readWrites;
   }
+
+  private Method getMethod(Class<?> cls, MethodNode methodNode) {
+    return this.getMethod(cls, methodNode.name, methodNode.desc);
+  }
   
   private Method getMethod(Class<?> cls, String methodName, String methodDesc) {
     Method[] methods = cls.getDeclaredMethods();
@@ -239,10 +241,6 @@ final class MethodRelations implements Opcodes {
     }
     
     return null;
-  }
-  
-  private Method getMethod(Class<?> cls, MethodNode methodNode) {
-    return this.getMethod(cls, methodNode.name, methodNode.desc);
   }
   
   private Map<Method, ReadWriteFields> mergeCallEffects(
@@ -293,7 +291,9 @@ final class MethodRelations implements Opcodes {
     return retMap;
   }
   
-  //using if-idf to compute
+  /**
+   * Compute the dependence between each methods
+   * */
   private void computeDependence() {
     for(Entry<Class<?>, Map<Method, ReadWriteFields>> entry : this.fieldReadWrites.entrySet()) {
       Class<?> clazz = entry.getKey();
@@ -307,7 +307,7 @@ final class MethodRelations implements Opcodes {
         //add all
         methodMap.put(m, allMethods);        
       }
-      
+      //put the class and method dependence to the map
       this.dependences.put(clazz, methodMap);
     }
   }
@@ -324,30 +324,32 @@ final class MethodRelations implements Opcodes {
     }
   }
   
-  private StatementKind getStatement(List<StatementKind> models, Method m) {
+  private void copyDependenceToStatements(List<StatementKind> models) {
+    
+    //keep a map to speed up lookup
+    Map<String, StatementKind> methodStmtMap = this.buildMethodStatementMapping(models);
+    
+  //classify constructors
+    Map<Class<?>, List<StatementKind>> constructors = new LinkedHashMap<Class<?>, List<StatementKind>>();
     for(StatementKind statement : models) {
-      if(statement instanceof RMethod) {
-        RMethod rmethod = (RMethod)statement;
-        if(rmethod.getMethod().toGenericString().equals(m.toGenericString())) {
-          return statement;
-        }
+      Class<?> owner = this.getDeclaringClass(statement);
+      if(!constructors.containsKey(owner)) {
+        constructors.put(owner, new LinkedList<StatementKind>());
+      }
+      if(statement instanceof RConstructor) {
+        constructors.get(owner).add(statement);
       }
     }
-    return null;
-  }
-  
-  private void copyDependenceToStatements(List<StatementKind> models) {
-    //System.err.println("~~~~~~~~~~~~~~~~");
     
+    //compute the dependence between statement kinds
     for(Entry<Class<?>, Map<Method, List<Method>>> entry : dependences.entrySet()) {
-      //System.err.println("~~~~~~~~~~~~~~~~");
       Class<?> clazz = entry.getKey();
       Map<StatementKind, List<StatementKind>> statementMap =
         new LinkedHashMap<StatementKind, List<StatementKind>>();
       
       Map<Method, List<Method>> methodMap = entry.getValue();
       for(Entry<Method, List<Method>> methodEntry : methodMap.entrySet()) {
-        StatementKind key = this.getStatement(models, methodEntry.getKey());
+        StatementKind key =  methodStmtMap.get(methodEntry.getKey().toGenericString());// this.getStatement(models, methodEntry.getKey());
         if(key == null) {
           //System.err.println("No key? " + methodEntry.getKey());
           continue;
@@ -356,15 +358,37 @@ final class MethodRelations implements Opcodes {
         
         List<Method> methods = methodEntry.getValue();
         for(Method method : methods) {
-          StatementKind mValue = this.getStatement(models, method);
+          StatementKind mValue = methodStmtMap.get(method.toGenericString()); //this.getStatement(models, method);
           if(mValue != null) {
             //System.err.println("~~~~~~~~~~~~~~~~");
             statementMap.get(key).add(mValue);
           }
         }
+        //also add constructors
+        List<StatementKind> ctors = constructors.get(clazz);
+        if(ctors != null && !ctors.isEmpty()) {
+          statementMap.get(key).addAll(ctors);
+        }
       }
       
       this.statementDependences.put(clazz, statementMap);
     }
+    
+    //reclaim the memory
+    constructors.clear();
+    methodStmtMap.clear();
   }
+  
+  private Map<String, StatementKind> buildMethodStatementMapping(List<StatementKind> models) {
+    Map<String, StatementKind> methodStmtMap = new LinkedHashMap<String, StatementKind>();
+    for(StatementKind statement : models) {
+      if(statement instanceof RMethod) {
+        String signature = ((RMethod)statement).getMethod().toGenericString();
+        methodStmtMap.put(signature, statement);
+      }
+    }
+    
+    return methodStmtMap;
+  }
+
 }

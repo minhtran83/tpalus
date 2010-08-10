@@ -8,6 +8,10 @@ import org.objectweb.asm.tree.IntInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import randoop.RConstructor;
+import randoop.RMethod;
+import randoop.StatementKind;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -397,6 +401,22 @@ public class PalusUtil implements Opcodes{
 	    }
 	    
 	    return sb.toString();
+	  }
+	  
+	  /**
+	   * Get the declaring class of constructor and method statement
+	   * If it is other kind of statement, return null.
+	   * */
+	  public static Class<?> getDeclaringClass(StatementKind statement) {
+	    if(statement instanceof RMethod) {
+	      RMethod rmethod = (RMethod)statement;
+	      return rmethod.getMethod().getDeclaringClass();
+	    } else if(statement instanceof RConstructor) {
+	      RConstructor rconstructor = (RConstructor)statement;
+	      return rconstructor.getConstructor().getDeclaringClass();
+	    } else {
+	      return null;
+	    }
 	  }
 	
 	public static void main(String[] args) {

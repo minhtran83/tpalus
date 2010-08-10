@@ -15,10 +15,14 @@ import java.util.Set;
  */
 class ReadWriteFields {
   
+  /**
+   * Variable name and frequency
+   * */
   final Map<String, Integer> readFields = new LinkedHashMap<String, Integer>();
-  
   final Map<String, Integer> writeFields = new LinkedHashMap<String, Integer>();
-  
+  /**
+   * The method calls
+   * */
   final Set<Method> calls = new LinkedHashSet<Method>();
   
   ReadWriteFields cloneWithoutCalls() {
