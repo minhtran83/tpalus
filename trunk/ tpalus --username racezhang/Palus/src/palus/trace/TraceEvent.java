@@ -2,11 +2,15 @@ package palus.trace;
 
 import org.objectweb.asm.Type;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
+import palus.AbstractState;
 import palus.PalusUtil;
 
 public abstract class TraceEvent implements Serializable {
@@ -19,6 +23,14 @@ public abstract class TraceEvent implements Serializable {
 	private final int thizID;
 	//private transient final Object[] params; /*can not serialize it, because you do not know what the runtime type it is*/
 	private final int[] paramIDs;
+	
+	//caching the type information of this and params
+	private /*final*/ Class<?> cachedThisType = null;
+	private final Class<?>[] cachedParamTypes;
+	
+	//the object profiles
+	private final AbstractState thizProfile;
+	private final AbstractState[] paramProfiles;
 	
 	//the following two are only used for keeping values of primitive types
 	//serialization thiz
@@ -100,6 +112,22 @@ public abstract class TraceEvent implements Serializable {
 		for(int i = 0; i < paramIDs.length; i++) {
 		  paramIDs[i] = System.identityHashCode(params[i]);
 		}
+		
+		//compute the type
+		cachedThisType = this.getReceiverType();
+		cachedParamTypes = new Class<?>[paramIDs.length];
+		for(int i = 0; i < paramIDs.length; i++) {
+		  cachedParamTypes[i] = this.getParamType(i);
+		}
+		
+		//compute the abstract profiles
+		boolean isInit = (thiz == null);
+		thizProfile = new AbstractState(thiz, cachedThisType, isInit);
+		paramProfiles = new AbstractState[params.length];
+		for(int i = 0; i < paramIDs.length; i++) {
+		  paramProfiles[i] = new AbstractState(params[i], cachedParamTypes[i]);
+		}
+		
 		//check the consistence
 		checkRep(methodDesc, params);
 	}
@@ -163,6 +191,14 @@ public abstract class TraceEvent implements Serializable {
 //		return thiz;
 //	}
 	
+	public AbstractState getThisProfile() {
+	  return this.thizProfile;
+	}
+	
+	public AbstractState[] getParamProfiles() {
+	  return this.paramProfiles;
+	}
+	
 	public String getSerializableThisValue() {
 	  return this.serializableThis;
 	}
@@ -206,21 +242,39 @@ public abstract class TraceEvent implements Serializable {
 	  return Type.getArgumentTypes(this.methodDesc)[i].getClassName();
 	}
 	
-	public Class<?> getReceiverType() throws ClassNotFoundException {
-	  return Class.forName(this.className);
+	public Class<?> getReceiverType()  {
+	  if(this.cachedThisType == null) {
+	    try {
+          this.cachedThisType = Class.forName(this.className);
+        } catch (ClassNotFoundException e) {
+          throw new RuntimeException(e);
+        }
+	  }
+	  return this.cachedThisType;// Class.forName(this.className);
 	}
 	
-	public Class<?> getParamType(int i) throws ClassNotFoundException {
+	public Class<?> getParamType(int i) {
 		assert i >= 0 && i < serializableParams.length;
-		String paramTypeName = Type.getArgumentTypes(this.methodDesc)[i].getClassName();
-		if(this.isArrayType(paramTypeName)) {
-		   return this.getClassForArrayType(paramTypeName);
+		if(this.cachedParamTypes[i] == null) {
+		  String paramTypeName = Type.getArgumentTypes(this.methodDesc)[i].getClassName();
+		  //System.out.println(paramTypeName + "xxxx");
+	      if(this.isArrayType(paramTypeName)) {
+	        try {
+                this.cachedParamTypes[i] = this.getClassForArrayType(paramTypeName);
+             } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+	      } else if(PalusUtil.isPrimitive(paramTypeName)) {
+	        this.cachedParamTypes[i] =  PalusUtil.getClassForPrimitiveType(paramTypeName);
+	      } else {
+	        try {
+                this.cachedParamTypes[i] =  Class.forName(paramTypeName);
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+	      }
 		}
-		if(PalusUtil.isPrimitive(paramTypeName)) {
-			return PalusUtil.getClassForPrimitiveType(paramTypeName);
-		} else {
-			return Class.forName(paramTypeName);
-		}
+		return this.cachedParamTypes[i];
 	}
 	
 	public Class<?> getReturnType() throws ClassNotFoundException {
@@ -262,6 +316,11 @@ public abstract class TraceEvent implements Serializable {
         sb.append("  ");
       }
       sb.append(toString());
+      sb.append("\nAbstract state profile: \n");
+      sb.append("This: " + this.thizProfile + "\n");
+      for(AbstractState state : this.paramProfiles) {
+        sb.append(" param: " + state + "\n");
+      }
 //      sb.append(",,,, id:");
 //      sb.append(this.id + ",");
 //      sb.append("pair_id:");
@@ -273,6 +332,27 @@ public abstract class TraceEvent implements Serializable {
       //sb.append("pair_trace:" + this.pair);
       
       return sb.toString();
+    }
+    
+    /**
+     * Serialize this object
+     * @throws IOException
+     * */
+    public void serialize(ObjectOutputStream oos) throws IOException {
+      oos.writeObject(this);
+    }
+    
+    public static TraceEvent deserialize(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+      Object obj = ois.readObject();
+      if(!(obj instanceof TraceEvent)) {
+          throw new IOException("Contain object other than TraceEvent!");
+      }
+      TraceEvent event = (TraceEvent)obj;
+      event.getThisProfile().recoverFieldStates();
+      for(AbstractState state : event.getParamProfiles()) {
+        state.recoverFieldStates();
+      }
+      return event;
     }
 	
 	public abstract boolean isStaticMethod();

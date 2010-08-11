@@ -20,6 +20,8 @@ import java.util.Set;
  */
 public class MethodRecommender {
   
+  public static boolean use_tf_idf = false;
+  
   private final MethodRelations relations;
   
   public MethodRecommender(Collection<Class<?>> classes) {
