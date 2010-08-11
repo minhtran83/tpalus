@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.objectweb.asm.Type;
 
+import palus.AbstractState;
 import palus.Log;
 import palus.PalusUtil;
 import palus.trace.Stats;
@@ -100,6 +101,16 @@ public class Transition implements Serializable {
 	    } else {
 	      return this.getConstructor().getParameterTypes();
 	    }
+	}
+	
+	//for constructor return the class owner
+	//for other method, it is the return type
+	public Class<?> getOutputType() {
+	  if(this.isConstructor()) {
+	    return this.getConstructor().getDeclaringClass();
+	  } else {
+	    return this.getMethod().getReturnType();
+	  }
 	}
 	
 	public boolean isLoopTransition() {
@@ -368,7 +379,12 @@ public class Transition implements Serializable {
 
 		private final Transition transition;
 		private final DecorationValue thiz;
-		private final DecorationValue[] params;		
+		private final DecorationValue[] params;
+		
+		//XXX add abstract state here
+		private final AbstractState thisState = null;
+		private final AbstractState[] paramStates = null;
+		
 		/** the initial state, 0 represents this, number 1 - params.length
 		 * -1 represents the return value
 		 * represents the corresponding parameter value */

@@ -17,6 +17,8 @@ import java.util.List;
  */
 public final class AbstractState implements java.io.Serializable {
   
+  //private static final long serialVersionUID = 961812625417279099L;
+  
   private final Class<?> clz;
   
   private transient /*final*/ Field[] fields; //field could not be serialized
@@ -24,28 +26,38 @@ public final class AbstractState implements java.io.Serializable {
   
   private final String[] serializableFields;
   
+  private boolean isNullValue = false;
+  
   public boolean isPrimtiveOrString = false;
   public Object valueOfPrimitiveOrString = null;
   
-  public AbstractState(Object obj) throws IllegalArgumentException, IllegalAccessException {
-    this(obj, false);
+  public AbstractState(Object obj, Class<?> type) {
+    this(obj, type, false);
   }
   
   /** init indicates whether the object is before creation */
-  public AbstractState(Object obj, boolean init) throws IllegalArgumentException, IllegalAccessException {
+  public AbstractState(Object obj, Class<?> type, boolean init) {
+    PalusUtil.checkNull(type);
+    
     //check for null
     if(obj == null) {
-      clz = null;
+      this.isNullValue = true;
+      this.clz = type; //static type
       fields = new Field[0];
       serializableFields = new String[0];
       states = new State[0];
       return;
     }
     
+    this.clz = obj.getClass(); //runtime type
+    
+    if(!PalusUtil.isPrimitive(type) && !type.isPrimitive()) {
+        PalusUtil.checkTrue(type.isAssignableFrom(this.clz));
+    }
+    
     //for non-null object
-    this.clz = obj.getClass();
     if(this.clz.isPrimitive() || PalusUtil.isPrimitive(this.clz)
-        || this.clz == java.lang.String.class) {
+        || this.clz == java.lang.String.class ) {
       fields = new Field[0];
       serializableFields = new String[0];
       states = new State[0];
@@ -56,6 +68,7 @@ public final class AbstractState implements java.io.Serializable {
       Field[] allMutableClassFields = this.getNonStaticNonFinalFields(obj.getClass());
       this.fields = allMutableClassFields;
       this.serializableFields = new String[this.fields.length];
+      this.saveFieldStates(); //for serialization purpose
       if(!init) {
         this.states = this.extractStates(this.fields, obj);
       } else {
@@ -80,16 +93,27 @@ public final class AbstractState implements java.io.Serializable {
     return abState;
   }
   
+  /**
+   * Call this before perform serialization
+   * */
   private void saveFieldStates() {
     for(int i = 0; i < this.fields.length; i++) {
       this.serializableFields[i] = this.fields[i].toGenericString();
+      //System.out.println("save field: " + this.serializableFields[i]);
+      PalusUtil.checkNull(this.serializableFields[i]);
     }
   }
   
-  private void recoverFieldStates() {
+  /**
+   * Call this after recovering from  serialization
+   * */
+  public void recoverFieldStates() {
     PalusUtil.checkNull(this.clz);
     Field[] declaredFields = this.clz.getDeclaredFields();
     this.fields = new Field[this.serializableFields.length];
+    
+    //System.out.println("length: " + this.serializableFields.length);
+    
     for(int i = 0; i < this.serializableFields.length; i++) {
       String signature = this.serializableFields[i];
       Field field = null;
@@ -99,6 +123,8 @@ public final class AbstractState implements java.io.Serializable {
           break;
         }
       }
+      //xxx
+      //System.out.println("Field name: null? " + (serializableFields[i] == null) + ", cls: " + this.clz);
       PalusUtil.checkNull(field);
       this.fields[i] = field;
     }
@@ -121,6 +147,15 @@ public final class AbstractState implements java.io.Serializable {
   }
   
   @Override
+  public int hashCode() {
+    int stateCode = 0;
+    for(int i = 0; i < this.states.length; i++) {
+      stateCode += i * this.states[i].hashCode() + 17;
+    }
+    return 133 * (this.isNullValue ? 3 : 1) + 15* this.clz.hashCode() + stateCode;
+  }
+  
+  @Override
   public boolean equals(Object obj) {
     if(!(obj instanceof AbstractState)) {
       return false;
@@ -128,6 +163,10 @@ public final class AbstractState implements java.io.Serializable {
     
     AbstractState state = (AbstractState)obj;
     if(state.getStateClass() != this.clz) {
+      return false;
+    }
+    
+    if(state.isNullValue != this.isNullValue) {
       return false;
     }
     
@@ -146,29 +185,49 @@ public final class AbstractState implements java.io.Serializable {
   public String toString() {
     assert this.fields.length == this.states.length;
     
-    if(this.clz == null) {
-      return "NULL_OBJ_STATE";
+    boolean debug = false;
+    
+    if(this.isNullValue) {
+      return "Null@" + this.clz.getName();
     }
     
     if(this.isPrimtiveOrString) {
-      assert this.valueOfPrimitiveOrString != null;
-      return this.valueOfPrimitiveOrString.toString();
+      PalusUtil.checkTrue(this.valueOfPrimitiveOrString != null);
+      return this.valueOfPrimitiveOrString.toString() + "@" + this.clz.getName();
     }
     
     StringBuffer sb = new StringBuffer();
     
+    sb.append("{");
     for(int i = 0; i < this.states.length; i++) {
       if(i > 0 ) {
         sb.append("  ");
       }
-      sb.append(this.fields[i].getName() + ":" + this.states[i].toString());
+      String fieldName = this.fields == null? "NULL_FIELD_FROM_DESERI" : this.fields[i].getName();
+      sb.append(fieldName + ":" + this.states[i].toString());
     }
+    sb.append("}");
+    sb.append("@");
+    sb.append(this.clz.getName());
+    
+    //append some debugging information
+    if(debug) {
+      sb.append("\n    ");
+      for(int i = 0; i < serializableFields.length; i++) {
+        if(i > 0) {
+           sb.append(", ");
+        }
+        sb.append(this.serializableFields[i]);
+      }
+      sb.append("\n");
+    }
+    
     
     return sb.toString();
   }
   
   //convert the state to abstract domain
-  private State[] extractStates(Field[] fields, Object obj) throws IllegalArgumentException, IllegalAccessException {
+  private State[] extractStates(Field[] fields, Object obj) {
     
     State[] extracts = new State[fields.length];
     for(int i = 0; i < fields.length; i++) {
@@ -178,7 +237,15 @@ public final class AbstractState implements java.io.Serializable {
       Class<?> fieldType = field.getType();
       //get the object value
       field.setAccessible(true);
-      Object fieldValue = field.get(obj);
+      Object fieldValue = null;
+      //XXX be aware here
+      try {
+        fieldValue = field.get(obj);
+      } catch (IllegalArgumentException e) {
+         throw new RuntimeException(e);
+      } catch (IllegalAccessException e) {
+         throw new RuntimeException(e);
+      }
       
       if(fieldType.isPrimitive()) {
         //all primitives must have values

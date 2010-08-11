@@ -30,6 +30,7 @@ import randoop.StatementKind;
 import randoop.Variable;
 import randoop.main.GenInputsAbstract;
 import randoop.util.Randomness;
+import randoop.util.Reflection;
 import randoop.util.Timer;
 
 /**
@@ -49,8 +50,14 @@ public class ModelBasedGenerator extends ForwardGenerator {
   public static int max_tries_for_extend_sequence = 5;
   //delete the extended trace ?
   public static boolean delete_extended_seq_in_model = true;
-  //do random testing before or after systematic testing?
-  public static boolean random_test_before_model = true;
+  //do random testing before  systematic testing?
+  public static boolean random_test_before_model = false;
+  //do random testing after systematic testing
+  public static boolean random_test_after_model = false;
+  //only randomize the model uncovered statements?
+  public static boolean only_random_uncovered_statements = true;
+  //use abstract object profile
+  public static boolean use_abstract_state_as_selector = false;
 
   
   //a time to record the time for random test generation
@@ -63,6 +70,8 @@ public class ModelBasedGenerator extends ForwardGenerator {
   
   //Keep the relations between generated sequence with model node
   protected final ModelSequences modelSequences;
+  //map the result of sequences to abstract states
+  protected final StatesOfSequences sequenceStates;
   //Values collected from method annotation
   protected final ParamValueCollections valueCollections;
   //Helper class for selecting method inputs
@@ -85,6 +94,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
     //initialize the model and model sequences
     this.models = models;
     modelSequences = new ModelSequences(models);
+    sequenceStates = new StatesOfSequences();
     //initialize the value collection
     if(valueCollections == null) {
       this.valueCollections = new ParamValueCollections();
@@ -122,6 +132,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
   
   /**
    * Make a new executable sequence each step
+   * this is called by the abstractgenerator's explorer method
    * */
   @Override
   public ExecutableSequence step() {
@@ -129,10 +140,14 @@ public class ModelBasedGenerator extends ForwardGenerator {
     if(random_test_before_model && !randomGenerationStop()) {
       return super.step();
     }
-    if(!random_test_before_model && randomGenerationStart()) {
+    if(random_test_after_model && randomGenerationStart()) {
       //System.out.println("random");
       //return super.step();
-      return sequenceForModelUncoveredStatements();
+      List<StatementKind> target = this.statements;
+      if(only_random_uncovered_statements) {
+        target = this.modelUncovered;
+      }
+      return randomSequenceForStatements(target);
     }
     //clear the component if needed
     long startTime = System.nanoTime();
@@ -192,12 +207,15 @@ public class ModelBasedGenerator extends ForwardGenerator {
       this.modelSequences.updateModelSequences(eSeq.sequence, tran);
       Log.log("execute pass. updated map size: " + this.modelSequences.size());
       
+      //Save that to the sequence states
+      this.sequenceStates.add(eSeq.sequence, eSeq.getAllResults());
+      Log.log(this.sequenceStates.showContent());
+      
       //diversify the legal sequence
       if(TestGenMain.diversifySequence) {
         //diverse the method
         this.diversifier.diversifySequence(eSeq.sequence, this.selectStatement(tran));
       }
-      
     } else {
       Log.log("executing fail: " + eSeq.toCodeString());
     }
@@ -380,8 +398,13 @@ public class ModelBasedGenerator extends ForwardGenerator {
     
     Log.log("    in extension Select a transition: " + extendTransition);    
     if(statement == null) {
-      throw new BugInPalusException("The statement in transition: "
-          + extendTransition.toSignature() + " is null!");
+      if(Reflection.isVisible(extendTransition.getOutputType())) {
+          throw new BugInPalusException("The statement in transition: "
+              + extendTransition.toSignature() + " is null!");
+      } else {
+        //the bug in randoop, need to remove it
+        return null;
+      }
     }    
     Log.log("    selected statement: " + statement.toParseableString());
     
@@ -523,7 +546,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
   /**
    * Random test model uncovered statements
    * */
-  private ExecutableSequence sequenceForModelUncoveredStatements() {
+  private ExecutableSequence randomSequenceForStatements(List<StatementKind> statements) {
     
     long startTime = System.nanoTime();
     SequenceGeneratorStats.steps++;
@@ -532,7 +555,9 @@ public class ModelBasedGenerator extends ForwardGenerator {
       components.clear();
     }
     
-    ExecutableSequence eSeq = createSeqForUncoveredStatements(this.modelUncovered);
+    //List<StatementKind>
+    
+    ExecutableSequence eSeq = randomCreateSeqStatements(statements/*this.modelUncovered*/);
     
     //create here FIXME
     
@@ -565,11 +590,12 @@ public class ModelBasedGenerator extends ForwardGenerator {
     return eSeq;
   }
   
+  
   /**
    * Create executable sequence for uncovered statements
    * XXX the following code is highly redundant!
    * */
-  private ExecutableSequence createSeqForUncoveredStatements(List<StatementKind> statementCandidates) {
+  private ExecutableSequence randomCreateSeqStatements(List<StatementKind> statementCandidates) {
     StatementKind statement = null;
     
     if(statementCandidates.isEmpty()) {
@@ -579,7 +605,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
     statement = Randomness.randomMember(statementCandidates);
     
     stats.statStatementSelected(statement);
-    
+    //pure random selection
     InputsAndSuccessFlag sequences = super.selectInputs(statement, this.components);
     
     if(!sequences.success) {

@@ -2,6 +2,8 @@
 
 package palus.testgen;
 
+import cov.Branch;
+
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -12,6 +14,7 @@ import palus.Log;
 import palus.PalusUtil;
 import palus.analysis.MethodRecommender;
 import randoop.ExecutableSequence;
+import randoop.FailureAnalyzer;
 import randoop.RConstructor;
 import randoop.RMethod;
 import randoop.Sequence;
@@ -44,11 +47,6 @@ import randoop.util.SimpleList;
 //use adapative testing to wisely choose parameter
 //record constrains during execution to guide parameter choosing
 
-/***
- * 
- * 
- * **/
-
 public class SequenceDiversifier {
   
   /**
@@ -56,7 +54,6 @@ public class SequenceDiversifier {
    * That is "replicating every generated sequence"
    * */
   public static boolean exhaustiveDiversifyModel = true;
-  
   public static boolean addReturnTypeRelatedStatement = false;
   
   
@@ -76,6 +73,10 @@ public class SequenceDiversifier {
       = new LinkedHashSet<ExecutableSequence>();
 
   
+  /**
+   * Constructor. Use a method recommender to diversify the current sequence with other
+   * related ones
+   * */
   public SequenceDiversifier(ModelBasedGenerator generator, MethodRecommender recommender) {
     PalusUtil.checkNull(generator);
     this.generator = generator;
@@ -118,6 +119,10 @@ public class SequenceDiversifier {
     }
   }
   
+  /**
+   * Diversify the current sequence with a collection of statements.
+   * Diversify one statement once
+   * */
   protected void diversifySequence(Sequence sequence, Collection<StatementKind> statementsToAppend) {
     if(statementsToAppend.isEmpty()) {
       return;
@@ -134,6 +139,9 @@ public class SequenceDiversifier {
     }
   }
   
+  /**
+   * Diversify (append) an sequence
+   * */
   protected void diversifyOneSequence(Sequence sequence, StatementKind statement) {
     PalusUtil.checkNull(sequence);
     PalusUtil.checkNull(statement);
@@ -189,9 +197,12 @@ public class SequenceDiversifier {
       //execute it,using the same executor
       eSeq.execute(generator.executionVisitor);
       
-      if(/*!eSeq.hasFailure() &&*/ !eSeq.hasNonExecutedStatements()) {
-        this.diversifiedValidSequence.add(eSeq);
-      }
+      //if(true || /*!eSeq.hasFailure() &&*/ !eSeq.hasNonExecutedStatements()) {
+        //update the num of generated tests  
+        FailureAnalyzer fa = new FailureAnalyzer(eSeq);
+        this.generator.stats.updateStatistics(eSeq, new LinkedHashSet<Branch>()/*no branch info*/,
+            fa);
+      /* }*/
     }
   }
   

@@ -11,11 +11,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import palus.Log;
+import palus.analysis.MethodRecommender;
 import palus.model.ClassModel;
 import palus.model.TraceAnalyzer;
 import palus.model.serialize.ModelSerializer;
 import palus.model.serialize.TraceSerializer;
 import palus.testgen.ModelBasedGenerator;
+import palus.testgen.ModelSequences;
 import palus.testgen.SequenceDiversifier;
 import palus.testgen.TestGenMain;
 import palus.trace.TraceEvent;
@@ -47,10 +49,17 @@ public class OfflineMain {
   }
   
   private static void configure_options() {
-    TestGenMain.timelimit = 50;
+    TestGenMain.timelimit = 300;
+    TestGenMain.diversifySequence = true;
     ModelBasedGenerator.percentage_of_random_gen = 0.4f;
     ModelBasedGenerator.random_test_before_model = false;
-    SequenceDiversifier.exhaustiveDiversifyModel = true;
+    ModelBasedGenerator.random_test_after_model = true;
+    ModelBasedGenerator.only_random_uncovered_statements = false;
+    ModelBasedGenerator.use_abstract_state_as_selector = true;
+    SequenceDiversifier.exhaustiveDiversifyModel = false;
+    ModelSequences.removeExtendedSequence = true;
+    SequenceDiversifier.addReturnTypeRelatedStatement = false;
+    MethodRecommender.use_tf_idf = false;
   }
   
   public void nonStaticMain(String[] args) throws IOException, ClassNotFoundException {

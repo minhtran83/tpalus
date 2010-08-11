@@ -14,6 +14,8 @@ public class MethodExitEvent extends TraceEvent {
 	//for serialization
 	private final String retObjString;
 	
+	//XXX do not need to capture the abstract state here
+	
 	public MethodExitEvent(int id, Object retObj, String className, String methodName,
 	    String methodDesc, Object thiz, Object[] params) {
 		super(id, className, methodName, methodDesc, thiz, params);

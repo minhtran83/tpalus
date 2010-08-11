@@ -155,6 +155,17 @@ public class MethodInputSelector {
         }
       }
       
+      //select from state of sequence pool
+      if(l == null && ModelBasedGenerator.use_abstract_state_as_selector) {
+        Sequence s = generator.sequenceStates.randomSequence(t);
+        if(s != null) {
+          Log.log("Choose from abstract state pool for root seq, type: " + t + "!");
+          ArrayListSimpleList<Sequence> list = new ArrayListSimpleList<Sequence>();
+          list.add(s);
+          l = list;
+        }
+      }
+      
       //there is no decoration value, do the normal selection process
       if(l == null) {
         if (GenInputsAbstract.always_use_ints_as_objects && t.equals(Object.class)) {
@@ -346,6 +357,16 @@ public class MethodInputSelector {
             arrayList.add(sequence);
             l = arrayList;
           }
+        }
+      }
+      
+      if(l == null && ModelBasedGenerator.use_abstract_state_as_selector) {
+        Sequence s = generator.sequenceStates.randomSequence(t);
+        if(s != null) {
+          Log.log("Choose from abstract state pool for extension seq, type: " + t + "!");
+          ArrayListSimpleList<Sequence> list = new ArrayListSimpleList<Sequence>();
+          list.add(s);
+          l = list;
         }
       }
       

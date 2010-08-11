@@ -58,7 +58,8 @@ public class TraceSerializer {
     oos.writeInt(events.size());
     //write the trace event
     for(TraceEvent event : events) {
-      oos.writeObject(event);
+      //oos.writeObject(event);
+      event.serialize(oos);
     }
     oos.flush();
     out.flush();
@@ -71,16 +72,17 @@ public class TraceSerializer {
     FileInputStream fin = new FileInputStream(file);
     ObjectInputStream ois = new ObjectInputStream(fin);
     
-    Object obj = null;
+    //Object obj = null;
     int size = ois.readInt();
     //System.out.println("size: " + size);
     for(int i = 0; i < size; i++) {
-      obj = ois.readObject();
-      if(!(obj instanceof TraceEvent)) {
-          throw new IOException("The file: " + file.getAbsolutePath()
-              + " is corrupted. Contain object other than TraceEvent!");
-      }
-      TraceEvent event = (TraceEvent)obj;
+//      obj = ois.readObject();
+//      if(!(obj instanceof TraceEvent)) {
+//          throw new IOException("The file: " + file.getAbsolutePath()
+//              + " is corrupted. Contain object other than TraceEvent!");
+//      }
+//      TraceEvent event = (TraceEvent)obj;
+      TraceEvent event = TraceEvent.deserialize(ois);
       events.add(event);
     }
     
