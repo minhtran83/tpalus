@@ -5,8 +5,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.objectweb.asm.Type;
 
@@ -206,9 +208,10 @@ public class Transition implements Serializable {
 	}
 	
 	public void addDecoration(String serializableThiz, String[] serializableParams,
-	    Object[] serializableArray, Transition transition, Position p) {
+	    Object[] serializableArray, AbstractState thizState, AbstractState[] paramStates,
+	    Transition transition, Position p) {
 	  Decoration decoration = new Decoration(serializableThiz, serializableParams, serializableArray,
-	      transition, p.toIntValue());
+	      thizState, paramStates, transition, p.toIntValue());
 	  this.addDecoration(decoration);
 	}
 	
@@ -225,8 +228,25 @@ public class Transition implements Serializable {
 	  }
 	}
 	
+	/**
+	 * return how many decoration has been merged
+	 * */
+	int mergeEquivalentDecorations() {
+	  int orig_num = this.decorations.size();
+	  
+	  Set<Decoration> decorationSet = new LinkedHashSet<Decoration>(this.decorations);
+	  this.decorations.clear();
+	  this.decorations.addAll(decorationSet);
+	  
+	  return orig_num - this.decorations.size();
+	}
+	
 	public List<Decoration> getDecorations() {
 	    return this.decorations;
+	}
+	
+	public int getDecorationNum() {
+	  return this.decorations.size();
 	}
 	
 	public boolean hasDecoration() {
@@ -382,8 +402,8 @@ public class Transition implements Serializable {
 		private final DecorationValue[] params;
 		
 		//XXX add abstract state here
-		private final AbstractState thisState = null;
-		private final AbstractState[] paramStates = null;
+//		private final AbstractState thisState = null;
+//		private final AbstractState[] paramStates = null;
 		
 		/** the initial state, 0 represents this, number 1 - params.length
 		 * -1 represents the return value
@@ -391,26 +411,30 @@ public class Transition implements Serializable {
 		private final int position;
 		
 		Decoration(String seriazableThisValue, String [] seriazableParamValues,
-		    Object[] serializableArray, Transition transition, int position) {
+		    Object[] serializableArray, AbstractState thizState, AbstractState[] paramStates,
+		    Transition transition, int position) {
 			//check the input first
 			PalusUtil.checkNull(transition);
 			PalusUtil.checkNull(seriazableParamValues);
 			PalusUtil.checkNull(serializableArray);
+			PalusUtil.checkNull(thizState);
+			PalusUtil.checkNull(paramStates);
 			//System.out.println("position: " + position + ",  param length: " + params.length);
 			PalusUtil.checkTrue(seriazableParamValues.length == serializableArray.length);
+			PalusUtil.checkTrue(seriazableParamValues.length == paramStates.length);
 			PalusUtil.checkTrue(position >= -1 && position <= seriazableParamValues.length);
 			//get the type
 			Class<?> thizType = transition.getModelledClass();
 			Class<?>[] paramTypes = transition.getParamClasses();
 			
-			this.thiz = new DecorationValue(seriazableThisValue, thizType);
+			this.thiz = new DecorationValue(seriazableThisValue, thizType, thizState);
 			this.params = new DecorationValue[seriazableParamValues.length];
 			for(int i = 0; i < this.params.length; i++) {
 			    if(PalusUtil.isPrimitiveOrStringOneDimensionArrayType(paramTypes[i])) {
 			      //the one dimension primitive or string array
-			      this.params[i] = new DecorationValue(serializableArray[i], paramTypes[i]);
+			      this.params[i] = new DecorationValue(serializableArray[i], paramTypes[i], paramStates[i]);
 			    } else {
-				  this.params[i] = new DecorationValue(seriazableParamValues[i], paramTypes[i]);
+				  this.params[i] = new DecorationValue(seriazableParamValues[i], paramTypes[i], paramStates[i]);
 			    }
 			}
 			this.transition = transition;
@@ -420,7 +444,7 @@ public class Transition implements Serializable {
 		/**
 		 * Copy constructor
 		 * */
-		Decoration(DecorationValue thizValue, DecorationValue[] paramValues, Transition transition,
+		private Decoration(DecorationValue thizValue, DecorationValue[] paramValues, Transition transition,
 		    int position) {
 		  PalusUtil.checkNull(thizValue);
 		  PalusUtil.checkNull(paramValues);
@@ -475,6 +499,40 @@ public class Transition implements Serializable {
 		   sb.append("]");
 		   return sb.toString();
 		}
+		
+		@Override
+		public boolean equals(Object obj) {
+		  if(!(obj instanceof Decoration)) {
+		    return false;
+		  }
+		  Decoration decoration = (Decoration)obj;
+		  //use == here
+		  if(this.transition != decoration.transition || this.position != decoration.position) {
+		    return false;
+		  }
+		  if(!this.thiz.equals(decoration.thiz)) {
+		    return false;
+		  }
+		  if(this.getParamValues().length != decoration.getParamValues().length) {
+		    return false;
+		  }
+		  for(int i = 0; i < this.getParamValues().length; i++) {
+		    if(!this.getParamValues()[i].equals(decoration.getParamValues()[i])) {
+		      return false;
+		    }
+		  }
+		  return true;
+		}
+		
+		@Override
+		public int hashCode() {
+		  int paramCode = 0;
+		  for(int i = 0; i < this.params.length; i++) {
+		    paramCode += (i+1) * this.params[i].hashCode();
+		  }
+		  
+		  return this.transition.hashCode() + 13 * this.thiz.hashCode() + 101 * this.position + paramCode;
+		}
 	}
 	
 	public static class DecorationValue implements Serializable {
@@ -486,9 +544,13 @@ public class Transition implements Serializable {
 		//can not set this final, edge need to change during model creation
 		private DependenceEdge edge = null;
 		
+		//keep the abstract state of the value
+		private final AbstractState state;
+		
 		//objStr could only be string and serializable primitive/string array
-		DecorationValue(Object obj, Class<?> type) {
+		DecorationValue(Object obj, Class<?> type, AbstractState state) {
 			PalusUtil.checkNull(type);
+			PalusUtil.checkNull(state);
 			this.type = type;
 			isPrimitiveOrStringType = type.isPrimitive() || PalusUtil.isPrimitive(type)
 				|| type == java.lang.String.class;
@@ -500,6 +562,8 @@ public class Transition implements Serializable {
 			} else {
 				objValue = null; //either non-primitive, non-string, or null value
 			}
+			//set the state here
+			this.state = state;
 		}
 		
 		public boolean isPrimitiveOrStringType() {
@@ -554,10 +618,15 @@ public class Transition implements Serializable {
 			return this.edge;
 		}
 		
+		public AbstractState getAbstractState() {
+		  return this.state;
+		}
+		
 		@Override
 		public int hashCode() {
 		  return 13*this.type.hashCode() + 53 * (this.isPrimitiveOrStringType ? 1 : 0)
-		      + 71 * (this.objValue ==  null? 33 : this.objValue.hashCode());
+		      + 71 * (this.objValue ==  null? 33 : this.objValue.hashCode())
+		      + 99 * this.state.hashCode();
 		}
 		
 		@Override
@@ -569,6 +638,10 @@ public class Transition implements Serializable {
 		    if(!this.type.equals(value.type)) {
 		      return false;
 		    }
+		    //check the profile
+            if(!this.state.equals(value.state)) {
+              return false;
+            }
 		    //equal type
 		    if(this.objValue != null && value.getValue() != null) {
 		      //compare value if neither is null
@@ -602,9 +675,10 @@ public class Transition implements Serializable {
 		
 		@Override
 		public String toString() {
-		  return isPrimitiveOrStringType ?
+		  return (isPrimitiveOrStringType ?
 		          (objValue == null? "primitive-null" : objValue.toString()) :
-		            (edge == null ? "dependence-edge-not-set" : "dependence-edge");
+		            (edge == null ? "dependence-edge-not-set" : "dependence-edge"))
+		           + " with abstract state: " + this.state.toString();
 		}
 	}
 }

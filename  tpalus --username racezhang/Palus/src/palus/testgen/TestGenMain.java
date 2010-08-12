@@ -57,6 +57,8 @@ public class TestGenMain {
     public static String testName = "GeneratedTest";
     //the number of tests per file
     public static int testsPerFile = 500;
+    //print the model coverage report
+    public static boolean printModelCoverage = false;
     //model-based testing or pure random testing
     public static boolean useModel = false;
     //add the modelled class automatically or not
@@ -216,6 +218,11 @@ public class TestGenMain {
       if(diversifySequence && explorer instanceof ModelBasedGenerator) {
         Set<ExecutableSequence> diversifiedSequence = ((ModelBasedGenerator)explorer).getAllDiversifiedSequences();
         this.write_junit_tests (outputDir, "tests", "Diversified", testsPerFile, new LinkedList<ExecutableSequence>(diversifiedSequence));
+      }
+      
+      if(printModelCoverage && useModel && explorer instanceof ModelBasedGenerator) {
+        System.out.println("-------------  overall model coverage ---------------");
+        System.out.println(((ModelBasedGenerator)explorer).reportOnModelCoverage());
       }
     }
     

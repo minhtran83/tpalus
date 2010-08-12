@@ -29,6 +29,8 @@ public abstract class TraceEvent implements Serializable {
 	private final Class<?>[] cachedParamTypes;
 	
 	//the object profiles
+	//when this abstract state objects are recovered from serialization, the client
+	//need to call thei recover state method
 	private final AbstractState thizProfile;
 	private final AbstractState[] paramProfiles;
 	
@@ -348,10 +350,10 @@ public abstract class TraceEvent implements Serializable {
           throw new IOException("Contain object other than TraceEvent!");
       }
       TraceEvent event = (TraceEvent)obj;
-      event.getThisProfile().recoverFieldStates();
-      for(AbstractState state : event.getParamProfiles()) {
-        state.recoverFieldStates();
-      }
+//      event.getThisProfile().recoverFieldStates();
+//      for(AbstractState state : event.getParamProfiles()) {
+//        state.recoverFieldStates();
+//      }
       return event;
     }
 	

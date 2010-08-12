@@ -213,6 +213,46 @@ public class ClassModel implements Serializable {
         this.addTransition(transition);
       }
     }
+    
+    /**
+     * return how many decoration has been merged
+     * */
+    public int mergeEquivalentDecorations() {
+      int total_num = 0;
+      for(Transition transition : this.transitions) {
+        total_num += transition.mergeEquivalentDecorations();
+      }
+      return total_num;
+    }
+    
+    public static int mergeEquivalentDecorations(Map<Class<?>, ClassModel> models) {
+      PalusUtil.checkNull(models);
+      int total_num = 0;
+      for(ClassModel model : models.values()) {
+        total_num += model.mergeEquivalentDecorations();
+      }
+      return total_num;
+    }
+
+    /**
+     * get the total number of decoration values
+     * */
+    public int getDecorationNum() {
+      int total_num = 0;
+      for(Transition transition : this.transitions) {
+        total_num += transition.getDecorationNum();
+      }
+      return total_num;
+    }
+    
+    public static int getDecorationNum(Map<Class<?>, ClassModel> models) {
+      PalusUtil.checkNull(models);
+      int total_num = 0;
+      for(ClassModel model : models.values()) {
+        total_num += model.getDecorationNum();
+      }
+      return total_num;
+    }
 	
 	/**
 	 * Merge the model into the current one
@@ -384,7 +424,10 @@ public class ClassModel implements Serializable {
 	    PalusUtil.checkNull(this.root);
 	    PalusUtil.checkNull(this.exit);
 	    PalusUtil.checkTrue(this.root.isRootNode());
-	    PalusUtil.checkTrue(this.exit.isExitNode());
+	    if(this.nodes.size() != 1) {
+	      //XXX flaw
+	        PalusUtil.checkTrue(this.exit.isExitNode());
+	    }
 	    //all nodes are reachable from root
 	    Log.log("In check rep, sub node number after root: " + this.getAllSubNodes(this.root).size()
 	        + ", all nodes: " + this.nodes.size());
@@ -659,6 +702,8 @@ public class ClassModel implements Serializable {
 	    node.getAllOutgoingEdges().removeAll(outToBeRemoved);
 	    node.getAllIncomingEdges().removeAll(inToBeRemoved);
 	  }
+	  //XXX design flaws, for the exit and root node
+	  
 	}
 	
 	/** To ease the merging process, we tolerance the existence of multiple
@@ -732,7 +777,6 @@ public class ClassModel implements Serializable {
 	  this.resetExit(unifiedExit);
 	}
 	
-
 	/**TODO add some model utility methods here for faciliting
 	 * manipulate the model */
 }

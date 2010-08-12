@@ -26,9 +26,9 @@ public final class Instance {
 		return type.equals(java.lang.String.class);
 	}
 	
-	public AbstractState abstractState() {
-		return null;
-	}
+//	public AbstractState abstractState() {
+//		return null;
+//	}
 	
 	@Override
 	public int hashCode() {

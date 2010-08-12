@@ -49,13 +49,15 @@ public class OfflineMain {
   }
   
   private static void configure_options() {
-    TestGenMain.timelimit = 300;
+    TestGenMain.timelimit = 200;
     TestGenMain.diversifySequence = true;
     ModelBasedGenerator.percentage_of_random_gen = 0.4f;
     ModelBasedGenerator.random_test_before_model = false;
     ModelBasedGenerator.random_test_after_model = true;
     ModelBasedGenerator.only_random_uncovered_statements = false;
-    ModelBasedGenerator.use_abstract_state_as_selector = true;
+    ModelBasedGenerator.use_abstract_state_as_selector = true; //use abstract profile
+    ModelBasedGenerator.merge_equivalent_decoration = true; //merge equivalent decoration?
+    TestGenMain.printModelCoverage = true; //print the model coverage
     SequenceDiversifier.exhaustiveDiversifyModel = false;
     ModelSequences.removeExtendedSequence = true;
     SequenceDiversifier.addReturnTypeRelatedStatement = false;
