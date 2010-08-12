@@ -42,6 +42,19 @@ public class StatesOfSequences {
     return Randomness.randomSetMember(stateSequences.get(s));
   }
   
+  public Sequence randomChooseSequenceForState(Class<?> clazz, AbstractState state) {
+    PalusUtil.checkNull(clazz);
+    PalusUtil.checkNull(state);
+    if(!this.sequenceStates.containsKey(clazz)) {
+      return null;
+    }
+    Map<AbstractState, Set<Sequence>> stateSequences = this.sequenceStates.get(clazz);
+    if(!stateSequences.containsKey(state) || stateSequences.get(state).isEmpty()) {
+      return null;
+    }
+    return Randomness.randomSetMember(stateSequences.get(state));
+  }
+  
   public List<Sequence> randomChooseDiffStateSequences(Class<?> clazz) {
     List<Sequence> retSeqs = new LinkedList<Sequence>();
     

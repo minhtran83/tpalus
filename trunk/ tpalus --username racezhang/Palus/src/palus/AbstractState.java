@@ -21,6 +21,7 @@ public final class AbstractState implements java.io.Serializable {
   
   private final Class<?> clz;
   
+  //it could not be final
   private transient /*final*/ Field[] fields; //field could not be serialized
   private final State[] states;
   
@@ -107,7 +108,7 @@ public final class AbstractState implements java.io.Serializable {
   /**
    * Call this after recovering from  serialization
    * */
-  public void recoverFieldStates() {
+  private void recoverFieldStates() {
     PalusUtil.checkNull(this.clz);
     Field[] declaredFields = this.clz.getDeclaredFields();
     this.fields = new Field[this.serializableFields.length];
@@ -135,6 +136,7 @@ public final class AbstractState implements java.io.Serializable {
   }
   
   public Field[] getStateFields() {
+    this.checkAndRecover();
     return fields;
   }
   
@@ -166,6 +168,13 @@ public final class AbstractState implements java.io.Serializable {
       return false;
     }
     
+    if(state.isPrimtiveOrString == this.isPrimtiveOrString) {
+      if(state.valueOfPrimitiveOrString != null &&
+          this.valueOfPrimitiveOrString != null) {
+        return state.valueOfPrimitiveOrString.equals(this.valueOfPrimitiveOrString);
+      }
+    }
+    
     if(state.isNullValue != this.isNullValue) {
       return false;
     }
@@ -183,7 +192,9 @@ public final class AbstractState implements java.io.Serializable {
   
   @Override
   public String toString() {
-    assert this.fields.length == this.states.length;
+    this.checkAndRecover();
+    
+    PalusUtil.checkTrue(this.fields.length == this.states.length);
     
     boolean debug = false;
     
@@ -224,6 +235,12 @@ public final class AbstractState implements java.io.Serializable {
     
     
     return sb.toString();
+  }
+  
+  private void checkAndRecover() {
+    if(this.fields == null) {
+      this.recoverFieldStates();
+    }
   }
   
   //convert the state to abstract domain

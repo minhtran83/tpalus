@@ -179,6 +179,7 @@ public class ModelConstructor {
 	        //add decorations
 	        srcToConnectingNode.addDecoration(traceAndPosition.event.getSerializableThisValue(),
 	            traceAndPosition.event.getSerializableParams(), traceAndPosition.event.getSerializableArray(),
+	            traceAndPosition.event.getThisProfile(), traceAndPosition.event.getParamProfiles(),
 	            srcToConnectingNode, traceAndPosition.position);
 	        //add the transitions
 	        model.addTransition(srcToConnectingNode);

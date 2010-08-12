@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import palus.AbstractState;
 import palus.Log;
 import palus.PalusUtil;
 import palus.model.BugInPalusException;
@@ -152,6 +153,20 @@ public class MethodInputSelector {
             arrayList.add(sequence);
             l = arrayList;
           }
+        }
+      }
+      
+      //select based on the abstract state profile
+      if(l == null && value != null && ModelBasedGenerator.use_abstract_state_as_selector) {
+        AbstractState state = value.getAbstractState();
+        PalusUtil.checkNull(state);
+        Sequence s = generator.sequenceStates.randomChooseSequenceForState(t, state);
+        if(s != null) {
+          //XXX never executed?
+            Log.log("Choose abstract state of decoration values for root");
+            ArrayListSimpleList<Sequence> list = new ArrayListSimpleList<Sequence>();
+            list.add(s);
+            l = list;
         }
       }
       
@@ -357,6 +372,19 @@ public class MethodInputSelector {
             arrayList.add(sequence);
             l = arrayList;
           }
+        }
+      }
+      
+      //select based on the abstract state profile
+      if(l == null && value != null && ModelBasedGenerator.use_abstract_state_as_selector) {
+        AbstractState state = value.getAbstractState();
+        PalusUtil.checkNull(state);
+        Sequence s = generator.sequenceStates.randomChooseSequenceForState(t, state);
+        if(s != null) {
+            Log.log("Choose abstract state of decoration values for extension");
+            ArrayListSimpleList<Sequence> list = new ArrayListSimpleList<Sequence>();
+            list.add(s);
+            l = list;
         }
       }
       

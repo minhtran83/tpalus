@@ -23,7 +23,7 @@ public class ModelNode implements Serializable {
     //a terminate node for test generation
     private boolean stopFlag = false;
     //use for serialization purpose
-    private int[] in_edge_transition_id;
+    int[] in_edge_transition_id;
     private int[] out_edge_transition_id;
 	
 	public ModelNode(ClassModel classModel) {
@@ -50,6 +50,15 @@ public class ModelNode implements Serializable {
 	  for(Transition t : outEdges) {
 	    this.out_edge_transition_id[i++] = t.getTransitionID();
 	  }
+	  
+//	  if(this.isExitNode() && this.modelledClass.getName().equals("com.sqlmagic.tinysql.tinySQLParser")) {
+//	    System.out.println("in edge size: " + inEdges.size());
+//	    for(i = 0; i < inEdges.size(); i++) {
+//	      System.out.println("   in edge id: " + this.in_edge_transition_id[i]);
+//	    }
+//	    System.out.println("out edge size: " + outEdges.size());
+//	    
+//	  }
 	}
 	
 	void recoverFromDeserialization() {
@@ -70,11 +79,13 @@ public class ModelNode implements Serializable {
 	
 	public boolean isRootNode() {
 		//XXX not reliable enough
+	    PalusUtil.checkNull(this.inEdges);
 		return this.inEdges.size() == 0;
 	}
 	
 	public boolean isExitNode() {
 	  //XXX not reliable enough
+	  PalusUtil.checkNull(this.outEdges);
 	  return this.outEdges.size() == 0;
 	}
 	

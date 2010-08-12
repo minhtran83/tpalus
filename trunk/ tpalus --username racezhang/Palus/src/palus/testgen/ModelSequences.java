@@ -45,6 +45,11 @@ public class ModelSequences {
    * */
   private final Map<Class<?>, Map<ModelNode, List<Sequence>>> modelSequences;
   
+  /**
+   * Keep the statistics of which model node has been covered, and how many times.
+   * Also keep track of which (and how many) transitions have been covered.
+   * */
+  private final ModelSequencesStats stats;
   
   /**
    * The internal state for keep which sequence has been returned for extension
@@ -58,6 +63,7 @@ public class ModelSequences {
     PalusUtil.checkNull(models);
     this.models = models;
     this.modelSequences = new LinkedHashMap<Class<?>, Map<ModelNode, List<Sequence>>>();
+    this.stats = new ModelSequencesStats(models);
   }
   
   /**
@@ -69,6 +75,13 @@ public class ModelSequences {
   
   public int size() {
     return this.modelSequences.size();
+  }
+  
+  /**
+   * Get the statistic data
+   * */
+  public ModelSequencesStats getSequenceStats() {
+    return this.stats;
   }
   
   /**
@@ -115,6 +128,10 @@ public class ModelSequences {
     }
     
     Transition transition = transitions.get(Randomness.nextRandomInt(transitions.size()));
+    
+    //update the statistic
+    this.stats.incrModelNodeCoverage(clazz, root);
+    this.stats.incrTransitionCoverage(clazz, transition);
     
     return transition;
   }
@@ -170,6 +187,10 @@ public class ModelSequences {
     //save the state of selected sequence
     this.currSequence = baseSequence;
     
+    //update statistic
+    this.stats.incrModelNodeCoverage(modelClass, startNode);
+    this.stats.incrTransitionCoverage(modelClass, transitionToExtend);
+    
     return new Pair<Sequence, Transition>(baseSequence, transitionToExtend);
   }
   
@@ -187,6 +208,9 @@ public class ModelSequences {
     ModelNode sourceNode = transition.getSourceNode();
     ModelNode destNode = transition.getDestNode();
     Class<?> clz = transition.getModelledClass();
+    
+    //update the statistic
+    this.stats.incrExecutedTransitionCoverage(clz, transition);
     
     //check nullness here
     PalusUtil.checkNull(sourceNode);

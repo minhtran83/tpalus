@@ -58,6 +58,8 @@ public class ModelBasedGenerator extends ForwardGenerator {
   public static boolean only_random_uncovered_statements = true;
   //use abstract object profile
   public static boolean use_abstract_state_as_selector = false;
+  //merge redundant decoration
+  public static boolean merge_equivalent_decoration = false;
 
   
   //a time to record the time for random test generation
@@ -93,6 +95,13 @@ public class ModelBasedGenerator extends ForwardGenerator {
     PalusUtil.checkNull(recommender);
     //initialize the model and model sequences
     this.models = models;
+    if(merge_equivalent_decoration) {
+      int numOfMerged = ClassModel.mergeEquivalentDecorations(this.models);
+      System.out.println("\n" + numOfMerged + " equivalent decorations merged!");
+      int remaining = ClassModel.getDecorationNum(this.models);
+      System.out.println("There are: " + remaining + " decorations remained!\n");
+    }
+    
     modelSequences = new ModelSequences(models);
     sequenceStates = new StatesOfSequences();
     //initialize the value collection
@@ -491,6 +500,9 @@ public class ModelBasedGenerator extends ForwardGenerator {
     }
   }
   
+  public String reportOnModelCoverage() {
+    return this.modelSequences.getSequenceStats().reportOnCoverage();
+  }
   
   /**
    * Filter all model uncovered method statement 
