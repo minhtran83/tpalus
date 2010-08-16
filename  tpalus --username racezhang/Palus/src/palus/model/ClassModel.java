@@ -155,6 +155,7 @@ public class ClassModel implements Serializable {
 	    PalusUtil.checkTrue(this.root != null);
 	    
 		if(!this.nodes.contains(node)) {
+		    node.setClassModel(this);
 			this.nodes.add(node);
 		} else {
 			Log.log("ModeNode: " + node.getNodeId()
@@ -258,6 +259,7 @@ public class ClassModel implements Serializable {
 	 * Merge the model into the current one
 	 * */
 	public void mergeModel(ClassModel model) {
+	    //System.out.println("start merging model: ");
 		PalusUtil.checkNull(model);
 		PalusUtil.checkNull(this.root);
 		PalusUtil.checkNull(this.exit);
@@ -269,10 +271,12 @@ public class ClassModel implements Serializable {
 		//from root. And do that level by level following the outgoing edges.
 		//XXX think about is there any information loss here??
 	    try {
+	        Log.log("------------ merging start ---------------");
             mergeNode(this.root, model.root);
+            //System.out.println("finish merging");
             //do some postprocessing about all merged nodes
             //remove dangling edges
-            this.removeDanglingEdges();
+            this.removeDanglingAndLoopEdges(); 
             //unify all exit nodes, and check the invariant after merge
             this.unifyAllExitNodes();
             //check the invariant
@@ -421,6 +425,7 @@ public class ClassModel implements Serializable {
 	 * Check the invariant of this object
 	 * */
 	public void checkRep() {
+	    //System.out.println("inside check rep...");
 	    PalusUtil.checkNull(this.root);
 	    PalusUtil.checkNull(this.exit);
 	    PalusUtil.checkTrue(this.root.isRootNode());
@@ -429,9 +434,15 @@ public class ClassModel implements Serializable {
 	        PalusUtil.checkTrue(this.exit.isExitNode());
 	    }
 	    //all nodes are reachable from root
+	    //System.out.println("Before sub node number checking");
+	    
 	    Log.log("In check rep, sub node number after root: " + this.getAllSubNodes(this.root).size()
 	        + ", all nodes: " + this.nodes.size());
+	    
 	    PalusUtil.checkTrue(this.getAllSubNodes(this.root).size() + 1 == this.nodes.size());
+	    
+	    //System.out.println("check rep pass sub node number consistence, node size: " + this.nodes.size());
+	    
 	    //only one root, one exit
 	    for(ModelNode node : this.nodes) {
 	      //at the beginning of this model, there is no transition.
@@ -570,7 +581,7 @@ public class ClassModel implements Serializable {
             subTransitions.add(newTransition);
             subTransitions.remove(t);
             //XXX update the repository
-            TraceTransitionManager.replaceTransitions(t, newTransition);
+            ///TraceTransitionManager.replaceTransitions(t, newTransition);
           }
           Log.log("    number of sub transitions added: " + subTransitions.size()
               + ", after tobemerged node: " + tobeMerged.getNodeId());
@@ -589,7 +600,15 @@ public class ClassModel implements Serializable {
 	          + tobeMerged.getNodeId() +  " are not exit nodes.");
 	      //do the recursion here, neither node is exit node, so we need to walk down one level
 	      List<Transition> transitions = tobeMerged.getAllOutgoingEdges();
-	      Log.log("number of outgoing transitions of tobeMerged node: " + transitions.size());
+	      Log.log("number of outgoing transition of dest node: " + destNode.getNodeId() + ": " + destNode.getAllOutgoingEdges().size());
+	      for(Transition temp : destNode.getAllOutgoingEdges()) {
+	        Log.log("   node id: " + temp.getDestNode().getNodeId() + ", tmp hashcode: " + temp.hashCode() + ",  " + temp.toSignature());
+	      }
+	      Log.log("number of outgoing transitions of tobeMerged " + tobeMerged.getNodeId() + "  node: " + transitions.size());
+	      for(Transition temp : transitions) {
+	        Log.log("   node id: " + temp.getDestNode().getNodeId() + ", tmp hashcode: " + temp.hashCode() + ",  " + temp.toSignature());
+	      }
+	      
 	      for(Transition transition : transitions) {
 	        //we use the signature for comparison, only concern on the method name, desc, owner class
 	        Transition destT = //destNode.getOutgoingTranisitionBySignature(transition); //XXX
@@ -601,7 +620,9 @@ public class ClassModel implements Serializable {
 	          //TraceTransitionManager.mergeTransitions(destT, transition);
 	          //merge the decoration
 	          for(Decoration d : transition.getDecorations()) {
-	            destT.addDecoration(d.makeClone(destT));
+	            if(!destT.hasDecorationValues(d)) {
+	               destT.addDecoration(d.makeClone(destT));
+	            }
 	          }
 	          /** merge recursively */
 	          Log.log(" Find the same transition, so recusrively proceed, dest node/to be merged nodes:  "
@@ -634,16 +655,24 @@ public class ClassModel implements Serializable {
 	  //do a breadth-first traverse
 	  List<ModelNode> tmp = new LinkedList<ModelNode>();
 	  tmp.addAll(node.getAllOutgoingNodes());
+	  
+	   //keep track of all visited nodes
+      Set<ModelNode> visited = new HashSet<ModelNode>();
+	  visited.addAll(node.getAllOutgoingNodes());
+	  
 	  while(!tmp.isEmpty()) {
+	    //System.out.println("size of tmp: " + tmp.size() + ", size of subnodess: " + subNodes.size());
 	    ModelNode n = tmp.remove(0);
 	    subNodes.add(n);
 	    for(ModelNode mn : n.getAllOutgoingNodes()) {
 	      //avoid duplication, check first
-	      if(!tmp.contains(mn)) {
+	      if(!visited.contains(mn)) {
 	         tmp.add(mn);
+	         visited.add(mn);
 	      }
 	    }
 	  }	  
+	  tmp.clear();
 	  return new LinkedList<ModelNode>(subNodes);
 	}
 	
@@ -659,13 +688,19 @@ public class ClassModel implements Serializable {
 	  //do a breadth-first traverse
 	  List<ModelNode> tmp = new LinkedList<ModelNode>();
 	  tmp.addAll(node.getAllOutgoingNodes());
+	  
+	  //keep track of all visited node
+	  Set<ModelNode> visited = new HashSet<ModelNode>();
+	  visited.addAll(node.getAllOutgoingNodes());
+	  
 	  while(!tmp.isEmpty()) {
 	    ModelNode n = tmp.remove(0);
 	    transitions.addAll(n.getAllOutgoingEdges());
 	    //avoid duplicate, ugly code here
 	    for(ModelNode mn : n.getAllOutgoingNodes()) {
-	      if(!tmp.contains(mn)) {
+	      if(!visited.contains(mn)) {
 	        tmp.add(mn);
+	        visited.add(mn);
 	      }
 	    }
 	  }	  
@@ -677,11 +712,12 @@ public class ClassModel implements Serializable {
 	 * Removes dangling edges (edges connected to some of the nodes, but do not
 	 * belong to the edge set) after merging models
 	 * */
-	private void removeDanglingEdges() {
+	private void removeDanglingAndLoopEdges() {
 	  //for each model node which is "fetched" from other class model during merge,
 	  //we set its class model be this. Then, for each node, we remove its connecting
 	  //edges (including outgoing and incoming), which do not belong to the edge
 	  //set of this class model
+	  Set<Transition> loop = new LinkedHashSet<Transition>();
 	  for(ModelNode node : this.nodes) {
 	    node.setClassModel(this);
 	    //to be removed outgoing edges
@@ -690,6 +726,11 @@ public class ClassModel implements Serializable {
 	      if(!this.transitions.contains(t)) {
 	        outToBeRemoved.add(t);
 	      }
+	    //remove the loop transition XXX
+          else if(t.getSourceNode() == t.getDestNode()) {
+            loop.add(t);
+            outToBeRemoved.add(t);
+          }
 	    }
 	    //to be removed incoming edges
 	    List<Transition> inToBeRemoved = new LinkedList<Transition>();
@@ -697,11 +738,17 @@ public class ClassModel implements Serializable {
 	      if(!this.transitions.contains(t)) {
 	        inToBeRemoved.add(t);
 	      }
+	      //remove the loop transition XXX
+	      else if(t.getSourceNode() == t.getDestNode()) {
+	        loop.add(t);
+	        inToBeRemoved.add(t);
+	      }
 	    }
 	    //remove them from outgoing/incoming edges
 	    node.getAllOutgoingEdges().removeAll(outToBeRemoved);
 	    node.getAllIncomingEdges().removeAll(inToBeRemoved);
 	  }
+	  this.transitions.removeAll(loop);
 	  //XXX design flaws, for the exit and root node
 	  
 	}
@@ -713,7 +760,7 @@ public class ClassModel implements Serializable {
 	  //#XXX be careful, the model could be empty then
 	  //check the root invariant does not violate
 	  PalusUtil.checkNull(this.root);
-	  PalusUtil.checkNull(this.root.isRootNode());
+	  PalusUtil.checkTrue(this.root.isRootNode());
 	  
 	  //check that the Class Model could be only one node remaining
 	  if(this.nodes.size() == 1) {
@@ -731,6 +778,13 @@ public class ClassModel implements Serializable {
 	  //there must be more than one exit node after merging
 	  //and each exit node should have more than one incoming edge
 	  //If not, the exit node is disconnected!
+	  
+	  if(exitNodes.size() == 0) {
+	    System.out.println("exit: " + this.exit.getNodeId() + "");
+	    System.out.println("------------------");
+	    System.out.println(this.getModelInfo());
+	  }
+	  
 	  PalusUtil.checkTrue(exitNodes.size() > 0);
 	  for(ModelNode exitNode : exitNodes) {
 	    PalusUtil.checkTrue(exitNode.numOfInEdges() > 0);

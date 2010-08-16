@@ -1,10 +1,15 @@
 package palus.model;
 
 import java.lang.reflect.Modifier;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import palus.PalusUtil;
 
 public final class ClassesToModel {
+  
+   public static boolean only_model_user_provided = false;
     /**
      * Check whether this class should be included in the model or not
      * @param clz the class to be check
@@ -39,6 +44,20 @@ public final class ClassesToModel {
 			return false;
 		}
 		//TODO add some by users
-		return true;
+		if(!only_model_user_provided) {
+		    return true;
+		} else {
+		  return classesToModel.contains(clz);
+		}
+	}
+	
+	/**
+	 * All classes user provided
+	 * */
+	private static Set<Class<?>> classesToModel = new LinkedHashSet<Class<?>>();
+	
+	public static void initializeClassesToModel(Collection<Class<?>> classes) {
+	  PalusUtil.checkTrue(classesToModel.isEmpty());
+	  classesToModel.addAll(classes);
 	}
 }

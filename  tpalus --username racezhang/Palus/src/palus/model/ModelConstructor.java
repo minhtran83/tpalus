@@ -1,9 +1,12 @@
 package palus.model;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import palus.Log;
 import palus.PalusUtil;
@@ -11,6 +14,13 @@ import palus.PalusUtil;
 public class ModelConstructor {
   
     public static boolean remove_non_public = true;
+    
+    public static boolean processing_all_traces = true;
+    
+    public static int MAX_NODE_NUM = 10000;
+    public static int MAX_INSTANCE_PER_MODEL = 20;
+    public static int MAX_TRY_UNTIL_FIXED_POINT = 5;
+    
 	
 	private final Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> traceByClasses;
 	
@@ -47,22 +57,70 @@ public class ModelConstructor {
 		System.out.print("   building model for class: " + clazz.getName());
 		//the output model
 		ClassModel classModel = null;
-		for(Instance instance : classTraces.keySet()) {
+		//the number of instance we processed
+		int instance_count = 0;
+		
+		//the number of node, edge of the current model
+		int current_model_node_num = 0;
+		int current_model_edge_num = 0;
+		
+		//the number try to merge a node
+		int number_to_try_before_fixpoint = 0;
+		
+		Set<Instance> instance_to_process = classTraces.keySet();
+		
+//		if(!processing_all_traces) {
+//		  List<Instance> ranked_instance_list = new LinkedList<Instance>();
+//		  for(Instance instance : instance_to_process) {
+//		    if(ranked_instance_list.isEmpty()) {
+//		      ranked_instance_list.add(instance);
+//		      continue;
+//		    }
+//		    int size_of_trace = classTraces.get(instance).size();
+//		    for(int insert_place = 0; insert_place < ranked_instance_list.size(); insert_place++) {
+//		      Instance current_instance = ranked_instance_list.get(insert_place);
+//		      if(classTraces.get(current_instance).size() < size_of_trace) {
+//		        ranked_instance_list.add(insert_place, instance);
+//		        break;
+//		      }
+//		      if(insert_place == ranked_instance_list.size() - 1) {
+//		        ranked_instance_list.add(instance); //at the end
+//		      }
+//		    }
+//		    if(ranked_instance_list.size() > MAX_INSTANCE_PER_MODEL) {
+//		      break;
+//		    }
+//		  } //end of while
+//		  
+//		  //PalusUtil.checkTrue(ranked_instance_list.size() == instance_to_process.size());
+//		  
+//		  instance_to_process = new LinkedHashSet<Instance>();
+//		  instance_to_process.addAll(ranked_instance_list);
+//		}
+		
+		System.out.println("Number of instance to process: " + instance_to_process.size());
+		
+		for(Instance instance : instance_to_process) {
+		    instance_count ++;
 			List<TraceEventAndPosition> traceList = classTraces.get(instance);
 			//first check the validity of the traces
 			TraceAnalyzer.checkTraceEventsAndPosition(traceList);
 			//start to build model from traces
 			ClassModel model = null;
             try {
+                System.out.print(" - " + traceList.size());
                 model = this.buildClassModelFromTrace(clazz, traceList);
                 //check the invariant here
+                //System.out.println("check rep...");
                 model.checkRep();
+                //System.out.println("check rep finishes...");
                 System.out.print(".");
                 if(classModel == null) {
                    classModel = model;
                 } else {
                   //merge the model with the new one
                    classModel.mergeModel(model);
+                   //System.out.println("model size: " + classModel.getAllNodes().size());
                 }
                 System.out.print("+");
                 //for debugging purpose
@@ -75,7 +133,34 @@ public class ModelConstructor {
             } catch (MethodNotExistInTransitionException e) {
                  throw new RuntimeException(e);
             }
+            
 			PalusUtil.checkNull(model);
+			//record the current node, edge num
+			
+			if(current_model_node_num == classModel.getAllNodes().size()
+			    && current_model_edge_num == classModel.getAllTransitions().size()) {
+			  number_to_try_before_fixpoint++;
+			}
+			
+			current_model_node_num = classModel.getAllNodes().size();
+			current_model_edge_num = classModel.getAllTransitions().size();
+			
+			//if not processing all traces
+			if(!processing_all_traces) {
+			    if(classModel.getAllNodes().size() > MAX_NODE_NUM) {
+			      System.out.println("model size exceed: " + MAX_NODE_NUM);
+                  break;
+                }
+			    if(instance_count > MAX_INSTANCE_PER_MODEL) {
+			      System.out.println("instance size has readed max: " + instance_count);
+			      break;
+			    }
+			    if(number_to_try_before_fixpoint > MAX_TRY_UNTIL_FIXED_POINT) {
+			      System.out.println("Quit building model since after: " + number_to_try_before_fixpoint
+			           + " tries, the model never changes.");
+			      break;
+			    }
+			}
 		}
 		//remove all public transition
 		try {
@@ -120,6 +205,8 @@ public class ModelConstructor {
 		//building models
 		this.buildClassModelRecurisvely(model, root, exit, traceList);
 		
+		//System.out.println("Finish building model!");
+		
 		Log.log(model.getModelInfo());
 		
 		//check the invariant
@@ -136,6 +223,9 @@ public class ModelConstructor {
 	private void buildClassModelRecurisvely(ClassModel model, ModelNode srcNode,
 	    ModelNode destNode, List<TraceEventAndPosition> traceList)
 	    throws ModelNodeNotFoundException, MethodNotExistInTransitionException {
+	  
+	    //System.out.println("recursively building model... " + traceList.size() + "   " + System.currentTimeMillis());
+	  
 	    //check the precondition of this method
 	    PalusUtil.checkNull(model);
 	    PalusUtil.checkNull(srcNode);
@@ -158,11 +248,23 @@ public class ModelConstructor {
 	    //Get the index of first level method invocation events
 	    Integer[] indices = this.getFirstLevelEventsStartIndex(traceList);
 	    
+//	    System.out.println();
+//	    for(int index : indices) {
+//	      System.out.print(index + ", ");
+//	    }
+//	    System.out.println();
+	    
 	    //Process each of the first-level trace event one by one.
 	    //For lower-level trace event below the first-level event, this algorithm
 	    //builds the model recursively
 	    for(int i = 0; i < indices.length; i++) {
+	      
+	        //System.out.println("   processing index i: " + i + "  out of " + indices.length);
+	      
 	        int currentIndex = indices[i];
+	        
+	        //System.out.println(" current index: " + currentIndex);
+	        
 	        //if the current index is the last one, there is no next (or the next is
 	        //beyond the trace size
 	        int nextIndex = (i == indices.length - 1) ? traceList.size()/*note size() - 1*/ : indices[i+1];
@@ -171,6 +273,8 @@ public class ModelConstructor {
 	        //create a new model node, add to the model, then connect to an existing node
 	        ModelNode connectingNode = (i == indices.length - 1) ? destNode : new ModelNode(model);
 	        model.addModelNode(connectingNode);
+	        
+	        //System.out.println("  add connecting node, next index: " + nextIndex);
 	        
 	        //add the transition from currentSrc node to connectingNode
 	        Transition srcToConnectingNode = new Transition(currentSrc, connectingNode,
@@ -185,12 +289,13 @@ public class ModelConstructor {
 	        model.addTransition(srcToConnectingNode);
 	        
 	        //save the TraceEvent and Transition relations here XXX not a good design
-	        TraceTransitionManager.addInitTraceEventTransitionPair(traceAndPosition.event, srcToConnectingNode);
+	        //TraceTransitionManager.addInitTraceEventTransitionPair(traceAndPosition.event, srcToConnectingNode);
 	        Log.log("adding event to trace-transition map: " + traceAndPosition.event.toString()
 	            + " position: " + traceAndPosition.position.toIntValue());
 	        
 	        //if there is any lower-level trace event
 	        if(nextIndex - currentIndex > 2) {
+	          //System.out.println("recursive: next index: " + nextIndex  + ", currentIndex : " + currentIndex);
 	          //we need to do recursion here
 	          buildClassModelRecurisvely(model, currentSrc, connectingNode, traceList.subList(currentIndex + 1, nextIndex - 1));
 	        }
@@ -198,6 +303,7 @@ public class ModelConstructor {
 	        currentSrc = connectingNode;
 	    }
 	    
+	   // System.out.println("exit the loop");
 	}
 	
 	/**
@@ -215,6 +321,7 @@ public class ModelConstructor {
 	 * */
 	private Integer[] getFirstLevelEventsStartIndex(List<TraceEventAndPosition> traceList) {
 	    PalusUtil.checkTrue(traceList.size() >= 2);
+	    TraceAnalyzer.checkTraceEventsAndPosition(traceList);
 	    if(traceList.size() == 2) {
 	      return new Integer[]{0};
 	    }
@@ -228,7 +335,9 @@ public class ModelConstructor {
 	    //a flag indicate current trace has matched or not
 	    boolean currentHasMatched = false;
 	    for(int i = 1; i < traceList.size(); i++) {
+	      //System.out.println("current trace id: " + currentTrace.event.getUniqueTracePairID() + ",  " + currentTrace.event);
 	      TraceEventAndPosition traceEventAndPosition = traceList.get(i);
+	      //System.out.println("This trace id: " + traceEventAndPosition.event.getUniqueTracePairID() + ",  " + traceEventAndPosition.event);
 	      if(currentHasMatched) {
 	        //start a new round of matching
 	        currentIndex = i;
@@ -236,13 +345,31 @@ public class ModelConstructor {
 	        indexList.add(currentIndex);
 	        currentHasMatched = false;
 	      }
-	      if(traceEventAndPosition.event.getPairEvent() == currentTrace.event
+	      else if(traceEventAndPosition.event.getPairEvent() == currentTrace.event && i%2 == 1 //XXX FIXME
 	          && traceEventAndPosition.event.getUniqueTracePairID() == currentTrace.event.getUniqueTracePairID()) {
 	        PalusUtil.checkTrue(!currentHasMatched);
+//	        if(traceEventAndPosition.event.getPairEvent() != currentTrace.event) {
+//	          System.out.println(traceEventAndPosition.event + ",  id: " + traceEventAndPosition.event.getUniqueTracePairID());
+//	          System.out.println(traceEventAndPosition.event.getPairEvent() + ",  id: " + traceEventAndPosition.event.getPairEvent().getUniqueTracePairID());
+//	          System.out.println(currentTrace.event + ", id: " + currentTrace.event.getUniqueTracePairID());
+//	          System.out.println(currentTrace.event.getPairEvent() + ",  id: " + currentTrace.event.getPairEvent().getUniqueTracePairID());
+//	          
+//	          int ii = 0;
+//	          for(TraceEventAndPosition tap : traceList) {
+//	            System.out.println((ii++) + ". " + tap.event.getUniqueTracePairID() + ", " + tap.event.getClass());
+//	          }
+//	          
+//	          PalusUtil.checkNull(null);
+//	        }
 	        currentHasMatched = true;
 	      }
 	    }
+	    
+//	    System.out.println("\nsize: " + traceList.size());
+//	    System.out.println(indexList);
+	    
 	    PalusUtil.checkTrue(currentHasMatched);
+	    
 		return (Integer[])indexList.toArray(new Integer[0]);
 	}
 }

@@ -3,7 +3,6 @@ package palus.model;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -28,7 +27,7 @@ import plume.Pair;
 
 public class TraceAnalyzer {
   
-    public static String PROJECT_NAME = "tinysql_";//"toy_db";// 
+    public static String PROJECT_NAME = "apache_";//"jsap_";//"html_parser_";//"tinysql_";//"toy_db";// "sat4j_";//
   
 	//the raw traces from program execution
 	private final List<TraceEvent> traces;
@@ -149,6 +148,14 @@ public class TraceAnalyzer {
 		
 		//start to build the class model
 		System.out.println("Classification ends, get a valid trace map.");
+		for(Entry<Class<?>, Map<Instance, List<TraceEventAndPosition>>> entry : traceMap.entrySet()) {
+		  int traceNum = 0;
+		  for(List<TraceEventAndPosition> list : entry.getValue().values()) {
+		    traceNum += list.size();
+		  }
+		  System.out.println("    class: " + entry.getKey() + ", instance number: " + entry.getValue().size()
+		      + ", total size: " + traceNum);
+		}
 		System.out.println("\n");
 		//first capture the parameter dependence between trace events
 		System.out.println("Computing the trace parameter dependences");
@@ -276,10 +283,15 @@ public class TraceAnalyzer {
 							//set up the stack depth
 	                        topEvent.setStackDepth(stack.size());
 	                        event.setStackDepth(stack.size());
+						} else {
+						  throw new Error("bug");
 						}
 					}
 				}
 			}
+		}
+		if(!stack.isEmpty()) {
+		  unmatchedEvents.addAll(stack);
 		}
 		Log.log("Size of all unmatched events to be removed: " + unmatchedEvents.size());
 		this.traces.removeAll(unmatchedEvents);
@@ -418,7 +430,7 @@ public class TraceAnalyzer {
 		
 		Instance instance = new Instance(objId, type);
 		if(!instanceEventMap.containsKey(instance)) {
-			instanceEventMap.put(instance, new LinkedList<TraceEventAndPosition>());
+			instanceEventMap.put(instance, new ArrayList<TraceEventAndPosition>());
 		}
 		List<TraceEventAndPosition> eventList = instanceEventMap.get(instance);
 		assert eventList != null;
@@ -433,7 +445,7 @@ public class TraceAnalyzer {
 	 * Check there is no unmatched pairs for the trace event list
 	 * */
 	public static void checkTraceEvents(List<TraceEvent> traces) {
-		List<TraceEventAndPosition> tracesAndPositions = new LinkedList<TraceEventAndPosition>();
+		List<TraceEventAndPosition> tracesAndPositions = new ArrayList<TraceEventAndPosition>();
 		for(TraceEvent trace : traces) {
 			tracesAndPositions.add(new TraceEventAndPosition(trace, Position.getMockPosition()));
 		}
@@ -446,18 +458,22 @@ public class TraceAnalyzer {
 		for(TraceEventAndPosition traceAndPosition : traces) {
 			TraceEvent trace = traceAndPosition.event;
 			if(trace.getStackDepth() ==  -1) {
+			  //System.out.println("   ---  stack depth -1");
 			  error++;
 			}
 			if(trace.getUniqueTracePairID() == -1) {
+			  //System.out.println("   ---  unique trace pair id -1");
 				error ++;
 			}
 			if(trace.getPairEvent() == null) {
+			  //System.out.println("   ---  pair event null");
 				error ++;
 			}
 			if(trace.isEntryEvent()) {
 				stack.push(trace);
 			} else {
 				if(stack.isEmpty()) {
+				  //System.out.println("--- stack empty ----");
 					error++;
 					continue;
 				} else {
@@ -481,6 +497,7 @@ public class TraceAnalyzer {
 			}
 		}
 		if(!stack.isEmpty()) {
+		  //System.out.println("    --- stack empty finally---");
 		  error++;
 		}
 		if(error != 0) {
