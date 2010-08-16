@@ -407,9 +407,12 @@ public class ModelBasedGenerator extends ForwardGenerator {
     
     Log.log("    in extension Select a transition: " + extendTransition);    
     if(statement == null) {
+      //there could be many possibilities, e.g. abstract type, void type, declaring class unvisibile, etc.
       if(Reflection.isVisible(extendTransition.getOutputType())) {
-          throw new BugInPalusException("The statement in transition: "
-              + extendTransition.toSignature() + " is null!");
+//          throw new BugInPalusException("The statement in transition: "
+//              + extendTransition.toSignature() + " is null!");
+        Log.log("Statement is null: " + extendTransition);
+          return null;
       } else {
         //the bug in randoop, need to remove it
         return null;

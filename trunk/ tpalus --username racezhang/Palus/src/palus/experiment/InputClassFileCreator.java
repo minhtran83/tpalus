@@ -92,8 +92,8 @@ public class InputClassFileCreator {
    * A small test driver
    * */
   public static void main(String[] args) throws IOException {
-    String dirPath = "/home/saizhang/workspace/tiny-sql-2/bin";
-    String outputFile = "/home/saizhang/workspace/tiny-sql-2/bin/tinysqlclass.txt";
+    String dirPath = "/home/saizhang/workspace/apache-collection-3.2/bin";//;"/home/saizhang/workspace/tiny-sql-2/bin";
+    String outputFile = "/home/saizhang/workspace/apache-collection-3.2/bin/apacheclass.txt";
     InputClassFileCreator.outputClassList(dirPath, outputFile);
   }
 }

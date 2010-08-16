@@ -29,6 +29,11 @@ import java.util.jar.JarOutputStream;
  *
  */
 public abstract class AbstractTransformer {
+  
+  //do not set true here unless in debugging mode
+  //it will load some classes in advance
+  private static boolean do_verify = false;
+  
   public void transformDir(File srcDir, File descDir) throws IOException {
     assert (srcDir != null);
     assert (descDir != null);
@@ -149,7 +154,7 @@ public abstract class AbstractTransformer {
     ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
     cn.accept(cw);
     
-    if (false) { //note that it will affect the class loading
+    if (do_verify) { //note that it will affect the class loading
       StringWriter sw = new StringWriter();
       PrintWriter pw = new PrintWriter(sw);
       CheckClassAdapter.verify(new ClassReader(cw.toByteArray()), false, pw);

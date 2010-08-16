@@ -10,7 +10,11 @@ import palus.model.Transition;
 import palus.theory.TheoryCheckingVisitor;
 import palus.theory.TheoryFinder;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -79,6 +83,8 @@ public class TestGenMain {
     public static boolean removeIsNotNullChecker = true;
     //append related method? the gencc approach
     public static boolean diversifySequence = true;
+    //all class to be tested, ignore other classes
+    public static String classFilePath = null;
     
     /**
      * Some private internal states
@@ -121,6 +127,8 @@ public class TestGenMain {
       //set the random generation seeds
       Randomness.reset(randomseed);
       Set<Class<?>> allClasses = this.findAllClasses(args, models);
+      //get class from file
+      allClasses.addAll(readClassFromFile());
       if(addRelevantClass) {
           allClasses.addAll(this.getAllRelevantClasses(models));
       }
@@ -248,10 +256,10 @@ public class TestGenMain {
       }
       
       //XXXFIXME add a sample class containing all sample param value
-      retClasses.add(tests.SomeParamValues.class);
+      //retClasses.add(tests.SomeParamValues.class);
       
       //add from command
-      retClasses.addAll(this.getSampleTestingClass());
+      //retClasses.addAll(this.getSampleTestingClass());
       
       return retClasses;
     }
@@ -397,6 +405,43 @@ public class TestGenMain {
       }
       System.out.println("Add " + set.size() + " more classes");
       return set;
+    }
+    
+    /**read from the provided class file */
+    
+    private static List<Class<?>> cached_list = null;
+    
+    public static List<Class<?>> readClassFromFile() {
+      if(cached_list != null) {
+        return cached_list;
+      }
+      
+      List<Class<?>> classToTest = new LinkedList<Class<?>>();
+      
+      if(TestGenMain.classFilePath != null) {
+        System.out.println("Read class from file: " + TestGenMain.classFilePath);
+        try {
+          BufferedReader br = new BufferedReader(new FileReader(new File(TestGenMain.classFilePath)));
+          String line = br.readLine();
+          while(line != null) {
+            String className = line.trim();
+            //System.out.println(className);
+            Class<?> clazz = Class.forName(className);
+            classToTest.add(clazz);
+            line = br.readLine();
+          }
+        } catch (FileNotFoundException e) {
+          e.printStackTrace();
+        } catch (IOException e) {
+          e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+          e.printStackTrace();
+        }
+      }
+      
+      cached_list = classToTest;
+      
+      return classToTest;
     }
     
     /**Only for testing*/

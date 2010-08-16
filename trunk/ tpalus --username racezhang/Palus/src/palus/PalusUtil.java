@@ -161,6 +161,13 @@ public class PalusUtil implements Opcodes{
 		return false;
 	}
 	
+	/**
+	 * long and double type needs to treat specially
+	 * */
+	public static boolean isLongOrDouble(Type type) {
+	  return type.equals(Type.LONG_TYPE) || type.equals(Type.DOUBLE_TYPE);
+	}
+	
 	public static boolean isPrimitive(String className) {
 		return className.equals("boolean") || className.equals("char") || className.equals("byte")
 		    || className.equals("short") || className.equals("int") || className.equals("float")

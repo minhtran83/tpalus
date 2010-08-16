@@ -13,6 +13,8 @@ import java.util.Map.Entry;
 import palus.Log;
 import palus.analysis.MethodRecommender;
 import palus.model.ClassModel;
+import palus.model.ClassesToModel;
+import palus.model.ModelConstructor;
 import palus.model.TraceAnalyzer;
 import palus.model.serialize.ModelSerializer;
 import palus.model.serialize.TraceSerializer;
@@ -36,7 +38,9 @@ public class OfflineMain {
   
   private static final String DUMP_MODEL_AS_TXT = "./models_dump.txt";
   
-  private static final boolean buildFromTrace = true;
+  private static boolean buildFromTrace = true;
+  
+  private static boolean palulu = false;
   
   public static void main(String[] args) throws IOException, ClassNotFoundException {
     Log.logConfig("./log_test_gen.txt");
@@ -49,28 +53,72 @@ public class OfflineMain {
   }
   
   private static void configure_options() {
-    TestGenMain.timelimit = 200;
-    TestGenMain.diversifySequence = true;
-    ModelBasedGenerator.percentage_of_random_gen = 0.4f;
-    ModelBasedGenerator.random_test_before_model = false;
-    ModelBasedGenerator.random_test_after_model = true;
-    ModelBasedGenerator.only_random_uncovered_statements = false;
-    ModelBasedGenerator.use_abstract_state_as_selector = true; //use abstract profile
-    ModelBasedGenerator.merge_equivalent_decoration = true; //merge equivalent decoration?
-    TestGenMain.printModelCoverage = true; //print the model coverage
-    SequenceDiversifier.exhaustiveDiversifyModel = false;
-    ModelSequences.removeExtendedSequence = true;
-    SequenceDiversifier.addReturnTypeRelatedStatement = false;
-    MethodRecommender.use_tf_idf = false;
+    //TraceAnalyzer.PROJECT_NAME = "html_parser_";//"tinysql_";//"toy_db";// "sat4j_";//
+    TestGenMain.timelimit = 50;
+    palulu = false;
+    OfflineMain.buildFromTrace = true;
+    String class_txt_file = "./apachecollectionexperiment/apacheclass.txt";
+      //"./jsap2.1experiment/jsapclass.txt";//"./shtmlparserexperiment/htmlparserclass.txt";//"./sat4jexperiment/sat4jclass.txt";
+    
+    ModelConstructor.processing_all_traces = false;
+    ModelConstructor.MAX_INSTANCE_PER_MODEL = 5;
+    ClassesToModel.only_model_user_provided = false;
+    
+    if(palulu) {
+      TestGenMain.diversifySequence = false;
+      ModelBasedGenerator.percentage_of_random_gen = 0.4f;
+      ModelBasedGenerator.random_test_before_model = true;
+      ModelBasedGenerator.random_test_after_model = false;
+      ModelBasedGenerator.only_random_uncovered_statements = false;
+      ModelBasedGenerator.use_abstract_state_as_selector = false; //not use abstract profile
+      ModelBasedGenerator.merge_equivalent_decoration = true; //merge equivalent decoration?
+      TestGenMain.printModelCoverage = false; //print the model coverage
+      TestGenMain.classFilePath = class_txt_file;
+      SequenceDiversifier.exhaustiveDiversifyModel = false;
+      ModelSequences.removeExtendedSequence = true;
+      SequenceDiversifier.addReturnTypeRelatedStatement = false;
+      MethodRecommender.use_tf_idf = false;
+    } else {
+        TestGenMain.diversifySequence = true;
+        ModelBasedGenerator.percentage_of_random_gen = 0.4f;
+        ModelBasedGenerator.random_test_before_model = false;
+        ModelBasedGenerator.random_test_after_model = true;
+        ModelBasedGenerator.only_random_uncovered_statements = false;
+        ModelBasedGenerator.use_abstract_state_as_selector = true; //use abstract profile
+        ModelBasedGenerator.merge_equivalent_decoration = true; //merge equivalent decoration?
+        TestGenMain.printModelCoverage = true; //print the model coverage
+        TestGenMain.classFilePath = class_txt_file;
+        SequenceDiversifier.exhaustiveDiversifyModel = false; //diversify with every stmt
+        ModelSequences.removeExtendedSequence = true;
+        SequenceDiversifier.addReturnTypeRelatedStatement = true;
+        MethodRecommender.use_tf_idf = false;
+    }
   }
   
   public void nonStaticMain(String[] args) throws IOException, ClassNotFoundException {
+    
+    System.out.println("Reading trace file: " + TRACE_OBJECT_FILE + " ...... ");
+    
     List<TraceEvent> events = TraceSerializer.deserializeObjectsFromTrace(new File(TRACE_OBJECT_FILE));
     TraceAnalyzer analyzer = new TraceAnalyzer(events);
     Map<Class<?>, ClassModel> models = null;
     
+    if(ClassesToModel.only_model_user_provided && TestGenMain.classFilePath != null) {
+      ClassesToModel.initializeClassesToModel(TestGenMain.readClassFromFile());
+    }
+    
+    if(ClassesToModel.only_model_user_provided && TestGenMain.classFilePath == null) {
+      throw new RuntimeException("Please set up the class file path, before using the option of only model user provided.");
+    }
+    
     if(buildFromTrace) {
       models = analyzer.createModels();
+      System.out.println("Serialize built models ...");
+      
+      ModelSerializer serializer = new ModelSerializer(models, new File(MODEL_OBJECT_FILE));
+      serializer.serializeModelAsObject();
+      
+      System.out.println("Finish serialization ...\n\n");
     } else {
       models = ModelSerializer.deserializeObjectsFromFile(new File(MODEL_OBJECT_FILE));
     }

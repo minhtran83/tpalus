@@ -214,6 +214,44 @@ public class Transition implements Serializable {
 	      thizState, paramStates, transition, p.toIntValue());
 	  this.addDecoration(decoration);
 	}
+
+    public boolean hasDecorationValues(Decoration decoration) {
+      for(Decoration d : this.decorations) {
+        
+        DecorationValue d_value_thiz = d.thiz;
+        DecorationValue decoration_value_thiz = decoration.thiz;
+        
+        int d_position = d.position;
+        int decoration_position = decoration.position;
+        
+        DecorationValue[] d_value_params = d.params;
+        DecorationValue[] decoration_value_params = decoration.params;
+        
+        if(!d_value_thiz.equals(decoration_value_thiz)) {
+          continue;
+        }
+        if(d_position != decoration_position) {
+          continue;
+        }
+        if(d_value_params.length != decoration_value_params.length) {
+          continue;
+        }
+        
+        boolean matched = true;
+        for(int i = 0; i < d_value_params.length; i++) {
+          if(!d_value_params[i].equals(decoration_value_params[i])) {
+            matched = false;
+            break;
+          }
+        }
+        
+        if(matched) {
+          return matched;
+        }
+        
+      }
+      return false;
+    }
 	
 	public void addDecoration(Decoration decoration) {
 		PalusUtil.checkTrue(decoration.transition == this);

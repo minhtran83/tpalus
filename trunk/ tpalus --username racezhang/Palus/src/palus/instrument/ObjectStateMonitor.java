@@ -71,7 +71,8 @@ public class ObjectStateMonitor extends AbstractTransformer implements
 					|| (method.access & ACC_ABSTRACT) > 0) {
 				continue;
 			}
-
+			
+			//if(false)
 			//System.out.println("   transforming: " + method.name);
 			this.instrumentMethod(cn, method);
 		}
@@ -103,7 +104,7 @@ public class ObjectStateMonitor extends AbstractTransformer implements
 			return;
 		}
 		// modify the instruction list
-//		System.out.println("instrument method: " + cn.name + ":" + method.name);
+		//System.out.println("  -> instrument method: " + cn.name + ":" + method.name);
 
 		boolean isStatic = ((method.access & ACC_STATIC) != 0);
 
@@ -144,6 +145,7 @@ public class ObjectStateMonitor extends AbstractTransformer implements
 		mlist.insertBefore(mlist.get(insnPlace), new VarInsnNode(
 				Opcodes.ASTORE, method.maxLocals - 1));
 		insnPlace++;
+		int delta = 0; //it records how many long and double fields have encountered
 		for (int i = 0; i < argumentNum; i++) {
 			Type t = Type.getArgumentTypes(method.desc)[i];
 			// insert
@@ -159,9 +161,15 @@ public class ObjectStateMonitor extends AbstractTransformer implements
 			if (!isStatic) {
 				loadIndex++;
 			}
+			loadIndex = loadIndex + delta;
 			mlist.insertBefore(mlist.get(insnPlace), new VarInsnNode(PalusUtil
 					.getLoadInsn(t), loadIndex));
 			insnPlace++;
+			
+			if(PalusUtil.isLongOrDouble(t)) {
+			  delta ++;
+			}
+			
 			boolean isPrimitive = PalusUtil.isPrimitive(t);
 			if (isPrimitive) {
 				mlist.insertBefore(mlist.get(insnPlace), PalusUtil
@@ -237,6 +245,8 @@ public class ObjectStateMonitor extends AbstractTransformer implements
 				mlist.insertBefore(mlist.get(insnPlace), new VarInsnNode(
 						Opcodes.ASTORE, method.maxLocals - 1));
 				insnPlace++;
+				
+				delta = 0;
 				for (int i = 0; i < argumentNum; i++) {
 					Type t = Type.getArgumentTypes(method.desc)[i];
 					// insert
@@ -252,9 +262,13 @@ public class ObjectStateMonitor extends AbstractTransformer implements
 					if (!isStatic) {
 						loadIndex++;
 					}
+					loadIndex = loadIndex + delta;
 					mlist.insertBefore(mlist.get(insnPlace), new VarInsnNode(PalusUtil
 							.getLoadInsn(t), loadIndex));
 					insnPlace++;
+					if(PalusUtil.isLongOrDouble(t)){
+					  delta ++;
+					}
 					boolean isPrimitive = PalusUtil.isPrimitive(t);
 					if (isPrimitive) {
 						mlist.insertBefore(mlist.get(insnPlace), PalusUtil
