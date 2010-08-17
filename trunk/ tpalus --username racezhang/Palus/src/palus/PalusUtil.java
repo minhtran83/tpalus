@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 public class PalusUtil implements Opcodes{
@@ -51,6 +52,14 @@ public class PalusUtil implements Opcodes{
 
     public static String transClassNameSlashToDot(String name) {
         return name.replace('/', '.');
+    }
+    
+    public static int sum(Collection<Integer> ints) {
+      int  total = 0;
+      for(int x : ints) {
+        total = total + x;
+      }
+      return total;
     }
     
     public static int copyFile(File inFile, File outFile) throws IOException {

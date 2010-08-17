@@ -18,6 +18,8 @@ import java.util.Map.Entry;
  */
 public class ModelSequencesStats {
   
+  static boolean stop_model_based_generation = false;
+  
   private final Map<Class<?>, ClassModel> models;
   
   //keep track of the number of model node / model transition
@@ -31,8 +33,17 @@ public class ModelSequencesStats {
   private final Map<Class<?>, Map<Transition, Integer>> executedTransitionCoverage =
     new LinkedHashMap<Class<?>, Map<Transition, Integer>>();
   
+  private final boolean auto_switch;
+
+  private int selected_model_node = 0;
+  private int selected_model_edge = 0;
+  private int executed_model_edge = 0;
+  private long last_update_time = 0;
+  
   ModelSequencesStats(Map<Class<?>, ClassModel> models) {
     this.models = models;
+    //the auto switch
+    auto_switch = ModelBasedGenerator.auto_switch_to_random_test;
   }
   
   void incrModelNodeCoverage(Class<?> clazz, ModelNode node) {
@@ -45,14 +56,23 @@ public class ModelSequencesStats {
     }
     //replace it by a new value
     nodeMap.put(node, 1 + nodeMap.get(node));
+    
+    //check whether the model-based generation should stop
+    this.checkModelCoverage();
   }
   
   void incrTransitionCoverage(Class<?> clazz, Transition transition) {
     this.updateTransitionMap(transitionCoverage, clazz, transition);
+    
+  //check whether the model-based generation should stop
+    this.checkModelCoverage();
   }
   
   void incrExecutedTransitionCoverage(Class<?> clazz, Transition transition) {
     this.updateTransitionMap(executedTransitionCoverage, clazz, transition);
+    
+  //check whether the model-based generation should stop
+    this.checkModelCoverage();
   }
   
   private void updateTransitionMap(Map<Class<?>, Map<Transition, Integer>> transitionMap,
@@ -105,6 +125,49 @@ public class ModelSequencesStats {
     }
     
     return sb.toString();
+  }
+  
+  
+  private void checkModelCoverage() {
+    
+    if(!auto_switch) {
+      return;
+    }
+    
+    int total_node = 0;
+    for(Map<ModelNode, Integer> nodeMap : this.nodeCoverage.values()) {
+      total_node = total_node + nodeMap.size();
+    }
+    int total_edge = 0;
+    for(Map<Transition, Integer> transMap : this.transitionCoverage.values()) {
+      total_edge = total_edge + transMap.size();
+    }
+    int total_exec = 0;
+    for(Map<Transition, Integer> execMap : this.executedTransitionCoverage.values()) {
+      total_exec = total_exec + execMap.size();
+    }
+    //see the update
+    if(this.last_update_time == 0) {
+      this.last_update_time = System.currentTimeMillis();
+      this.selected_model_node = total_node;
+      this.selected_model_edge = total_edge;
+      this.executed_model_edge = total_exec;
+    } else {
+      if(total_node != this.selected_model_node || total_edge != this.selected_model_edge
+          || total_exec != this.executed_model_edge) {
+        this.last_update_time = System.currentTimeMillis();
+        this.selected_model_node = total_node;
+        this.selected_model_edge = total_edge;
+        this.executed_model_edge = total_exec;
+      } else {
+        long currentMill = System.currentTimeMillis();
+        if(currentMill - this.last_update_time > 10000) {
+          //stop model based generation
+          stop_model_based_generation = true;
+          //throw new Error("start random generation");
+        }
+      }
+    }
   }
   
   private String computeMinMaxAndAverage(Collection<Integer> statistic) {

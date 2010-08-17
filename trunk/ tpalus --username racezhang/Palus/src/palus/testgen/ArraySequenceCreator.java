@@ -75,6 +75,12 @@ public class ArraySequenceCreator {
     int toStatement = 0;
     for(int i = 0; i < expectedLength; i++) {
       Sequence arrayElement = sequencePool.get(Randomness.nextRandomInt(sequencePool.size()));
+      StatementKind lastStmt = arrayElement.getLastStatement();
+      if(lastStmt instanceof RMethod && ((RMethod)lastStmt).getOutputType() == void.class) {
+        i --;
+        continue;
+      }
+      //if(arrayElement.getLastStatement())
       arrayElements.add(arrayElement);
       toStatement += arrayElement.size();
       variableIndices.add(toStatement);
