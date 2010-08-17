@@ -60,6 +60,8 @@ public class ModelBasedGenerator extends ForwardGenerator {
   public static boolean use_abstract_state_as_selector = false;
   //merge redundant decoration
   public static boolean merge_equivalent_decoration = false;
+  //automatic switch to random testing if the model coverage does not change for 10s
+  public static boolean auto_switch_to_random_test = false;
 
   
   //a time to record the time for random test generation
@@ -149,7 +151,8 @@ public class ModelBasedGenerator extends ForwardGenerator {
     if(random_test_before_model && !randomGenerationStop()) {
       return super.step();
     }
-    if(random_test_after_model && randomGenerationStart()) {
+    if((random_test_after_model && randomGenerationStart())
+        || (random_test_after_model && auto_switch_to_random_test && ModelSequencesStats.stop_model_based_generation)) {
       //System.out.println("random");
       //return super.step();
       List<StatementKind> target = this.statements;
@@ -158,6 +161,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
       }
       return randomSequenceForStatements(target);
     }
+    
     //clear the component if needed
     long startTime = System.nanoTime();
     SequenceGeneratorStats.steps ++;

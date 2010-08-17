@@ -54,19 +54,23 @@ public class OfflineMain {
   
   private static void configure_options() {
     //TraceAnalyzer.PROJECT_NAME = "html_parser_";//"tinysql_";//"toy_db";// "sat4j_";//
-    TestGenMain.timelimit = 50;
+    TestGenMain.timelimit = 150;
     palulu = false;
     OfflineMain.buildFromTrace = true;
     String class_txt_file = "./apachecollectionexperiment/apacheclass.txt";
-      //"./jsap2.1experiment/jsapclass.txt";//"./shtmlparserexperiment/htmlparserclass.txt";//"./sat4jexperiment/sat4jclass.txt";
+      ////"./shtmlparserexperiment/htmlparserclass.txt";
+    //"./sat4jexperiment/sat4jclass.txt";"./jsap2.1experiment/jsapclass.txt";
     
     ModelConstructor.processing_all_traces = false;
     ModelConstructor.MAX_INSTANCE_PER_MODEL = 5;
-    ClassesToModel.only_model_user_provided = false;
+    ClassesToModel.only_model_user_provided = true;
+    
+    //test
+   // ModelBasedGenerator.auto_switch_to_random_test = true;
     
     if(palulu) {
       TestGenMain.diversifySequence = false;
-      ModelBasedGenerator.percentage_of_random_gen = 0.4f;
+      ModelBasedGenerator.percentage_of_random_gen = 0.5f;
       ModelBasedGenerator.random_test_before_model = true;
       ModelBasedGenerator.random_test_after_model = false;
       ModelBasedGenerator.only_random_uncovered_statements = false;
@@ -88,7 +92,7 @@ public class OfflineMain {
         ModelBasedGenerator.merge_equivalent_decoration = true; //merge equivalent decoration?
         TestGenMain.printModelCoverage = true; //print the model coverage
         TestGenMain.classFilePath = class_txt_file;
-        SequenceDiversifier.exhaustiveDiversifyModel = false; //diversify with every stmt
+        SequenceDiversifier.exhaustiveDiversifyModel = true; //diversify with every stmt
         ModelSequences.removeExtendedSequence = true;
         SequenceDiversifier.addReturnTypeRelatedStatement = true;
         MethodRecommender.use_tf_idf = false;
