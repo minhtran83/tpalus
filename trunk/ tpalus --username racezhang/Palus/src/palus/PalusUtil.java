@@ -218,6 +218,39 @@ public class PalusUtil implements Opcodes{
       return false;
 	}
 	
+	public static boolean isTwoArrayCompatible(Class<?> superType, Class<?> extendType) {
+	  PalusUtil.checkNull(superType);
+	  PalusUtil.checkNull(extendType);
+	  //PalusUtil.checkTrue(superType.isArray());
+	  if(!extendType.isArray()) {
+	    return false;
+	  }
+	  
+	  Class<?> compSuperType = getArrayComponentType(superType);
+	  int superDimension = getDim(superType);
+	  Class<?> compExtendType = getArrayComponentType(extendType);
+	  int extendDimension = getDim(extendType);
+	  
+	  return compSuperType.isAssignableFrom(compExtendType) && superDimension <= extendDimension;
+	}
+	
+	public static int getDim(Class<?> arrayType) {
+	  int dim = 0;
+	  while(arrayType.isArray()) {
+	    arrayType = arrayType.getComponentType();
+	    dim++;
+	  }
+	  
+	  return dim;
+	}
+	
+	public static Class<?> getArrayComponentType(Class<?> arrayType) {
+	  while(arrayType.isArray()) {
+	    arrayType = arrayType.getComponentType();
+	  }
+	  return arrayType;
+	}
+	
 	public static boolean isStringType(Class<?> clz) {
 	  return clz == java.lang.String.class;
 	}

@@ -27,7 +27,7 @@ import plume.Pair;
 
 public class TraceAnalyzer {
   
-    public static String PROJECT_NAME = "apache_";//"jsap_";//"html_parser_";//"tinysql_";//"toy_db";// "sat4j_";//
+    public static String PROJECT_NAME = "rhino_";//"jdtcore_";//"apache_";//"jsap_";//"html_parser_";//"tinysql_";//"toy_db";// "sat4j_";//
   
 	//the raw traces from program execution
 	private final List<TraceEvent> traces;
@@ -70,7 +70,7 @@ public class TraceAnalyzer {
       Tracer.switchOff();
       
       //remove any unmatched trace event pairs
-      this.removeUnmatchedEvents();
+      this.removeUnmatchedEvents(this.traces);
       //assign an unique id for each trace event
       this.assignTraceSequenceID();
       
@@ -143,6 +143,9 @@ public class TraceAnalyzer {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
+		
+		TraceProcessingUtils.removeUnmatchedTracesPerInstance(traceMap);
+		
 		//check the validity of the trace map before proceeding
 		checkTraceMapValidity(traceMap);
 		
@@ -222,7 +225,7 @@ public class TraceAnalyzer {
 	 * assign a unique id for each trace event, associate each entry/exit
 	 * pairs, and assign stack depth for each event.
 	 * */
-	private void removeUnmatchedEvents() {
+	private void removeUnmatchedEvents(List<TraceEvent> target_trace) {
 		//All unmatched events found in the traces (to be removed at the end)
 		List<TraceEvent> unmatchedEvents = new ArrayList<TraceEvent>();
 		
@@ -230,7 +233,7 @@ public class TraceAnalyzer {
 		Stack<TraceEvent> stack = new Stack<TraceEvent>();
 
 		//go through each trace event
-		for(TraceEvent event : this.traces) {
+		for(TraceEvent event : target_trace) {
 			if(event.isEntryEvent()) {
 				//push entry event to the stack
 				stack.push(event);
@@ -284,7 +287,9 @@ public class TraceAnalyzer {
 	                        topEvent.setStackDepth(stack.size());
 	                        event.setStackDepth(stack.size());
 						} else {
-						  throw new Error("bug");
+						  if(!stack.isEmpty()) {
+						      throw new Error("bug");
+						  }
 						}
 					}
 				}
@@ -294,7 +299,7 @@ public class TraceAnalyzer {
 		  unmatchedEvents.addAll(stack);
 		}
 		Log.log("Size of all unmatched events to be removed: " + unmatchedEvents.size());
-		this.traces.removeAll(unmatchedEvents);
+		target_trace.removeAll(unmatchedEvents);
 	}
 	
 	/**
@@ -311,8 +316,11 @@ public class TraceAnalyzer {
 	 * @param traces the trace events after preprocessing (e.g. removing unmatched pairs)
 	 * @return the classified trace events by class and instance
 	 * */
-	private static Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> extractTraceEventByClass(List<TraceEvent> traces)
+	private Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> extractTraceEventByClass(List<TraceEvent> traces)
 	    throws ClassNotFoundException {
+	  
+	  checkTraceEvents(traces);
+	  
 		//the map classifying trace events by instances from different classes
 		Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> retMap =
 			new LinkedHashMap<Class<?>, Map<Instance, List<TraceEventAndPosition>>>();
@@ -458,22 +466,22 @@ public class TraceAnalyzer {
 		for(TraceEventAndPosition traceAndPosition : traces) {
 			TraceEvent trace = traceAndPosition.event;
 			if(trace.getStackDepth() ==  -1) {
-			  //System.out.println("   ---  stack depth -1");
+			  System.out.println("   ---  stack depth -1");
 			  error++;
 			}
 			if(trace.getUniqueTracePairID() == -1) {
-			  //System.out.println("   ---  unique trace pair id -1");
+			  System.out.println("   ---  unique trace pair id -1");
 				error ++;
 			}
 			if(trace.getPairEvent() == null) {
-			  //System.out.println("   ---  pair event null");
+			  System.out.println("   ---  pair event null");
 				error ++;
 			}
 			if(trace.isEntryEvent()) {
 				stack.push(trace);
 			} else {
 				if(stack.isEmpty()) {
-				  //System.out.println("--- stack empty ----");
+				  System.out.println("--- stack empty ---- : " + trace.getUniqueTracePairID());
 					error++;
 					continue;
 				} else {
@@ -497,13 +505,13 @@ public class TraceAnalyzer {
 			}
 		}
 		if(!stack.isEmpty()) {
-		  //System.out.println("    --- stack empty finally---");
+		  System.out.println("    --- stack empty finally---");
 		  error++;
 		}
 		if(error != 0) {
 			System.err.println("There are " + error + " errors!");
 			for(TraceEventAndPosition tap : traces) {
-	          System.out.println("-->" + tap.event.getUniqueTracePairID());
+	          System.out.println("-->" + tap.event.getUniqueTracePairID()  + "    " + tap.event);
 	        }
 	        
 			throw new RuntimeException("There are " + error + " errors after checkTraceEvents!");

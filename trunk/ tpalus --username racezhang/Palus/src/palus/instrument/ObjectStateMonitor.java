@@ -127,11 +127,11 @@ public class ObjectStateMonitor extends AbstractTransformer implements
 			mlist.insertBefore(mlist.get(insnPlace), new InsnNode(ACONST_NULL));
 		}
 		insnPlace++;
-		mlist.insertBefore(mlist.get(insnPlace), new MethodInsnNode(
-				INVOKESTATIC, "palus/trace/Tracer", "traceMethodEntry",
-				// the new method call
-				"(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V"));
-		insnPlace++;
+//		mlist.insertBefore(mlist.get(insnPlace), new MethodInsnNode(
+//				INVOKESTATIC, "palus/trace/Tracer", "traceMethodEntry",
+//				// the new method call
+//				"(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V"));
+//		insnPlace++;
 
 		// create an object array
 		method.maxLocals = method.maxLocals + 2;
@@ -184,11 +184,17 @@ public class ObjectStateMonitor extends AbstractTransformer implements
 				method.maxLocals - 1));
 		insnPlace++;
 
-		mlist.insertBefore(mlist.get(insnPlace), new MethodInsnNode(
-				INVOKESTATIC, "palus/trace/Tracer", "traceMethodEntryArgs",
-				// the new method call
-				"([Ljava/lang/Object;)V"));
-		insnPlace++;
+//		mlist.insertBefore(mlist.get(insnPlace), new MethodInsnNode(
+//				INVOKESTATIC, "palus/trace/Tracer", "traceMethodEntryArgs",
+//				// the new method call
+//				"([Ljava/lang/Object;)V"));
+//		insnPlace++;
+		
+      mlist.insertBefore(mlist.get(insnPlace), new MethodInsnNode(
+      INVOKESTATIC, "palus/trace/Tracer", "traceMethodEntry",
+      // the new method call
+      "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;[Ljava/lang/Object;)V"));
+      insnPlace++;
 
 		
 		/** trace this object after method calls*/
@@ -227,11 +233,11 @@ public class ObjectStateMonitor extends AbstractTransformer implements
 				insnPlace++;
 				mlist.insertBefore(mlist.get(insnPlace), new LdcInsnNode(cn.name));
 				insnPlace++;
-				mlist.insertBefore(mlist.get(insnPlace), new MethodInsnNode(
-						INVOKESTATIC, "palus/trace/Tracer", "traceMethodExit",
-						// the new method call
-						"(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;ILjava/lang/String;)V"));
-				insnPlace++;
+//				mlist.insertBefore(mlist.get(insnPlace), new MethodInsnNode(
+//						INVOKESTATIC, "palus/trace/Tracer", "traceMethodExit",
+//						// the new method call
+//						"(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;ILjava/lang/String;)V"));
+//				insnPlace++;
 
 				// create an object array
 				method.maxLocals = method.maxLocals + 2;
@@ -284,10 +290,15 @@ public class ObjectStateMonitor extends AbstractTransformer implements
 				insnPlace++;
 
 				mlist.insertBefore(mlist.get(insnPlace), new MethodInsnNode(
-						INVOKESTATIC, "palus/trace/Tracer", "traceMethodExitArgs",
-						// the new method call
-						"([Ljava/lang/Object;)V"));
-				insnPlace++;
+                    INVOKESTATIC, "palus/trace/Tracer", "traceMethodExit",
+                    // the new method call
+                    "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;ILjava/lang/String;[Ljava/lang/Object;)V"));
+                insnPlace++;
+//				mlist.insertBefore(mlist.get(insnPlace), new MethodInsnNode(
+//						INVOKESTATIC, "palus/trace/Tracer", "traceMethodExitArgs",
+//						// the new method call
+//						"([Ljava/lang/Object;)V"));
+//				insnPlace++;
 			}
 		}
 	}

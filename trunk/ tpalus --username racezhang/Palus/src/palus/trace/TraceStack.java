@@ -17,42 +17,42 @@ public class TraceStack {
 	private static Object currentReturnObj = null;
 	private static boolean currentEntryOrExit = false;
 	
-	public static void pushMethodToStack(int id, Object ret, String className, String methodName,
-	    String methodDesc, Object thiz, boolean entryOrExit) {
-		if(hasMethodToPush) {
-			throw new RuntimeException("State error! Current method name, desc: " + currentMethodName
-					+ ",  " + currentMethodDesc+ ". But now pushing: " + methodName + ", " + methodDesc);
-		}
-		if(entryOrExit && ret != null) {
-			throw new RuntimeException("Method entry, why has ret value?");
-		}
-		
-		currentId = id;
-		currentClassName = className;
-		currentMethodName = methodName;
-		currentMethodDesc = methodDesc;
-		currentReturnObj = ret;
-		currentThizObj = thiz;
-		currentEntryOrExit = entryOrExit;
-		
-		hasMethodToPush = true;
-	}
+//	public static void pushMethodToStack(int id, Object ret, String className, String methodName,
+//	    String methodDesc, Object thiz, boolean entryOrExit) {
+//		if(hasMethodToPush) {
+//			throw new RuntimeException("State error! Current method name, desc: " + currentMethodName
+//					+ ",  " + currentMethodDesc+ ". But now pushing: " + methodName + ", " + methodDesc);
+//		}
+//		if(entryOrExit && ret != null) {
+//			throw new RuntimeException("Method entry, why has ret value?");
+//		}
+//		
+//		currentId = id;
+//		currentClassName = className;
+//		currentMethodName = methodName;
+//		currentMethodDesc = methodDesc;
+//		currentReturnObj = ret;
+//		currentThizObj = thiz;
+//		currentEntryOrExit = entryOrExit;
+//		
+//		hasMethodToPush = true;
+//	}
+//	
+//	public static void pushParamsToStack(Object[] args, boolean entryOrExit) {
+//		if(!hasMethodToPush) {
+//			throw new RuntimeException("State error! There is no current method info ");
+//		}
+//		if (currentEntryOrExit != entryOrExit) {
+//			throw new RuntimeException("State error! The currentEntryOrExit: " + currentEntryOrExit
+//					+ ", now entry or exit: " + entryOrExit);
+//		}
+//		
+//		pushToStack(currentId, currentReturnObj, currentClassName, currentMethodName,
+//		    currentMethodDesc, currentThizObj, args, entryOrExit);
+//		hasMethodToPush = false;
+//	}
 	
-	public static void pushParamsToStack(Object[] args, boolean entryOrExit) {
-		if(!hasMethodToPush) {
-			throw new RuntimeException("State error! There is no current method info ");
-		}
-		if (currentEntryOrExit != entryOrExit) {
-			throw new RuntimeException("State error! The currentEntryOrExit: " + currentEntryOrExit
-					+ ", now entry or exit: " + entryOrExit);
-		}
-		
-		pushToStack(currentId, currentReturnObj, currentClassName, currentMethodName,
-		    currentMethodDesc, currentThizObj, args, entryOrExit);
-		hasMethodToPush = false;
-	}
-	
-	private static void pushToStack(int id, Object retObj, String className, String methodName,
+	public static void pushToStack(int id, Object retObj, String className, String methodName,
 	    String methodDesc, Object thiz, Object[] params, boolean entryOrExit) { //true is entry, false is exit
 		TraceEvent pushItem = null;
 		if(methodName.equals("<init>")) {
