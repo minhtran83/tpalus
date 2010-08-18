@@ -52,8 +52,10 @@ public final class AbstractState implements java.io.Serializable {
     
     this.clz = obj.getClass(); //runtime type
     
-    if(!PalusUtil.isPrimitive(type) && !type.isPrimitive()) {
+    if(!PalusUtil.isPrimitive(type) && !type.isPrimitive() && !type.isArray()) {
         PalusUtil.checkTrue(type.isAssignableFrom(this.clz));
+    } else if (type.isArray()) {
+        PalusUtil.checkTrue(PalusUtil.isTwoArrayCompatible(type, this.clz));
     }
     
     //for non-null object

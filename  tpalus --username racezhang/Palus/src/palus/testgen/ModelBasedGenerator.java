@@ -151,6 +151,9 @@ public class ModelBasedGenerator extends ForwardGenerator {
     if(random_test_before_model && !randomGenerationStop()) {
       return super.step();
     }
+    if(auto_switch_to_random_test) {
+      this.modelSequences.getSequenceStats().checkModelCoverage();
+    }
     if((random_test_after_model && randomGenerationStart())
         || (random_test_after_model && auto_switch_to_random_test && ModelSequencesStats.stop_model_based_generation)) {
       //System.out.println("random");
@@ -159,6 +162,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
       if(only_random_uncovered_statements) {
         target = this.modelUncovered;
       }
+      //SequenceGeneratorStats.steps ++;
       return randomSequenceForStatements(target);
     }
     

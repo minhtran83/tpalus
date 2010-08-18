@@ -20,6 +20,8 @@ public class ModelSequencesStats {
   
   static boolean stop_model_based_generation = false;
   
+  public static long time_interval_to_stop = 5000;
+  
   private final Map<Class<?>, ClassModel> models;
   
   //keep track of the number of model node / model transition
@@ -127,10 +129,10 @@ public class ModelSequencesStats {
     return sb.toString();
   }
   
-  
-  private void checkModelCoverage() {
-    
+  void checkModelCoverage() {
+    //System.out.println("check coverage");
     if(!auto_switch) {
+      //System.out.println("not auto switched!");
       return;
     }
     
@@ -159,11 +161,13 @@ public class ModelSequencesStats {
         this.selected_model_node = total_node;
         this.selected_model_edge = total_edge;
         this.executed_model_edge = total_exec;
+        //System.out.println("changed?");
       } else {
         long currentMill = System.currentTimeMillis();
-        if(currentMill - this.last_update_time > 10000) {
+        if(currentMill - this.last_update_time > time_interval_to_stop) {
           //stop model based generation
           stop_model_based_generation = true;
+          //System.err.println("Switch back to random test generation.");
           //throw new Error("start random generation");
         }
       }

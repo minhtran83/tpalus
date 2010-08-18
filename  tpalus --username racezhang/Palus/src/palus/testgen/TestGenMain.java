@@ -425,9 +425,12 @@ public class TestGenMain {
           String line = br.readLine();
           while(line != null) {
             String className = line.trim();
-            //System.out.println(className);
-            Class<?> clazz = Class.forName(className);
-            classToTest.add(clazz);
+            if(!className.equals("")) { 
+               //System.out.println(className);
+               System.out.println("Class name: " + className);
+               Class<?> clazz = Class.forName(className);
+               classToTest.add(clazz);
+            }
             line = br.readLine();
           }
         } catch (FileNotFoundException e) {

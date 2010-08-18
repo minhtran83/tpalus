@@ -57,16 +57,18 @@ public class OfflineMain {
     TestGenMain.timelimit = 150;
     palulu = false;
     OfflineMain.buildFromTrace = true;
-    String class_txt_file = "./apachecollectionexperiment/apacheclass.txt";
+    String class_txt_file = "./rhinoexperiment/rhinoclass.txt"; 
+      //"./jdtcoreperiment/jdtcoreclass.txt";
+      //"./apachecollectionexperiment/apacheclass.txt";
       ////"./shtmlparserexperiment/htmlparserclass.txt";
     //"./sat4jexperiment/sat4jclass.txt";"./jsap2.1experiment/jsapclass.txt";
     
-    ModelConstructor.processing_all_traces = false;
-    ModelConstructor.MAX_INSTANCE_PER_MODEL = 5;
-    ClassesToModel.only_model_user_provided = true;
+    ModelConstructor.processing_all_traces = true;
+    //ModelConstructor.MAX_INSTANCE_PER_MODEL = 5;
+    ClassesToModel.only_model_user_provided = false;
     
     //test
-   // ModelBasedGenerator.auto_switch_to_random_test = true;
+   ModelBasedGenerator.auto_switch_to_random_test = false;
     
     if(palulu) {
       TestGenMain.diversifySequence = false;
@@ -92,7 +94,7 @@ public class OfflineMain {
         ModelBasedGenerator.merge_equivalent_decoration = true; //merge equivalent decoration?
         TestGenMain.printModelCoverage = true; //print the model coverage
         TestGenMain.classFilePath = class_txt_file;
-        SequenceDiversifier.exhaustiveDiversifyModel = true; //diversify with every stmt
+        SequenceDiversifier.exhaustiveDiversifyModel = false; //diversify with every stmt
         ModelSequences.removeExtendedSequence = true;
         SequenceDiversifier.addReturnTypeRelatedStatement = true;
         MethodRecommender.use_tf_idf = false;

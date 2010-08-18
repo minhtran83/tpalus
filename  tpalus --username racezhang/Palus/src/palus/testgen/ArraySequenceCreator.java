@@ -5,6 +5,7 @@ package palus.testgen;
 import palus.PalusUtil;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import randoop.ArrayDeclaration;
@@ -50,23 +51,37 @@ public class ArraySequenceCreator {
     Class<?> componentType = type.getComponentType();
     
     SimpleList<Sequence> candidatesFromComponent = components.getSequencesForType(componentType, false);
+    //only keep the sequence which produce a desirable type
+    List<Sequence> candidatesWithOutputTypeFromComponent = new LinkedList<Sequence>();
+    for(Sequence s : candidatesFromComponent.toJDKList()) {
+      Class<?> outputType = s.getLastVariable().getType();
+      StatementKind lastStmt = s.getLastStatement();
+      boolean isLastStmtVoid = (lastStmt instanceof RMethod) && (((RMethod)lastStmt).getOutputType() == void.class);
+      if(!isLastStmtVoid && componentType.isAssignableFrom(outputType)) {
+        candidatesWithOutputTypeFromComponent.add(s);
+      }
+    }
     
     //the array declaration statement
     ArrayDeclaration decl = new ArrayDeclaration(componentType, expectedLength);
     
     //if there is no way to create an array differently
     SimpleList<Sequence> candidateFromExists = getSequencesForType(sequences, componentType);
-    if(candidateFromExists.isEmpty() && candidatesFromComponent.isEmpty()) {
+    if(candidateFromExists.isEmpty() && /*candidatesFromComponent*/candidatesWithOutputTypeFromComponent.isEmpty()) {
       return HelperSequenceCreator.createSequence(type, components);
     } else {
       //System.err.println("Create the array in a new way!");
     }
     
     //the sequence to produce array declaration
+    
+//    System.out.println("\n\nis candidate pool empty? " + candidateFromExists.isEmpty());
+//    System.out.println("is candidatesWithOutputTypeFromComponent from component empty? " + candidatesWithOutputTypeFromComponent.isEmpty());
 
     List<Sequence> sequencePool = new ArrayList<Sequence>();
     sequencePool.addAll(candidateFromExists.toJDKList());
-    sequencePool.addAll(candidatesFromComponent.toJDKList());
+//    sequencePool.addAll(candidatesFromComponent.toJDKList());
+    sequencePool.addAll(candidatesWithOutputTypeFromComponent);
     
     Sequence s = null;
     
@@ -80,6 +95,7 @@ public class ArraySequenceCreator {
         i --;
         continue;
       }
+//      System.out.println("array element: " + arrayElement);
       //if(arrayElement.getLastStatement())
       arrayElements.add(arrayElement);
       toStatement += arrayElement.size();
@@ -99,6 +115,9 @@ public class ArraySequenceCreator {
     
     
     //create the array declaration
+//    System.out.println("\n\nArray declaration: " + decl);
+//    System.out.println("\n type: " + type.getName());
+//    System.out.println("\n component type: " + componentType.getName());
     s = s.extend(decl, varList);
     
     //create the array simple list
