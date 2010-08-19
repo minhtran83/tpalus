@@ -5,6 +5,7 @@ package palus.testgen;
 import palus.model.ClassModel;
 import palus.model.ModelNode;
 import palus.model.Transition;
+import randoop.Globals;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -94,35 +95,35 @@ public class ModelSequencesStats {
     StringBuilder sb = new StringBuilder();
     
     sb.append("There are totally " + this.models.size() + " class models");
-    sb.append("\n");
+    sb.append(Globals.lineSep);
     
     for(Entry<Class<?>, ClassModel> entry : this.models.entrySet()) {
       Class<?> clazz = entry.getKey();
       ClassModel model = entry.getValue();
       sb.append("Class model for: " + clazz.getName());
-      sb.append("\n");
-      sb.append("   total node num: " + model.getAllNodes().size() + "\n");
-      sb.append("   total transition num: " + model.getAllTransitions().size() + "\n");
-      sb.append("   total decoration num: " + model.getDecorationNum() + "\n");
+      sb.append(Globals.lineSep);
+      sb.append("   total node num: " + model.getAllNodes().size() + Globals.lineSep);
+      sb.append("   total transition num: " + model.getAllTransitions().size() + Globals.lineSep);
+      sb.append("   total decoration num: " + model.getDecorationNum() + Globals.lineSep);
       if(this.nodeCoverage.get(clazz) == null) {
-        sb.append("    no node has been selected!\n");
+        sb.append("    no node has been selected!" + Globals.lineSep);
       } else {
-        sb.append("   selected node num: " + this.nodeCoverage.get(clazz).size() + "\n");
-        sb.append("      for each selected node, " + this.computeMinMaxAndAverage(this.nodeCoverage.get(clazz).values()) + "\n");
+        sb.append("   selected node num: " + this.nodeCoverage.get(clazz).size() + Globals.lineSep);
+        sb.append("      for each selected node, " + this.computeMinMaxAndAverage(this.nodeCoverage.get(clazz).values()) + Globals.lineSep);
       }
       
       if(this.transitionCoverage.get(clazz) == null) {
-        sb.append("    no transition has been selected!\n");
+        sb.append("    no transition has been selected!" + Globals.lineSep);
       } else {
-        sb.append("   selected transition num: " + this.transitionCoverage.get(clazz).size() + "\n");
-        sb.append("      for each selected transition, " + this.computeMinMaxAndAverage(this.transitionCoverage.get(clazz).values()) + "\n");
+        sb.append("   selected transition num: " + this.transitionCoverage.get(clazz).size() + Globals.lineSep);
+        sb.append("      for each selected transition, " + this.computeMinMaxAndAverage(this.transitionCoverage.get(clazz).values()) + Globals.lineSep);
       }
       
       if(this.executedTransitionCoverage.get(clazz) == null) {
-        sb.append("    no transition has been executed!\n");
+        sb.append("    no transition has been executed!" + Globals.lineSep);
       } else {
-        sb.append("   executed transition num: " + this.executedTransitionCoverage.get(clazz).size() + "\n");
-        sb.append("      for each executed transition, " + this.computeMinMaxAndAverage(this.executedTransitionCoverage.get(clazz).values()) + "\n");
+        sb.append("   executed transition num: " + this.executedTransitionCoverage.get(clazz).size() + Globals.lineSep);
+        sb.append("      for each executed transition, " + this.computeMinMaxAndAverage(this.executedTransitionCoverage.get(clazz).values()) + Globals.lineSep);
       }
     }
     

@@ -23,6 +23,7 @@ import palus.testgen.ModelSequences;
 import palus.testgen.SequenceDiversifier;
 import palus.testgen.TestGenMain;
 import palus.trace.TraceEvent;
+import randoop.Globals;
 
 /**
  * @author saizhang@google.com (Your Name Here)
@@ -54,7 +55,7 @@ public class OfflineMain {
   
   private static void configure_options() {
     //TraceAnalyzer.PROJECT_NAME = "html_parser_";//"tinysql_";//"toy_db";// "sat4j_";//
-    TestGenMain.timelimit = 150;
+    TestGenMain.timelimit = 100;
     palulu = false;
     OfflineMain.buildFromTrace = true;
     String class_txt_file = "./rhinoexperiment/rhinoclass.txt"; 
@@ -124,7 +125,7 @@ public class OfflineMain {
       ModelSerializer serializer = new ModelSerializer(models, new File(MODEL_OBJECT_FILE));
       serializer.serializeModelAsObject();
       
-      System.out.println("Finish serialization ...\n\n");
+      System.out.println("Finish serialization ..." + Globals.lineSep + Globals.lineSep);
     } else {
       models = ModelSerializer.deserializeObjectsFromFile(new File(MODEL_OBJECT_FILE));
     }
@@ -139,9 +140,9 @@ public class OfflineMain {
   private static void dumpModels(Map<Class<?>, ClassModel> models, String fileName) throws IOException {
     BufferedWriter bw = new BufferedWriter(new FileWriter(fileName));
     for(Entry<Class<?>, ClassModel> entry : models.entrySet()) {
-      bw.write("Model for class: " + entry.getKey().toString() + "\n");
-      bw.write(entry.getValue().getModelInfo() + "\n");
-      bw.write("\n\n\n");
+      bw.write("Model for class: " + entry.getKey().toString() + Globals.lineSep);
+      bw.write(entry.getValue().getModelInfo() + Globals.lineSep);
+      bw.write(Globals.lineSep + Globals.lineSep + Globals.lineSep);
     }
     bw.flush();
     bw.close();

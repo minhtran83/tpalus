@@ -5,6 +5,7 @@ package palus.testgen;
 
 import palus.Log;
 import palus.PalusUtil;
+import randoop.Globals;
 import randoop.util.Randomness;
 
 import java.lang.reflect.Constructor;
@@ -133,11 +134,11 @@ public class ParamValueCollections {
     StringBuilder sb = new StringBuilder();
     
     sb.append("Values for each method:");
-    sb.append("\n");
+    sb.append(Globals.lineSep);
     for(Entry<String, Map<String, Set<Object>>> classEntry: methodValues.entrySet()) {
       sb.append("Class: ");
       sb.append(classEntry.getKey());
-      sb.append("\n");
+      sb.append(Globals.lineSep);
       for(Entry<String, Set<Object>> methodEntry : classEntry.getValue().entrySet()) {
         sb.append("   ");
         sb.append("Method: \"");
@@ -150,11 +151,11 @@ public class ParamValueCollections {
            sb.append(obj.toString() + ", ");
          }
         }
-        sb.append("\n");
+        sb.append(Globals.lineSep);
       }
     }
     sb.append("All unclaimed values: ");
-    sb.append("\n");
+    sb.append(Globals.lineSep);
     for(Object obj : this.unclaimed) {
       if(obj==null) {
         sb.append("NULL, ");
@@ -162,7 +163,7 @@ public class ParamValueCollections {
         sb.append(obj.toString() + ", ");
       }
     }
-    sb.append("\n");
+    sb.append(Globals.lineSep);
     
     return sb.toString();
   }

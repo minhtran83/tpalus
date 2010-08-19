@@ -7,6 +7,7 @@ import java.util.List;
 
 import palus.PalusUtil;
 import palus.trace.Stats;
+import randoop.Globals;
 
 public class ModelNode implements Serializable {
 	private final int nodeid;
@@ -203,12 +204,12 @@ public class ModelNode implements Serializable {
 	public String getNodeInfo() {
 	  StringBuilder sb = new StringBuilder();
 	  sb.append("Node id: " + this.nodeid + ", Model: " + this.getModelledClass());
-	  sb.append(" \n    ");
+	  sb.append(Globals.lineSep + "    ");
 	  sb.append("incoming transitions: ");
 	  for(Transition t : this.inEdges) {
 	    sb.append(t.getTransitionID() + "  ");
 	  }
-	  sb.append("\n    ");
+	  sb.append(Globals.lineSep + "    ");
 	  sb.append("outgoing transitions: ");
 	  for(Transition t : this.outEdges) {
 	    sb.append(t.getTransitionID() + "  ");

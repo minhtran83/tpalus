@@ -24,6 +24,7 @@ import palus.trace.TraceEvent;
 import palus.trace.Tracer;
 import palus.visualization.ClassModelViewer;
 import plume.Pair;
+import randoop.Globals;
 
 public class TraceAnalyzer {
   
@@ -62,7 +63,7 @@ public class TraceAnalyzer {
 	 * a unique sequence id to each event, and serialize the trace into files.
 	 * */
 	public void dumpTraces() {
-	  System.out.println("Switch off the tracing. Analyzing the trace....\n");
+	  System.out.println("Switch off the tracing. Analyzing the trace...." + Globals.lineSep);
       System.out.println("Instrumented methods: " + Stats.genTraceID());
       System.out.println("Recorded trace size: " + traces.size());
       
@@ -81,7 +82,7 @@ public class TraceAnalyzer {
       System.out.println("After removing unmatched pairs. Size of trace: " + traces.size());
       System.out.println("Trace unique id: " + Stats.genTracePairID());
       System.out.println("Trace sequence id: " + Stats.genTraceSequenceID());
-      System.out.println("\n");
+      System.out.println(Globals.lineSep);
       
       //start to serialize the raw traces to the file
       //first dump a copy as human-readable text file
@@ -95,7 +96,7 @@ public class TraceAnalyzer {
         throw new RuntimeException(e1);
       }
       System.out.println("Serialization successes!");
-      System.out.println("\n");
+      System.out.println(Globals.lineSep);
       //second, dump a copy as object stream for offline analysis
       System.out.println("Serializing trace to file: " + TRACE_OBJECT_FILE + " as object ...");
       TraceSerializer objectSerializer;
@@ -107,7 +108,7 @@ public class TraceAnalyzer {
         throw new RuntimeException(e1);
       }
       System.out.println("Serialization successes!");
-      System.out.println("\n");
+      System.out.println(Globals.lineSep);
       
       //the following is only for testing purpose
 //      System.out.println("Dump by class and instance to file: ");
@@ -159,7 +160,7 @@ public class TraceAnalyzer {
 		  System.out.println("    class: " + entry.getKey() + ", instance number: " + entry.getValue().size()
 		      + ", total size: " + traceNum);
 		}
-		System.out.println("\n");
+		System.out.println(Globals.lineSep);
 		//first capture the parameter dependence between trace events
 		System.out.println("Computing the trace parameter dependences");
 		try {
@@ -170,7 +171,7 @@ public class TraceAnalyzer {
             throw new RuntimeException(e);
         }
 		System.out.println("Finish computing the trace dependences");
-		System.out.println("\n");
+		System.out.println(Globals.lineSep);
 		//get all dependence information from traces
 		Log.log("Here is all the dependence information: ");
 		Map<TraceEventAndPosition, TraceEventAndPosition> dependenceMap =
@@ -182,7 +183,7 @@ public class TraceAnalyzer {
 		ModelConstructor constructor = new ModelConstructor(traceMap);
 		Map<Class<?>, ClassModel> models = constructor.buildClassModels();
 		System.out.println("Finish building models!");
-		System.out.println("\n");
+		System.out.println(Globals.lineSep);
 		
 		//TODO enrich the model by adding dependence!
 		Map<Pair<Transition, Position>, Pair<ModelNode, Position>> dependences
@@ -266,7 +267,7 @@ public class TraceAnalyzer {
 						while(!(topEvent.isEntryEvent() && topEvent.getId() == event.getId())) {
 							//log the error, and add the event to the unmatched list
 							Log.log("No matched event. Ignored event: " + topEvent.toString()
-							    + "\n     for " + event.toString());
+							    + Globals.lineSep + "     for " + event.toString());
 							unmatchedEvents.add(topEvent);
 							if(stack.isEmpty()) {
 								unmatchedEvents.add(event);

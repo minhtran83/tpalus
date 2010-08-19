@@ -10,6 +10,7 @@ import java.util.Set;
 
 import palus.Log;
 import palus.PalusUtil;
+import randoop.Globals;
 
 public class ModelConstructor {
   
@@ -126,7 +127,7 @@ public class ModelConstructor {
                 //for debugging purpose
                 Log.log("############### Intermediate merging result #############");
                 Log.log("Class model for :" + clazz.getName());
-                Log.log(classModel.getModelInfo() + "\n");
+                Log.log(classModel.getModelInfo() + Globals.lineSep);
                 Log.log("#########################################################");
             } catch (ModelNodeNotFoundException e) {
                  throw new RuntimeException(e);
@@ -174,7 +175,7 @@ public class ModelConstructor {
 		System.out.println();
 		Log.log(" ---------------- class model after merging and removing nonpublic transitions ------------");
 		Log.log("Class model for: " + clazz.getName());
-		Log.log(classModel.getModelInfo() + "\n");
+		Log.log(classModel.getModelInfo() + Globals.lineSep);
 		Log.log(" ------------------------------------------------------");
 		
 		if(classModel.getAllNodes().size() == 2
@@ -365,7 +366,7 @@ public class ModelConstructor {
 	      }
 	    }
 	    
-//	    System.out.println("\nsize: " + traceList.size());
+//	    System.out.println(Globals.lineSep + "size: " + traceList.size());
 //	    System.out.println(indexList);
 	    
 	    PalusUtil.checkTrue(currentHasMatched);

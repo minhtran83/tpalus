@@ -20,6 +20,7 @@ import java.util.Set;
 
 import randoop.ExecutableSequence;
 import randoop.ForwardGenerator;
+import randoop.Globals;
 import randoop.InputsAndSuccessFlag;
 import randoop.RConstructor;
 import randoop.RMethod;
@@ -99,9 +100,9 @@ public class ModelBasedGenerator extends ForwardGenerator {
     this.models = models;
     if(merge_equivalent_decoration) {
       int numOfMerged = ClassModel.mergeEquivalentDecorations(this.models);
-      System.out.println("\n" + numOfMerged + " equivalent decorations merged!");
+      System.out.println(Globals.lineSep + numOfMerged + " equivalent decorations merged!");
       int remaining = ClassModel.getDecorationNum(this.models);
-      System.out.println("There are: " + remaining + " decorations remained!\n");
+      System.out.println("There are: " + remaining + " decorations remained!" + Globals.lineSep);
     }
     
     modelSequences = new ModelSequences(models);
@@ -120,14 +121,14 @@ public class ModelBasedGenerator extends ForwardGenerator {
     for(StatementKind statement : statements) {
       Log.log("   " + statement);
     }
-    Log.log("\n\n");
+    Log.log(Globals.lineSep + Globals.lineSep);
     
     //log all uncovered statements
     Log.log("All uncovered statements: ");
     for(StatementKind statement : modelUncovered) {
       Log.log("    " + statement);
     }
-    Log.log("\n\n");
+    Log.log(Globals.lineSep + Globals.lineSep);
     
     //initialize the sequence diversifier, and recommender
     this.diversifier = new SequenceDiversifier(this, recommender);
@@ -137,7 +138,9 @@ public class ModelBasedGenerator extends ForwardGenerator {
     this.random_gen_timer_before.startTiming();
     this.random_gen_timer_after.startTiming();
     if(random_test_before_model) {
-        System.out.println("\n\n....First generating tests randomly...\n\n");
+        System.out.println(Globals.lineSep + Globals.lineSep
+            + "....First generating tests randomly..."
+            + Globals.lineSep +  Globals.lineSep);
     }
   }
   

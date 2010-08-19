@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import randoop.ArrayDeclaration;
+import randoop.Globals;
 import randoop.HelperSequenceCreator;
 import randoop.PrimitiveOrStringOrNullDecl;
 import randoop.RConstructor;
@@ -75,7 +76,7 @@ public class ArraySequenceCreator {
     
     //the sequence to produce array declaration
     
-//    System.out.println("\n\nis candidate pool empty? " + candidateFromExists.isEmpty());
+//    System.out.println(Globals.lineSep + Globals.lineSep+ "is candidate pool empty? " + candidateFromExists.isEmpty());
 //    System.out.println("is candidatesWithOutputTypeFromComponent from component empty? " + candidatesWithOutputTypeFromComponent.isEmpty());
 
     List<Sequence> sequencePool = new ArrayList<Sequence>();
@@ -115,9 +116,9 @@ public class ArraySequenceCreator {
     
     
     //create the array declaration
-//    System.out.println("\n\nArray declaration: " + decl);
-//    System.out.println("\n type: " + type.getName());
-//    System.out.println("\n component type: " + componentType.getName());
+//    System.out.println(Globals.lineSep + Globals.lineSep + "Array declaration: " + decl);
+//    System.out.println(Globals.lineSep + " type: " + type.getName());
+//    System.out.println(Globals.lineSep + " component type: " + componentType.getName());
     s = s.extend(decl, varList);
     
     //create the array simple list

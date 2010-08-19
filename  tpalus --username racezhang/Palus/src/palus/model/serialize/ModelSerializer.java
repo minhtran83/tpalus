@@ -8,6 +8,7 @@ import palus.model.TraceAnalyzer;
 import palus.model.Transition;
 import palus.model.Transition.Decoration;
 import palus.trace.TraceEvent;
+import randoop.Globals;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -43,31 +44,31 @@ public class ModelSerializer {
   public void serializeModelsAsText() throws IOException {
     BufferedWriter bw = new BufferedWriter(new FileWriter(file));
     for(Entry<Class<?>, ClassModel> entry : models.entrySet()) {
-      bw.write("Model for class: " + entry.getKey().getName() + "\n");
-      bw.write(entry.getValue().getModelInfo() + "\n");
+      bw.write("Model for class: " + entry.getKey().getName() + Globals.lineSep);
+      bw.write(entry.getValue().getModelInfo() + Globals.lineSep);
       //output the information of the model node
       for(ModelNode node : entry.getValue().getAllNodes()) {
         bw.write("Node id: " + node.getNodeId());
-        bw.write("Class model for node: " + node.getClassModel().getClassModelID() + "\n");
-        bw.write("Modelled class for node: " + node.getModelledClass() + "\n");
+        bw.write("Class model for node: " + node.getClassModel().getClassModelID() + Globals.lineSep);
+        bw.write("Modelled class for node: " + node.getModelledClass() + Globals.lineSep);
         for(Transition inT : node.getAllIncomingEdges()) {
-          bw.write("incoming transition: " + inT.toString() + "\n");
+          bw.write("incoming transition: " + inT.toString() + Globals.lineSep);
         }
         for(Transition outT : node.getAllOutgoingEdges()) {
-          bw.write("outgoing transition: " + outT.toString() + "\n");
+          bw.write("outgoing transition: " + outT.toString() + Globals.lineSep);
         }
       }
       for(Transition transition : entry.getValue().getAllTransitions()) {
         bw.write("Transition ID: " + transition.getTransitionID());
         bw.write(" method or constructor? " + transition.isConstructor()
-            + "  " + transition.isMethod() + "\n");
-        bw.write("Source node: " + transition.getSourceNode().getNodeInfo() + "\n");
-        bw.write("Source node: " + transition.getDestNode().getNodeInfo() + "\n");
+            + "  " + transition.isMethod() + Globals.lineSep);
+        bw.write("Source node: " + transition.getSourceNode().getNodeInfo() + Globals.lineSep);
+        bw.write("Source node: " + transition.getDestNode().getNodeInfo() + Globals.lineSep);
         for(Decoration decoration : transition.getDecorations()) {
           bw.write("   decoration: " + decoration.toString());
         }
       }
-      bw.write("\n\n\n");
+      bw.write(Globals.lineSep + Globals.lineSep + Globals.lineSep);
     }
     bw.flush();
     bw.close();
@@ -137,21 +138,21 @@ public class ModelSerializer {
     System.out.println("Serializing model as object ...");
     ModelSerializer serializer = new ModelSerializer(models, new File(fileName_bin));
     serializer.serializeModelAsObject();
-    System.out.println("Serialization as object finishes!\n\n");
+    System.out.println("Serialization as object finishes!" + Globals.lineSep + Globals.lineSep);
     
     System.out.println("Serializing model as text ...");
     serializer = new ModelSerializer(models, new File(fileName_txt));
     serializer.serializeModelsAsText();
-    System.out.println("Serialization as text finishes!\n\n");
+    System.out.println("Serialization as text finishes!" + Globals.lineSep + Globals.lineSep);
     
     System.out.println("Deserialze from file: " + fileName_bin + "...");
     models = ModelSerializer.deserializeObjectsFromFile(new File(fileName_bin));
-    System.out.println("Deserialze finishes!\n\n");
+    System.out.println("Deserialze finishes!" + Globals.lineSep + Globals.lineSep);
     
     System.out.println("Serializing model as text ...");
     serializer = new ModelSerializer(models, new File(fileName_de_txt));
     serializer.serializeModelsAsText();
-    System.out.println("Serialization as text finishes!\n\n");
+    System.out.println("Serialization as text finishes!" + Globals.lineSep + Globals.lineSep);
     
     //so the dumpd text of the model should be the same as the model after deserialization
   }

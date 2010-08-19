@@ -31,6 +31,7 @@ import randoop.EqualsToNullRetFalse;
 import randoop.ExecutableSequence;
 import randoop.ExecutionVisitor;
 import randoop.ForwardGenerator;
+import randoop.Globals;
 import randoop.JunitFileWriter;
 import randoop.ObjectContract;
 import randoop.RConstructor;
@@ -156,7 +157,7 @@ public class TestGenMain {
       //initialize the method recommender
       this.recommender = new MethodRecommender(classesToTest);
       if(diversifySequence) {
-        System.out.println("\nBuilding up method dependence model for diversifying...");
+        System.out.println(Globals.lineSep + "Building up method dependence model for diversifying...");
         recommender.buildDependence(model);
         Log.log("---- all method dependence ----");
         Log.log(recommender.showDependence());

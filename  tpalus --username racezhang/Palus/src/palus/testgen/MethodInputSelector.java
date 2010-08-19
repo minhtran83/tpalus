@@ -388,7 +388,7 @@ public class MethodInputSelector {
         }
       }
       
-      if(l == null && ModelBasedGenerator.use_abstract_state_as_selector) {
+      if(l == null /*&& ModelBasedGenerator.use_abstract_state_as_selector*/) {
         Sequence s = generator.sequenceStates.randomSequence(t);
         if(s != null) {
           Log.log("Choose from abstract state pool for extension seq, type: " + t + "!");

@@ -4,6 +4,7 @@ package palus.model.serialize;
 
 import palus.model.Instance;
 import palus.model.TraceEventAndPosition;
+import randoop.Globals;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -27,19 +28,19 @@ public class TraceDumper {
       BufferedWriter bw = new BufferedWriter(new FileWriter(file));
       
       Map<Instance, List<TraceEventAndPosition>> map = entry.getValue();
-      bw.write("Instance num: " + map.size() + "\n\n");
+      bw.write("Instance num: " + map.size() + Globals.lineSep + Globals.lineSep);
       for(Entry<Instance, List<TraceEventAndPosition>> instanceEntry : map.entrySet()) {
-        bw.write("For instance:" + instanceEntry.getKey().toString() + "\n");
+        bw.write("For instance:" + instanceEntry.getKey().toString() + Globals.lineSep);
         List<TraceEventAndPosition> traceList = instanceEntry.getValue();
         for(TraceEventAndPosition tap : traceList) {
           for(int i = 0; i < tap.event.getStackDepth(); i++) {
             bw.write("  ");
           }
           bw.write(tap.event.toParsableString());
-          bw.write("\n");
+          bw.write(Globals.lineSep);
         }
       }
-      bw.write("\n\n\n");
+      bw.write(Globals.lineSep + Globals.lineSep + Globals.lineSep);
       
       bw.flush();
       bw.close();

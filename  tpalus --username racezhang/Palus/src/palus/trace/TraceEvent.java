@@ -12,6 +12,7 @@ import java.lang.reflect.Modifier;
 
 import palus.AbstractState;
 import palus.PalusUtil;
+import randoop.Globals;
 
 public abstract class TraceEvent implements Serializable {
 	
@@ -318,10 +319,10 @@ public abstract class TraceEvent implements Serializable {
         sb.append("  ");
       }
       sb.append(toString());
-      sb.append("\nAbstract state profile: \n");
-      sb.append("This: " + this.thizProfile + "\n");
+      sb.append(Globals.lineSep + "Abstract state profile: " + Globals.lineSep);
+      sb.append("This: " + this.thizProfile + Globals.lineSep);
       for(AbstractState state : this.paramProfiles) {
-        sb.append(" param: " + state + "\n");
+        sb.append(" param: " + state + Globals.lineSep);
       }
 //      sb.append(",,,, id:");
 //      sb.append(this.id + ",");
