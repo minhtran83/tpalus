@@ -5,6 +5,7 @@ package palus.model.serialize;
 import palus.PalusUtil;
 import palus.model.TraceAnalyzer;
 import palus.trace.TraceEvent;
+import randoop.Globals;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -45,7 +46,7 @@ public class TraceSerializer {
   public void serializeTracesAsText() throws IOException {
     BufferedWriter bw = new BufferedWriter(new FileWriter(this.file));
     for(TraceEvent event : events) {
-      bw.write(event.toParsableString() + "\n");
+      bw.write(event.toParsableString() + Globals.lineSep);
     }
     bw.flush();
     bw.close();

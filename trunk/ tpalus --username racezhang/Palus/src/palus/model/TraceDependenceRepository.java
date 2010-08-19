@@ -10,6 +10,7 @@ import palus.trace.MethodEntryEvent;
 import palus.trace.MethodExitEvent;
 import palus.trace.TraceEvent;
 import plume.Pair;
+import randoop.Globals;
 
 import java.util.List;
 import java.util.Map;
@@ -180,7 +181,7 @@ public class TraceDependenceRepository {
     Set<Entry<TraceEventAndPosition, TraceEventAndPosition>> entries = traceDependences.entrySet();
     for(Entry<TraceEventAndPosition, TraceEventAndPosition> entry : entries) {
       TraceEventAndPosition keyTAP = entry.getKey();
-      Log.log("\n\n");
+      Log.log(Globals.lineSep + Globals.lineSep);
       List<Transition> dependentTransitions =
         TraceTransitionManager.findTransitionsByTraceEventAndPosition(keyTAP.event, keyTAP.position);
       // XXX it is a trick here entry.getKey() is the init/method entry event
@@ -190,7 +191,7 @@ public class TraceDependenceRepository {
       List<Transition> dependentOnTransitions =
         TraceTransitionManager.findTransitionsByTraceEventAndPosition(pairEvent, valueTAP.position);
       
-      Log.log("\n\n");
+      Log.log(Globals.lineSep + Globals.lineSep);
       Log.log(" size of dependent transitions: " + dependentTransitions.size());
       Log.log(" size of dependent on transitions: " + dependentOnTransitions.size());
       
@@ -228,7 +229,7 @@ public class TraceDependenceRepository {
       sb.append(key.event.getTraceEventSequenceID() + " (position: " + key.position.toIntValue()
           + ") depends on " + value.event.getTraceEventSequenceID() + " (position: " + value.position.toIntValue()
           + ")");
-      sb.append("\n");
+      sb.append(Globals.lineSep);
     }
     
     return sb.toString();

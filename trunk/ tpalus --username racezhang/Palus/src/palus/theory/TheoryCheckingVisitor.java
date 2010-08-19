@@ -20,6 +20,7 @@ import randoop.ExceptionalExecution;
 import randoop.ExecutableSequence;
 import randoop.ExecutionOutcome;
 import randoop.ExecutionVisitor;
+import randoop.Globals;
 import randoop.NormalExecution;
 import randoop.NotExecuted;
 import randoop.ObjectContract;
@@ -146,7 +147,7 @@ public class TheoryCheckingVisitor implements ExecutionVisitor {
           //check the contract here
           Check check = null;
           //Log.log("!!!Incorrect behavior of contract execution: " + contract.toCodeString());
-              //+ "  but have not implements how to add the check to the code yet.\n");
+              //+ "  but have not implements how to add the check to the code yet." + Globals.lineSep);
           check = new TheoryCheck(contract, variables);
           //the index-th statement did not pass the check, add the failed check to the sequence
           sequence.addCheck(index, check, false);
@@ -234,7 +235,7 @@ public class TheoryCheckingVisitor implements ExecutionVisitor {
           //check the contract here
           Check check = null;
           Log.log("!!!Incorrect behavior of contract execution in exhaustive mode: " + contract.toCodeString());
-              //+ "  but have not implements how to add the check to the code yet.\n");
+              //+ "  but have not implements how to add the check to the code yet." + Globals.lineSep);
           check = new TheoryCheck(contract, inputVariables);
           //the index-th statement did not pass the check, add the failed check to the sequence
           sequence.addCheck(index, check, false);
@@ -389,7 +390,7 @@ public class TheoryCheckingVisitor implements ExecutionVisitor {
       PalusUtil.checkTrue(list.size() == requiredTypes.length);
     }
     
-    //System.out.println("\n\n");
+    //System.out.println(Globals.lineSep + Globals.lineSep);
     
     return crossProducts;
   }

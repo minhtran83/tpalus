@@ -8,14 +8,14 @@ public class TraceStack {
 	public static final List<TraceEvent> traces = new LinkedList<TraceEvent>();
 	
 	//ugly design here
-	private static boolean hasMethodToPush = false;
-	private static int currentId = -1;
-	private static String currentClassName = null;
-	private static String currentMethodName = null;
-	private static String currentMethodDesc = null;
-	private static Object currentThizObj = null;
-	private static Object currentReturnObj = null;
-	private static boolean currentEntryOrExit = false;
+//	private static boolean hasMethodToPush = false;
+//	private static int currentId = -1;
+//	private static String currentClassName = null;
+//	private static String currentMethodName = null;
+//	private static String currentMethodDesc = null;
+//	private static Object currentThizObj = null;
+//	private static Object currentReturnObj = null;
+//	private static boolean currentEntryOrExit = false;
 	
 //	public static void pushMethodToStack(int id, Object ret, String className, String methodName,
 //	    String methodDesc, Object thiz, boolean entryOrExit) {

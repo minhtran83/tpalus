@@ -16,6 +16,7 @@ import palus.PalusUtil;
 import palus.model.Transition.Decoration;
 import palus.trace.Stats;
 import plume.Pair;
+import randoop.Globals;
 
 public class ClassModel implements Serializable {
 	
@@ -382,35 +383,35 @@ public class ClassModel implements Serializable {
 	  PalusUtil.checkNull(this.exit);
 	  
 	  StringBuilder sb = new StringBuilder();
-	  sb.append("---------- model info start ----------\n");
-	  sb.append("Class model: " + this.getModelledClass().getName() + "\n");
-	  sb.append("Number of nodes: " + this.nodes.size() + "\n");
-	  sb.append("Number of edges: " + this.transitions.size() + "\n");
-	  sb.append("Root node id: " + this.root.getNodeId() + "\n");
-	  sb.append("Exit root id: " + this.exit.getNodeId() + "\n");
-	  sb.append("All nodes: \n");
+	  sb.append("---------- model info start ----------" + Globals.lineSep);
+	  sb.append("Class model: " + this.getModelledClass().getName() + Globals.lineSep);
+	  sb.append("Number of nodes: " + this.nodes.size() + Globals.lineSep);
+	  sb.append("Number of edges: " + this.transitions.size() + Globals.lineSep);
+	  sb.append("Root node id: " + this.root.getNodeId() + Globals.lineSep);
+	  sb.append("Exit root id: " + this.exit.getNodeId() + Globals.lineSep);
+	  sb.append("All nodes: " + Globals.lineSep);
 	  sb.append("   ");
 	  for(ModelNode node : this.nodes) {
-	    sb.append(node.getNodeInfo() + "\n");
+	    sb.append(node.getNodeInfo() + Globals.lineSep);
 	  }
-	  sb.append("\n");
-	  sb.append("All transitions: \n");
+	  sb.append(Globals.lineSep);
+	  sb.append("All transitions:" + Globals.lineSep);
 	  for(Transition transition : this.transitions) {
 	    sb.append("   " + transition.getSourceNode().getNodeId() + ":"
 	        + transition.getDecorations().size() + "   ------" + transition.getTransitionID()
 	        + ":" + transition.getClassName() + ":" +  transition.getMethodName()
 	        + ":" + transition.getMethodDesc() +  "----->  "
-	        + transition.getDestNode().getNodeId() + "\n");
-	    sb.append("           unique decoration position? " + transition.hasUniqueDecorationPosition() + "\n");
+	        + transition.getDestNode().getNodeId() + Globals.lineSep);
+	    sb.append("           unique decoration position? " + transition.hasUniqueDecorationPosition() + Globals.lineSep);
 	    if(transition.hasUniqueDecorationPosition() && transition.hasDecoration()) {
-	        sb.append("             if so: " + transition.getUniqueDecorationPosition() + "\n");
+	        sb.append("             if so: " + transition.getUniqueDecorationPosition() + Globals.lineSep);
 	    }
 	    List<Decoration> decorations = transition.getDecorations();
 	    for (Decoration decoration : decorations) {
-	        sb.append("          " + decoration.toString() + "\n");
+	        sb.append("          " + decoration.toString() + Globals.lineSep);
 	    }
 	  }
-	  sb.append("\n");
+	  sb.append(Globals.lineSep);
 	  sb.append("---------------------------------------");
 	  
 	  return sb.toString();
@@ -487,7 +488,7 @@ public class ClassModel implements Serializable {
 	    modelled = entry.getValue().a.getModelledClass();
 	    model = models.get(modelled);
 	    Log.log("Model for: " + modelled + " contains node:?" + model.hasNode(entry.getValue().a));
-	    Log.log("\n");
+	    Log.log(Globals.lineSep);
 	  }
 	}
 	

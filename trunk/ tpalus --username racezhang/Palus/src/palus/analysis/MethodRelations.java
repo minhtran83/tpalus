@@ -12,6 +12,7 @@ import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import randoop.Globals;
 import randoop.RConstructor;
 import randoop.RMethod;
 import randoop.StatementKind;
@@ -111,40 +112,40 @@ final class MethodRelations implements Opcodes {
     for(Entry<Class<?>, Map<StatementKind, List<StatementKind>>> entry : this.statementDependences.entrySet()) {
       sb.append("Class: ");
       sb.append(entry.getKey());
-      sb.append("\n");
+      sb.append(Globals.lineSep);
       Map<StatementKind, List<StatementKind>> methodMap = entry.getValue();
       for(Entry<StatementKind, List<StatementKind>> mfields: methodMap.entrySet()) {
         sb.append("  method: ");
         sb.append(mfields.getKey());
-        sb.append("\n");
+        sb.append(Globals.lineSep);
         List<StatementKind> fields = mfields.getValue();
         sb.append("      " + fields.size());
-        sb.append("\n");
+        sb.append(Globals.lineSep);
         for(StatementKind s : fields) {
           sb.append("              " + s);
-          sb.append("\n");
+          sb.append(Globals.lineSep);
         }
       }
-      sb.append("\n\n");
+      sb.append(Globals.lineSep + Globals.lineSep);
     }
     
     
-    sb.append("\n\n\n\n\n");
+    sb.append(Globals.lineSep + Globals.lineSep + Globals.lineSep + Globals.lineSep);
     
     for(Entry<Class<?>, Map<Method, List<Method>>> entry : this.dependences.entrySet()) {
       sb.append("Class: ");
       sb.append(entry.getKey());
-      sb.append("\n");
+      sb.append(Globals.lineSep);
       Map<Method, List<Method>> methodMap = entry.getValue();
       for(Entry<Method, List<Method>> mfields: methodMap.entrySet()) {
         sb.append("  method: ");
         sb.append(mfields.getKey());
-        sb.append("\n");
+        sb.append(Globals.lineSep);
         List<Method> fields = mfields.getValue();
         sb.append("      " + fields.size());
-        sb.append("\n");
+        sb.append(Globals.lineSep);
       }
-      sb.append("\n\n");
+      sb.append(Globals.lineSep + Globals.lineSep);
     }
      
      return sb.toString();
@@ -159,26 +160,26 @@ final class MethodRelations implements Opcodes {
    for(Entry<Class<?>, Map<Method, ReadWriteFields>> entry : this.fieldReadWrites.entrySet()) {
      sb.append("Class: ");
      sb.append(entry.getKey());
-     sb.append("\n");
+     sb.append(Globals.lineSep);
      Map<Method, ReadWriteFields> methodSummary = entry.getValue();
      for(Entry<Method, ReadWriteFields> mfields: methodSummary.entrySet()) {
        sb.append("  method: ");
        sb.append(mfields.getKey());
-       sb.append("\n");
+       sb.append(Globals.lineSep);
        ReadWriteFields fields = mfields.getValue();
-       sb.append("    All reads:\n");
+       sb.append("    All reads:" + Globals.lineSep);
        for(Entry<String, Integer> reads : fields.readFields.entrySet()) {
          sb.append("       " + reads.getKey()+ ", " + reads.getValue());
-         sb.append("\n");
+         sb.append(Globals.lineSep);
        }
-       sb.append("    All writes:\n");
+       sb.append("    All writes:" + Globals.lineSep);
        for(Entry<String, Integer> writes : fields.writeFields.entrySet()) {
          sb.append("       " + writes.getKey()+ ", " + writes.getValue());
-         sb.append("\n");
+         sb.append(Globals.lineSep);
        }
-       //sb.append("\n");
+       //sb.append(Globals.lineSep);
      }
-     sb.append("\n\n");
+     sb.append(Globals.lineSep + Globals.lineSep);
    }
     
     return sb.toString();

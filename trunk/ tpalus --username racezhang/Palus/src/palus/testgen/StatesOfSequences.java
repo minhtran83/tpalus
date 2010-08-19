@@ -5,8 +5,10 @@ package palus.testgen;
 import palus.AbstractState;
 import palus.PalusUtil;
 import randoop.ExecutionOutcome;
+import randoop.Globals;
 import randoop.NormalExecution;
 import randoop.Sequence;
+import randoop.SubTypeSet;
 import randoop.Variable;
 import randoop.util.Randomness;
 
@@ -27,6 +29,8 @@ public class StatesOfSequences {
   private Map<Class<?>, Map<AbstractState, Set<Sequence>>> sequenceStates =
     new LinkedHashMap<Class<?>, Map<AbstractState, Set<Sequence>>>();
   
+  private SubTypeSet types = new SubTypeSet(false);
+  
   
   StatesOfSequences() {
     //package visibility
@@ -36,7 +40,10 @@ public class StatesOfSequences {
     if(!this.sequenceStates.containsKey(clazz)) {
       return null;
     }
-    Map<AbstractState, Set<Sequence>> stateSequences = this.sequenceStates.get(clazz);
+    Set<Class<?>> compatibleSet = this.types.getMatches(clazz);
+    PalusUtil.checkTrue(compatibleSet != null && !compatibleSet.isEmpty());
+    Class<?> chosenClass = Randomness.randomSetMember(compatibleSet);
+    Map<AbstractState, Set<Sequence>> stateSequences = this.sequenceStates.get(chosenClass);
     AbstractState s = Randomness.randomSetMember(stateSequences.keySet());
     
     return Randomness.randomSetMember(stateSequences.get(s));
@@ -59,7 +66,13 @@ public class StatesOfSequences {
     List<Sequence> retSeqs = new LinkedList<Sequence>();
     
     if(this.sequenceStates.containsKey(clazz)) {
-      Map<AbstractState, Set<Sequence>> stateSequences = this.sequenceStates.get(clazz);
+      
+      Set<Class<?>> compatibleSet = this.types.getMatches(clazz);
+      Map<AbstractState, Set<Sequence>> stateSequences = new LinkedHashMap<AbstractState, Set<Sequence>>();
+      for(Class<?> clz : compatibleSet) {
+        stateSequences.putAll(this.sequenceStates.get(clz));
+      }
+      
       for(Set<Sequence> sequences : stateSequences.values()) {
         PalusUtil.checkTrue(!sequences.isEmpty());
         retSeqs.add(Randomness.randomSetMember(sequences));
@@ -118,6 +131,7 @@ public class StatesOfSequences {
    * */
   private void updateMap(Class<?> type, AbstractState state, Sequence sequence) {
     if(!sequenceStates.containsKey(type)) {
+      this.types.add(type); //it will update the type map automatically
       this.sequenceStates.put(type, new LinkedHashMap<AbstractState, Set<Sequence>>());
     }
     if(!sequenceStates.get(type).containsKey(state)) {
@@ -134,15 +148,15 @@ public class StatesOfSequences {
     
     for(Entry<Class<?>, Map<AbstractState, Set<Sequence>>> entry : this.sequenceStates.entrySet()) {
       sb.append("Class: " + entry.getKey());
-      sb.append("\n");
+      sb.append(Globals.lineSep);
       sb.append("  abstract states: ");
-      sb.append("\n");
+      sb.append(Globals.lineSep);
       Map<AbstractState, Set<Sequence>> abSequence = entry.getValue();
       for(Entry<AbstractState, Set<Sequence>> abEntry : abSequence.entrySet()) {
         sb.append("    " + abEntry.getKey().toString());
         sb.append("  :  ");
         sb.append(abEntry.getValue().size());
-        sb.append("\n");
+        sb.append(Globals.lineSep);
       }
     }
     

@@ -2,6 +2,8 @@
 
 package palus;
 
+import randoop.Globals;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -225,14 +227,14 @@ public final class AbstractState implements java.io.Serializable {
     
     //append some debugging information
     if(debug) {
-      sb.append("\n    ");
+      sb.append(Globals.lineSep + "    ");
       for(int i = 0; i < serializableFields.length; i++) {
         if(i > 0) {
            sb.append(", ");
         }
         sb.append(this.serializableFields[i]);
       }
-      sb.append("\n");
+      sb.append(Globals.lineSep);
     }
     
     
