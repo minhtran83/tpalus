@@ -7,6 +7,13 @@ Palus is an automated test generation tool, which combines various static and dy
 
 = How to use Palus? =
 
+*In short*: see its help manual. 
+
+Execute the following command:
+
+java -cp ./palus-0.1.jar:./asm-all-3.1.jar:./plume.jar palus.main.OfflineMain --help
+
+
 == Example 1 (a toy example) ===
 
 The needed class files are included in the palus-0.1.jar.
@@ -28,3 +35,31 @@ The needed class files are included in the palus-0.1.jar.
    Execute the following command to generate tests:
 
    java -cp ./palus-0.1.jar:./asm-all-3.1.jar:./plume.jar palus.main.OfflineMain --time_limit 10 --class_file ./toydatabase.txt --trace_file ./toydb_trace.model
+
+== Example 2 (a real-world program: bcel 5.2 library) ===
+
+The first 2 steps are the same with *Example 1*
+
+1. put palus-0.1.jar in a folder, denoted as PALUS_DIR
+
+2. download two dependent jars (plume.jar, asm-all-3.1.jar) from the download tab, and put them all into the PALUS_DIR folder
+
+3. download the *bcel-5.2-exp.jar* from the download tab. Palus will generate tests for this library
+
+4. enter PALUS_DIR
+
+5. run a sample execution:
+
+   java -javaagent:./palus-0.1.jar=bcel -cp ./palus-0.1.jar:./asm-all-3.1.jar:./bcel-5.2-exp.jar:$CLASSPATH org.apache.bcel.util.BCELifier org.apache.bcel.util.CodeHTML
+
+6. Palus will record the captured trace and save to a (binary) file in PALUS_DIR folder, named *bcel_trace.model* (there might be another file called: bcel_trace.txt. This is the human-readable trace text for error diagnose and performance tuning)
+
+7. Download the bcelclass.txt file from the download tab. This file contains all classes of the bcel library. Put this file to the PALUS_DIR.
+
+   Execute the following command to generate tests:
+
+   java -Xmx2G -cp ./palus-0.1.jar:./asm-all-3.1.jar:./plume.jar:./bcel-5.2-exp.jar palus.main.OfflineMain --time_limit 150 --class_file ./bcelclass.txt --trace_file ./bcel_trace.model --switch_time_to_random 6000 --process_large_trace
+
+===where to find the generated tests?===
+
+In the above 2 examples, all generated tests will reside in $PALUS_DIR/tests folder, under the tests package
