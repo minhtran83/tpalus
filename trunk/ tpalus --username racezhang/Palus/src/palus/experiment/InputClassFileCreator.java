@@ -11,8 +11,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * @author saizhang@google.com (Your Name Here)
- *
+ * A simple utility class to create the input class file for Randoop
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  */
 public class InputClassFileCreator {
   
@@ -92,8 +93,15 @@ public class InputClassFileCreator {
    * A small test driver
    * */
   public static void main(String[] args) throws IOException {
-    String dirPath = "/home/saizhang/workspace/Rhino/bin";//;"/home/saizhang/workspace/tiny-sql-2/bin";
-    String outputFile = "/home/saizhang/workspace/Rhino/bin/rhinoclass.txt";
+    String dirPath, outputFile = null;
+    if(args.length == 2) {
+        dirPath = args[0];
+        outputFile = args[1];
+    } else {
+      //for experiment purpose only
+      dirPath = "/home/saizhang/workspace/Bcel5.2/bin";//;"/home/saizhang/workspace/tiny-sql-2/bin";
+      outputFile = "/home/saizhang/workspace/Bcel5.2/bin/bcelclass.txt";
+    }
     InputClassFileCreator.outputClassList(dirPath, outputFile);
   }
 }

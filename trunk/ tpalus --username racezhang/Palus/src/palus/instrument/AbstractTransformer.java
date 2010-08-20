@@ -25,15 +25,19 @@ import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 
 /**
- * @author saizhang@google.com (Your Name Here)
- *
+ * An abstract bytecode transformer which contains various utility
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  */
 public abstract class AbstractTransformer {
   
-  //do not set true here unless in debugging mode
-  //it will load some classes in advance
+  /**o not set true here unless in debugging mode
+  / it will load some classes in advance */
   private static boolean do_verify = false;
   
+  /**
+   * Transform the bytecode the give source directory statically
+   * */
   public void transformDir(File srcDir, File descDir) throws IOException {
     assert (srcDir != null);
     assert (descDir != null);
@@ -64,6 +68,9 @@ public abstract class AbstractTransformer {
     }
   }
 
+  /**
+   * Transforms a given file statically
+   * */
   private void transformFile(File in, File out) throws IOException {
     if (in == null || out == null) {
       return;
@@ -83,22 +90,17 @@ public abstract class AbstractTransformer {
   }
 
   /**
-   * Transform a jar file
+   * Transform a jar file statically
    */
   private void transformJarFile(File in, File out) throws IOException {
-    // jar file
     JarFile inJar = new JarFile(in);
-
-    // jar output stream
     JarOutputStream outJarStream = new JarOutputStream(new FileOutputStream(out));
-
-    // get all jar entries
+    // get all jar entries from the jar file
     Enumeration<JarEntry> entries = inJar.entries();
     while (entries.hasMoreElements()) {
       // get a jar entry and input stream
       JarEntry entry = entries.nextElement();
       InputStream inJarStream = inJar.getInputStream(entry);
-
       // add the jar entry
       outJarStream.putNextEntry(new JarEntry(entry.getName()));
       if (entry.isDirectory()) {
@@ -113,7 +115,6 @@ public abstract class AbstractTransformer {
       else {
         PalusUtil.copyStream(inJarStream, outJarStream);
       }
-
       // close the inJar stream
       inJarStream.close();
     }
@@ -122,6 +123,9 @@ public abstract class AbstractTransformer {
     inJar.close();
   }
 
+  /**
+   * Transforms a given class file
+   * */
   private void transformClassFile(File classFile, File transformedClassFile) throws IOException {
     FileInputStream classFileInputStream = new FileInputStream(classFile);
 

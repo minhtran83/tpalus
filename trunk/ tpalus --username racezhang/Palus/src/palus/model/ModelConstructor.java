@@ -19,7 +19,7 @@ public class ModelConstructor {
     public static boolean processing_all_traces = true;
     
     public static int MAX_NODE_NUM = 10000;
-    public static int MAX_INSTANCE_PER_MODEL = 20;
+    public static int MAX_INSTANCE_PER_MODEL = 4;
     public static int MAX_TRY_UNTIL_FIXED_POINT = 5;
     
 	
@@ -70,34 +70,30 @@ public class ModelConstructor {
 		
 		Set<Instance> instance_to_process = classTraces.keySet();
 		
-//		if(!processing_all_traces) {
-//		  List<Instance> ranked_instance_list = new LinkedList<Instance>();
-//		  for(Instance instance : instance_to_process) {
-//		    if(ranked_instance_list.isEmpty()) {
-//		      ranked_instance_list.add(instance);
-//		      continue;
-//		    }
-//		    int size_of_trace = classTraces.get(instance).size();
-//		    for(int insert_place = 0; insert_place < ranked_instance_list.size(); insert_place++) {
-//		      Instance current_instance = ranked_instance_list.get(insert_place);
-//		      if(classTraces.get(current_instance).size() < size_of_trace) {
-//		        ranked_instance_list.add(insert_place, instance);
-//		        break;
-//		      }
-//		      if(insert_place == ranked_instance_list.size() - 1) {
-//		        ranked_instance_list.add(instance); //at the end
-//		      }
-//		    }
-//		    if(ranked_instance_list.size() > MAX_INSTANCE_PER_MODEL) {
-//		      break;
-//		    }
-//		  } //end of while
-//		  
-//		  //PalusUtil.checkTrue(ranked_instance_list.size() == instance_to_process.size());
-//		  
-//		  instance_to_process = new LinkedHashSet<Instance>();
-//		  instance_to_process.addAll(ranked_instance_list);
-//		}
+		System.out.println("instance size: " + MAX_INSTANCE_PER_MODEL);
+		
+		if(!processing_all_traces && instance_to_process.size() > MAX_INSTANCE_PER_MODEL) {
+		  
+		  System.out.println("Eliminate the trace size to: " + MAX_INSTANCE_PER_MODEL);
+		  
+		  instance_to_process = new LinkedHashSet<Instance>();
+          Set<Instance> allInstances = classTraces.keySet();
+		  for(int i = 0; i < MAX_INSTANCE_PER_MODEL; i++) {
+		    int size = 0;
+		    Instance currentInstance = null;
+		    for(Instance instance : allInstances) {
+		      int currentListSize = classTraces.get(instance).size();
+		      if(currentListSize > size && !instance_to_process.contains(currentInstance)) {
+		        size = currentListSize;
+		        currentInstance = instance;
+		      }
+		    }
+		    if(currentInstance != null) {
+		      instance_to_process.add(currentInstance);
+		      //allInstances.remove(currentInstance);
+		    }
+		  }
+		}
 		
 		System.out.println("Number of instance to process: " + instance_to_process.size());
 		

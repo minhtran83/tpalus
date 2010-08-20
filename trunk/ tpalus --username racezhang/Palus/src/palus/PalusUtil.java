@@ -11,6 +11,7 @@ import org.objectweb.asm.tree.MethodNode;
 import randoop.RConstructor;
 import randoop.RMethod;
 import randoop.StatementKind;
+import randoop.util.Reflection;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,6 +24,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * A simple collection of utility methods
+ * 
+ * @author saizhang@google.com (Sai Zhang)
+ */
 public class PalusUtil implements Opcodes{
 	
    private static final List<String> nonTransformedPrefixes = Arrays
@@ -122,6 +128,15 @@ public class PalusUtil implements Opcodes{
         Class<?> componentType = clz.getComponentType();
         return !isPrimitiveOrStringType(componentType);
       }
+    }
+    
+    public static boolean areAllVisible(Class<?>[] classes) {
+      for(Class<?> clz : classes) {
+        if(!Reflection.isVisible(clz)) {
+          return false;
+        }
+      }
+      return true;
     }
     
     public static int[] computeObjectIdInArray(Object array) {

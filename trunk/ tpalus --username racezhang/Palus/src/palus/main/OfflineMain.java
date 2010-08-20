@@ -20,6 +20,7 @@ import palus.model.serialize.ModelSerializer;
 import palus.model.serialize.TraceSerializer;
 import palus.testgen.ModelBasedGenerator;
 import palus.testgen.ModelSequences;
+import palus.testgen.ModelSequencesStats;
 import palus.testgen.SequenceDiversifier;
 import palus.testgen.TestGenMain;
 import palus.trace.TraceEvent;
@@ -33,43 +34,55 @@ public class OfflineMain {
 
  
   //the file
-  public static final String TRACE_OBJECT_FILE = TraceAnalyzer.TRACE_OBJECT_FILE;
+  static String TRACE_OBJECT_FILE = TraceAnalyzer.TRACE_OBJECT_FILE;
   
-  private static final String MODEL_OBJECT_FILE = TraceAnalyzer.MODEL_OBJECT_FILE;//"./model_serialize_bin.model";
+  static String MODEL_OBJECT_FILE = TraceAnalyzer.MODEL_OBJECT_FILE;//"./model_serialize_bin.model";
   
-  private static final String DUMP_MODEL_AS_TXT = "./models_dump.txt";
+  static String DUMP_MODEL_AS_TXT = "./models_dump.txt";
   
-  private static boolean buildFromTrace = true;
+  static boolean buildFromTrace = true;
   
-  private static boolean palulu = false;
+  static boolean palulu = false;
   
   public static void main(String[] args) throws IOException, ClassNotFoundException {
     Log.logConfig("./log_test_gen.txt");
     Log.log("Start logging....");
     
-    configure_options();
+    if(args.length == 0) {
+        //only for experiment
+        System.out.println("In experiment environment ....");
+        experiment_configure_options();
+    } else {
+      System.out.println("Starting Palus, configuring options ...");
+      PalusOptions options = new PalusOptions();
+      options.parseArgsAndConfigurePalus(args);
+    }
     
     OfflineMain main = new OfflineMain();
     main.nonStaticMain(args);
   }
   
-  private static void configure_options() {
+  private static void experiment_configure_options() {
     //TraceAnalyzer.PROJECT_NAME = "html_parser_";//"tinysql_";//"toy_db";// "sat4j_";//
-    TestGenMain.timelimit = 100;
+    TestGenMain.timelimit = 10;
     palulu = false;
     OfflineMain.buildFromTrace = true;
-    String class_txt_file = "./rhinoexperiment/rhinoclass.txt"; 
+    String class_txt_file = //"./bcelexperiment/bcelclass.txt";
+      "./toyexperiment/toydatabase.txt";
+      //"./apachecollectionexperiment/apacheclass.txt";
+      //"./rhinoexperiment/rhinoclass.txt"; 
       //"./jdtcoreperiment/jdtcoreclass.txt";
       //"./apachecollectionexperiment/apacheclass.txt";
       ////"./shtmlparserexperiment/htmlparserclass.txt";
     //"./sat4jexperiment/sat4jclass.txt";"./jsap2.1experiment/jsapclass.txt";
     
-    ModelConstructor.processing_all_traces = true;
-    //ModelConstructor.MAX_INSTANCE_PER_MODEL = 5;
-    ClassesToModel.only_model_user_provided = false;
+    ModelConstructor.processing_all_traces = false;
+    ModelConstructor.MAX_INSTANCE_PER_MODEL = 4;
+    ClassesToModel.only_model_user_provided = true;
     
     //test
-   ModelBasedGenerator.auto_switch_to_random_test = false;
+   ModelBasedGenerator.auto_switch_to_random_test = true;
+   ModelSequencesStats.time_interval_to_stop = 6000;
     
     if(palulu) {
       TestGenMain.diversifySequence = false;
@@ -77,7 +90,7 @@ public class OfflineMain {
       ModelBasedGenerator.random_test_before_model = true;
       ModelBasedGenerator.random_test_after_model = false;
       ModelBasedGenerator.only_random_uncovered_statements = false;
-      ModelBasedGenerator.use_abstract_state_as_selector = false; //not use abstract profile
+      ModelBasedGenerator.use_abstract_state_as_selector = true; //not use abstract profile
       ModelBasedGenerator.merge_equivalent_decoration = true; //merge equivalent decoration?
       TestGenMain.printModelCoverage = false; //print the model coverage
       TestGenMain.classFilePath = class_txt_file;
@@ -93,7 +106,7 @@ public class OfflineMain {
         ModelBasedGenerator.only_random_uncovered_statements = false;
         ModelBasedGenerator.use_abstract_state_as_selector = true; //use abstract profile
         ModelBasedGenerator.merge_equivalent_decoration = true; //merge equivalent decoration?
-        TestGenMain.printModelCoverage = true; //print the model coverage
+        TestGenMain.printModelCoverage = false; //print the model coverage
         TestGenMain.classFilePath = class_txt_file;
         SequenceDiversifier.exhaustiveDiversifyModel = false; //diversify with every stmt
         ModelSequences.removeExtendedSequence = true;
@@ -109,6 +122,10 @@ public class OfflineMain {
     List<TraceEvent> events = TraceSerializer.deserializeObjectsFromTrace(new File(TRACE_OBJECT_FILE));
     TraceAnalyzer analyzer = new TraceAnalyzer(events);
     Map<Class<?>, ClassModel> models = null;
+    
+    if(TestGenMain.classFilePath == null) {
+      throw new RuntimeException("You must provide a file containing all classes to test.");
+    }
     
     if(ClassesToModel.only_model_user_provided && TestGenMain.classFilePath != null) {
       ClassesToModel.initializeClassesToModel(TestGenMain.readClassFromFile());

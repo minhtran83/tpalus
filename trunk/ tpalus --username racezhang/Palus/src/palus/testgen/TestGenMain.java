@@ -15,6 +15,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -35,6 +37,7 @@ import randoop.Globals;
 import randoop.JunitFileWriter;
 import randoop.ObjectContract;
 import randoop.RConstructor;
+import randoop.RMethod;
 import randoop.RegressionCaptureVisitor;
 import randoop.SeedSequences;
 import randoop.Sequence;
@@ -146,6 +149,9 @@ public class TestGenMain {
       //add Object constructor
       this.addObjectConstructor(model);
       
+      //add static method
+      this.addPublicStaticMethodFromAbstracts(model, allClasses);
+      
       //if there is no method for testing, we exit
       if(model.size() == 0) {
         System.out.println("There is nothing to test!");
@@ -226,7 +232,10 @@ public class TestGenMain {
       
       if(diversifySequence && explorer instanceof ModelBasedGenerator) {
         Set<ExecutableSequence> diversifiedSequence = ((ModelBasedGenerator)explorer).getAllDiversifiedSequences();
-        this.write_junit_tests (outputDir, "tests", "Diversified", testsPerFile, new LinkedList<ExecutableSequence>(diversifiedSequence));
+        if(diversifiedSequence.size() != 0) {
+            this.write_junit_tests (outputDir, "tests", "Diversified", testsPerFile,
+                new LinkedList<ExecutableSequence>(diversifiedSequence));
+        }
       }
       
       if(printModelCoverage && useModel && explorer instanceof ModelBasedGenerator) {
@@ -294,6 +303,28 @@ public class TestGenMain {
       }
       if (!model.contains(objectConstructor))
         model.add(objectConstructor);
+    }
+    
+    /**
+     * Add testable abstract class public static method
+     * */
+    private void addPublicStaticMethodFromAbstracts(List<StatementKind> model, Set<Class<?>> allClasses) {
+      for(Class<?> clazz : allClasses) {
+        if(Reflection.isAbstract(clazz) && Reflection.isVisible(clazz)) {
+          Method[] methods = Reflection.getDeclaredMethodsOrdered(clazz);
+          for(Method method : methods) {
+            int modifier = method.getModifiers();
+            Class<?> returnType = method.getReturnType();
+            Class<?>[] paramTypes = method.getParameterTypes();
+            if(Modifier.isStatic(modifier) && Modifier.isPublic(modifier) && Reflection.isVisible(returnType)
+                && PalusUtil.areAllVisible(paramTypes)) {
+              RMethod mc =  RMethod.getRMethod(method);
+              //add here
+              model.add(mc);
+            }
+          }
+        }
+      }
     }
     
     /**

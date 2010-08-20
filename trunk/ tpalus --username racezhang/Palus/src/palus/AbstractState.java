@@ -14,31 +14,81 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author saizhang@google.com (Your Name Here)
- *
+ * An abstraction for a Java object. It maps each fields in a given
+ * object to a limited domain state.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  */
 public final class AbstractState implements java.io.Serializable {
   
-  //private static final long serialVersionUID = 961812625417279099L;
-  
+  /**
+   * The type of the represented object
+   * */
   private final Class<?> clz;
   
-  //it could not be final
-  private transient /*final*/ Field[] fields; //field could not be serialized
+  /**
+   * Fields in the represented object
+   * 
+   * <p>The {@link Field} Object could not be serialized. Thus, the field
+   * is made to be transient.</P
+   * */
+  private transient /*final*/ Field[] fields;
+  
+  /**
+   * Abstract states where each field in the represented object maps to
+   * */
   private final State[] states;
   
+  /**
+   * The name of each field in the represented object, which has the same order
+   * as {@code fields} and {@code states}
+   * */
   private final String[] serializableFields;
   
+  /**
+   * Indicates whether the represented object is null value
+   * */
   private boolean isNullValue = false;
   
+  /**
+   * Indicates whether the represented object is primitive type (including boxing
+   * type) or string type
+   * */
   public boolean isPrimtiveOrString = false;
+  
+  /**
+   * The object value, if the type is primitive or string
+   * <p>The field is not null, only if the {@code isPrimitiveOrString} field
+   * is true</p>
+   * */
   public Object valueOfPrimitiveOrString = null;
   
+  /**
+   * Default constructor
+   * @param obj  the object value to abstract. Maybe {@code null}
+   * @param type  the type of the given object. Can not be {@code null}
+   * 
+   * @see #AbstractState(Object, Class, boolean)
+   * */
   public AbstractState(Object obj, Class<?> type) {
     this(obj, type, false);
   }
   
-  /** init indicates whether the object is before creation */
+  /**
+   * Constructor which creates the object
+   * @param obj  the object value to abstract. Maybe {@code null}
+   * @param type  the type of the given object. Can not be {@code null}
+   * @param init  a flag indicating that whether the object is in the
+   *              state of before initialization. If so, each of the
+   *              field in the given object is treated as uninitialized,
+   *              and will be mapped to a special value {@link State#INIT}
+   * 
+   * <p>If the {@code obj} is not null, this class will use the runtime
+   * type of the object, which may not be the same as the given type {@code type}}
+   * </p>
+   * 
+   * @see #AbstractState(Object, Class)
+   * */
   public AbstractState(Object obj, Class<?> type, boolean init) {
     PalusUtil.checkNull(type);
     
@@ -52,15 +102,19 @@ public final class AbstractState implements java.io.Serializable {
       return;
     }
     
-    this.clz = obj.getClass(); //runtime type
+    //use the runtime type
+    this.clz = obj.getClass();
     
+    //double check the array case, to make sure the type is compatible, and
+    //the created object is valid
     if(!PalusUtil.isPrimitive(type) && !type.isPrimitive() && !type.isArray()) {
         PalusUtil.checkTrue(type.isAssignableFrom(this.clz));
     } else if (type.isArray()) {
         PalusUtil.checkTrue(PalusUtil.isTwoArrayCompatible(type, this.clz));
     }
     
-    //for non-null object
+    //For non-null object, extract its fields, and maps to the domain
+    //of abstract state
     if(this.clz.isPrimitive() || PalusUtil.isPrimitive(this.clz)
         || this.clz == java.lang.String.class ) {
       fields = new Field[0];
@@ -85,11 +139,22 @@ public final class AbstractState implements java.io.Serializable {
     }
   }
   
+  /**
+   * Serialize this object
+   * @param oos  the object output stream to searialize objects
+   * @param abState the {@link AbstractState} object to be seraialized
+   * 
+   * @throws IOException any error occurs during serialization
+   * */
   public static void serialize(ObjectOutputStream oos, AbstractState abState) throws IOException {
     abState.saveFieldStates();
     oos.writeObject(abState);
   }
   
+  /**
+   * Deserialize an {@link AbstractState} object from a given stream
+   * @param ois the given stream from where to deserialize objects
+   * */
   public static AbstractState deserialize(ObjectInputStream ois) throws IOException, ClassNotFoundException {
     Object obj = ois.readObject();
     PalusUtil.checkTrue(obj instanceof AbstractState);
@@ -99,7 +164,8 @@ public final class AbstractState implements java.io.Serializable {
   }
   
   /**
-   * Call this before perform serialization
+   * Save the field names before serialization. This internal method
+   * is usually called before performing serialization
    * */
   private void saveFieldStates() {
     for(int i = 0; i < this.fields.length; i++) {
@@ -110,14 +176,13 @@ public final class AbstractState implements java.io.Serializable {
   }
   
   /**
-   * Call this after recovering from  serialization
+   * Recover the {@link #fields} field from serialization. This internal
+   * method is usually called after deserialization
    * */
   private void recoverFieldStates() {
     PalusUtil.checkNull(this.clz);
     Field[] declaredFields = this.clz.getDeclaredFields();
     this.fields = new Field[this.serializableFields.length];
-    
-    //System.out.println("length: " + this.serializableFields.length);
     
     for(int i = 0; i < this.serializableFields.length; i++) {
       String signature = this.serializableFields[i];
@@ -128,22 +193,31 @@ public final class AbstractState implements java.io.Serializable {
           break;
         }
       }
-      //xxx
-      //System.out.println("Field name: null? " + (serializableFields[i] == null) + ", cls: " + this.clz);
+      
       PalusUtil.checkNull(field);
       this.fields[i] = field;
     }
   }
   
+  /**
+   * Gets the type of this object
+   * */
   public Class<?> getStateClass() {
     return clz;
   }
   
+  /**
+   * Gets the fields of this object. It first checks whether
+   * the fields have been recovered from serialization
+   * */
   public Field[] getStateFields() {
     this.checkAndRecover();
     return fields;
   }
   
+  /**
+   * Gets the abstract states of this method
+   * */
   public State[] getStates() {
     return states;
   }

@@ -15,8 +15,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * @author saizhang@google.com (Your Name Here)
- *
+ * The class for recommending a set of related method after static analysis
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  */
 public class MethodRecommender {
   
@@ -74,6 +75,6 @@ public class MethodRecommender {
     list.add(java.util.Vector.class);
     MethodRecommender recommender = new MethodRecommender(list);
     //recommender.buildDependence();
-    System.out.println(recommender.relations.showFieldReadWrites());
+    //System.out.println(recommender.relations.showFieldReadWrites());
   }
 }

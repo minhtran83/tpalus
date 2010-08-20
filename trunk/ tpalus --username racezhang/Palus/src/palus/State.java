@@ -3,8 +3,9 @@
 package palus;
 
 /**
- * @author saizhang@google.com (Your Name Here)
- *
+ * The abstract domain of an object
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  */
 public enum State implements java.io.Serializable {
 

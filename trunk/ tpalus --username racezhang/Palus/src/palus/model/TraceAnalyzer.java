@@ -28,7 +28,8 @@ import randoop.Globals;
 
 public class TraceAnalyzer {
   
-    public static String PROJECT_NAME = "rhino_";//"jdtcore_";//"apache_";//"jsap_";//"html_parser_";//"tinysql_";//"toy_db";// "sat4j_";//
+    public static String PROJECT_NAME = "toy_db";////"bcel_";//"apache_";//"rhino_";
+    ////"apache_";//"jsap_";//"html_parser_";//"tinysql_";// "sat4j_";//"jdtcore_";
   
 	//the raw traces from program execution
 	private final List<TraceEvent> traces;
@@ -36,12 +37,12 @@ public class TraceAnalyzer {
 	public static final String LOG_FILE = "log.txt";
 	
 	//dump the trace to human readable txt
-	public static final String TRACE_FILE = PROJECT_NAME + "_trace.txt";
+	public static String TRACE_FILE = PROJECT_NAME + "_trace.txt";
 	//dump the trace event as object stream for reuse
-	public static final String TRACE_OBJECT_FILE = PROJECT_NAME + "_trace.model";
+	public static String TRACE_OBJECT_FILE = PROJECT_NAME + "_trace.model";
 	
-	public static final String MODEL_FILE = PROJECT_NAME + "_model.txt";
-	public static final String MODEL_OBJECT_FILE = PROJECT_NAME + "_model.model";
+	public static String MODEL_FILE = PROJECT_NAME + "_model.txt";
+	public static String MODEL_OBJECT_FILE = PROJECT_NAME + "_model.model";
 	//testing purpose
 	//private static final String TRACE_DUMP_FILE = "trace_dump_by_class.txt";
 	
@@ -56,6 +57,11 @@ public class TraceAnalyzer {
 	 * */
 	public TraceAnalyzer(List<TraceEvent> traces) {
 		this.traces = traces;
+		TRACE_FILE = PROJECT_NAME + "_trace.txt";
+	    //dump the trace event as object stream for reuse
+	    TRACE_OBJECT_FILE = PROJECT_NAME + "_trace.model";
+	    MODEL_FILE = PROJECT_NAME + "_model.txt";
+	    MODEL_OBJECT_FILE = PROJECT_NAME + "_model.model";
 	}
 	
 	/**
