@@ -10,8 +10,10 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 /**
- * @author saizhang@google.com (Your Name Here)
- *
+ * An entity class keeps the field read write (with the frequency) information
+ * of a class
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  */
 class ReadWriteFields {
   

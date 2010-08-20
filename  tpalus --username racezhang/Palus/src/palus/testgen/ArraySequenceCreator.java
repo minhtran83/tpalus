@@ -9,7 +9,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import randoop.ArrayDeclaration;
-import randoop.Globals;
 import randoop.HelperSequenceCreator;
 import randoop.PrimitiveOrStringOrNullDecl;
 import randoop.RConstructor;

@@ -29,8 +29,10 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 /**
- * @author saizhang@google.com (Your Name Here)
- *
+ * Constructing the relations between each method using read/write dependence
+ * relations.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  */
 final class MethodRelations implements Opcodes {
   //all classes

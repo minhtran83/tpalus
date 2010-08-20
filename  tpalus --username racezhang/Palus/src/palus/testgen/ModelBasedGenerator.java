@@ -294,8 +294,15 @@ public class ModelBasedGenerator extends ForwardGenerator {
     StatementKind statement = this.selectStatement(selectedTransition);
     //it can not be null
     if(statement == null) {
-      throw new BugInPalusException("The statement in transition: "
-          + selectedTransition.toSignature() + " is null!");
+      //XXXX it could be hashcode()
+      String signature = selectedTransition.toSignature();
+      //XXXX hard code
+      if(signature.indexOf("hashCode") == -1 && signature.indexOf("toString") == -1) {
+        throw new BugInPalusException("The statement in transition: "
+            + selectedTransition.toSignature() + " is null!");
+      } else {
+      return null;
+      }
     }
     
     Log.log("    Get a statement: " + statement.toParseableString());    
@@ -356,7 +363,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
     }    
     //success in creating a sequence!
     ExecutableSequence eSeq = new ExecutableSequence(newSequence);    
-    Log.log("    return eseq and transition from root");
+    Log.log("    return eseq and transition from root " + selectedTransition.toSignature());
     
     return new Pair<ExecutableSequence, Transition>(eSeq, selectedTransition); 
   }
@@ -476,7 +483,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
     }
     
     ExecutableSequence eSeq = new ExecutableSequence(newSequence);    
-    Log.log("    return eseq and transition from extending");
+    Log.log("    return eseq and transition from extending, " + extendTransition.toSignature());
     
     return new Pair<ExecutableSequence, Transition>(eSeq, extendTransition);
   }

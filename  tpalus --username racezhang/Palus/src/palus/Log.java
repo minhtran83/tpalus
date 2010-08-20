@@ -5,7 +5,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 
-
+/**
+ * A simple logging util class
+ * 
+ * @author saizhang@google.com (Sai Zhang)
+ */
 public final class Log {
 
   public static FileWriter log = null;

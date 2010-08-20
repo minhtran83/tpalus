@@ -21,7 +21,7 @@ public class ModelSequencesStats {
   
   static boolean stop_model_based_generation = false;
   
-  public static long time_interval_to_stop = 5000;
+  public static long time_interval_to_stop = 6000;
   
   private final Map<Class<?>, ClassModel> models;
   
