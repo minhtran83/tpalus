@@ -12,8 +12,11 @@ Palus is an automated test generation tool, which combines various static and dy
 The needed class files are included in the palus-0.1.jar.
 
 1. put palus-0.1.jar in a folder, denoted as PALUS_DIR
+
 2. download two dependent jars (plume.jar, asm-all-3.1.jar) from the download tab, and put them all into the PALUS_DIR folder
+
 3. enter PALUS_DIR
+
 4. run a sample execution:
 
    java -javaagent:./palus-0.1.jar=toydb -cp ./palus-0.1.jar:./asm-all-3.1.jar:$CLASSPATH database.Main
@@ -21,5 +24,7 @@ The needed class files are included in the palus-0.1.jar.
 5. Palus will record the captured trace and save to a (binary) file in PALUS_DIR folder, named *toy_db_trace.model* (there might be another file called: toy_db_trace.txt. This is the human-readable trace text for error diagnose and performance tuning)
 
 6. Download the toydatabase.txt file from the download tab. This file contains several classes to test for the toy example. Put this file to the PALUS_DIR.
+
    Execute the following command to generate tests:
+
    java -cp ./palus-0.1.jar:./asm-all-3.1.jar:./plume.jar palus.main.OfflineMain --time_limit 10 --class_file ./toydatabase.txt --trace_file ./toydb_trace.model
