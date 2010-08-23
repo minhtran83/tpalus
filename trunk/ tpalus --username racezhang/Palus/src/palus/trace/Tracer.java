@@ -5,8 +5,9 @@ package palus.trace;
 import palus.PalusUtil;
 
 /**
- * @author saizhang@google.com (Your Name Here)
- *
+ * The instrumentation code for recording all trace information
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  */
 public class Tracer {
 	
@@ -44,6 +45,15 @@ public class Tracer {
 //	  //TraceStack.pushParamsToStack(objs, false);
 //  }
   
+  /**
+   * Tracing the method entry information
+   * @param id  the unique id of the traced method
+   * @param className  the class name of the traced method
+   * @param methodName  the name of the traced method
+   * @param desc  method descriptor
+   * @param o  the this object of the traced method. It is null for static method
+   * @param objs  the parameters of the traced method
+   * */
   public static void traceMethodEntry(int id, String className, String methodName,
       String desc, Object o, Object[] objs) {
 	  if(switchOff) {
@@ -58,6 +68,16 @@ public class Tracer {
 	  TraceStack.pushToStack(id, null, className, methodName, desc, o, objs, true);
   }
   
+  /**
+   * Tracing the method exit information
+   * @param ret the return object the traced method. It is null for void method.
+   * @param methodName  the name of the traced method
+   * @param desc  method descriptor
+   * @param o  the this object of the traced method. It is null for static method
+   * @param id  the unique id of the traced method
+   * @param className  the class name of the traced method
+   * @param objs  the parameters of the traced method
+   * */
   public static void traceMethodExit(Object ret, String methodName, String desc,
       Object o, int id, String className, Object[] objs) {
 	  if(switchOff) {

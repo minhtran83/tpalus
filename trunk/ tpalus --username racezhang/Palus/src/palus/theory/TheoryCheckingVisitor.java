@@ -162,6 +162,7 @@ public class TheoryCheckingVisitor implements ExecutionVisitor {
         if(!contract.evalExceptionMeansFailure()) {
           continue;
         } else {
+          System.out.println(contract.toCommentString());
           throw new BugInPalusException("Exception in evaluating theory: "
               + exceptionExecution.getException());
         }
