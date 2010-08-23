@@ -44,6 +44,13 @@ public class OfflineMain {
   
   static boolean palulu = false;
   
+  //experimental option
+  static boolean fall_back_to_randoop = false;
+  
+  /**
+   * Start test generation.
+   * TODO the args should be compatible with randoop's
+   * */
   public static void main(String[] args) throws IOException, ClassNotFoundException {
     Log.logConfig("./log_test_gen.txt");
     Log.log("Start logging....");
@@ -63,13 +70,16 @@ public class OfflineMain {
   }
   
   private static void experiment_configure_options() {
+    
+    fall_back_to_randoop = true;
+    
     //TraceAnalyzer.PROJECT_NAME = "html_parser_";//"tinysql_";//"toy_db";// "sat4j_";//
-    TestGenMain.timelimit = 10;
+    TestGenMain.timelimit = 50;
     palulu = false;
     OfflineMain.buildFromTrace = true;
     String class_txt_file = //"./bcelexperiment/bcelclass.txt";
-      "./toyexperiment/toydatabase.txt";
-      //"./apachecollectionexperiment/apacheclass.txt";
+      //"./toyexperiment/toydatabase.txt";
+      "./apachecollectionexperiment/apacheclass.txt";
       //"./rhinoexperiment/rhinoclass.txt"; 
       //"./jdtcoreperiment/jdtcoreclass.txt";
       //"./apachecollectionexperiment/apacheclass.txt";
@@ -115,6 +125,9 @@ public class OfflineMain {
     }
   }
   
+  /**
+   * Read the trace file, build the model, and start test generation
+   * */
   public void nonStaticMain(String[] args) throws IOException, ClassNotFoundException {
     
     System.out.println("Reading trace file: " + TRACE_OBJECT_FILE + " ...... ");
@@ -123,6 +136,7 @@ public class OfflineMain {
     TraceAnalyzer analyzer = new TraceAnalyzer(events);
     Map<Class<?>, ClassModel> models = null;
     
+    //check the validity of the input args
     if(TestGenMain.classFilePath == null) {
       throw new RuntimeException("You must provide a file containing all classes to test.");
     }
@@ -135,25 +149,37 @@ public class OfflineMain {
       throw new RuntimeException("Please set up the class file path, before using the option of only model user provided.");
     }
     
-    if(buildFromTrace) {
-      models = analyzer.createModels();
-      System.out.println("Serialize built models ...");
+    //build model from saved trace
+    if(!fall_back_to_randoop) {
+      if(buildFromTrace) {
+        models = analyzer.createModels();
+        System.out.println("Serialize built models ...");
       
-      ModelSerializer serializer = new ModelSerializer(models, new File(MODEL_OBJECT_FILE));
-      serializer.serializeModelAsObject();
+        ModelSerializer serializer = new ModelSerializer(models, new File(MODEL_OBJECT_FILE));
+        serializer.serializeModelAsObject();
       
-      System.out.println("Finish serialization ..." + Globals.lineSep + Globals.lineSep);
-    } else {
-      models = ModelSerializer.deserializeObjectsFromFile(new File(MODEL_OBJECT_FILE));
+        System.out.println("Finish serialization ..." + Globals.lineSep + Globals.lineSep);
+      } else {
+        models = ModelSerializer.deserializeObjectsFromFile(new File(MODEL_OBJECT_FILE));
+      }
     }
+    
     //for testing purpose
-    dumpModels(models, DUMP_MODEL_AS_TXT);
+    if(DUMP_MODEL_AS_TXT != null && !fall_back_to_randoop) {
+        dumpModels(models, DUMP_MODEL_AS_TXT);
+    }
     
     //start to generate tests
     TestGenMain main = new TestGenMain();
     main.generateTests(new String[]{}, models);
   }
   
+  /**
+   * Dump models to a txt file for human inspection
+   * @param models the class models to dump
+   * @param fileName the file the model is dumped to
+   * @throws IOException any exception occurs during model dump
+   * */
   private static void dumpModels(Map<Class<?>, ClassModel> models, String fileName) throws IOException {
     BufferedWriter bw = new BufferedWriter(new FileWriter(fileName));
     for(Entry<Class<?>, ClassModel> entry : models.entrySet()) {

@@ -2,6 +2,9 @@
 
 package palus.testgen;
 
+import org.junit.experimental.theories.Theory;
+import org.junit.runner.RunWith;
+
 import palus.Log;
 import palus.PalusUtil;
 import palus.analysis.MethodRecommender;
@@ -15,6 +18,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -78,7 +82,7 @@ public class TestGenMain {
     //add relevant classes
     public static boolean addRelevantClass = true;
     //check the theory oracle or not
-    public static boolean checkTheory = false;
+    public static boolean checkTheory = true;
     //exhaustively enumerate all possible objects
     public static boolean exhaustiveTheoryChecking = false;
     //use param value specified for each method
@@ -100,15 +104,8 @@ public class TestGenMain {
     //the method recommender for get related methods
     private MethodRecommender recommender = null;
     
-    public static void main(String[] args) {
-       TestGenMain main = new TestGenMain();
-       
-//       main.generateTests(args, null);
-//       System.exit(0);
-    }
-    
     /**
-     * Entry for external client
+     * Entry for generating tests
      * */
     public void generateTests(String[] args, Map<Class<?>, ClassModel> models) {
       //use long format
@@ -120,7 +117,6 @@ public class TestGenMain {
     
     /**
      * The main entry for test generation
-     * TODO the args should be as compatible as Randoop
      * */
     private void nonStaticMain(String[] args, Map<Class<?>, ClassModel> models) {
       // use model-based random testing or not
@@ -130,11 +126,11 @@ public class TestGenMain {
       
       //set the random generation seeds
       Randomness.reset(randomseed);
-      Set<Class<?>> allClasses = this.findAllClasses(args, models);
+      Set<Class<?>> allClasses = this.findAllClassesInModels(models);
       //get class from file
       allClasses.addAll(readClassFromFile());
       if(addRelevantClass) {
-          allClasses.addAll(this.getAllRelevantClasses(models));
+          allClasses.addAll(this.getModelOwnerClasses(models));
       }
       Set<Class<?>> classesToTest = this.filterUntestableClasses(allClasses);
       
@@ -151,6 +147,12 @@ public class TestGenMain {
       
       //add static method
       this.addPublicStaticMethodFromAbstracts(model, allClasses);
+      
+      //remove the statement which correponding to a theory checking
+      this.removeTheoryCheckingStatement(model);
+      
+      //remove the statement which has an ignorable annotation
+      this.removeIgnorableStatements(model);
       
       //if there is no method for testing, we exit
       if(model.size() == 0) {
@@ -202,6 +204,7 @@ public class TestGenMain {
             recommender);
       } else {
         //use the explorer of Randoop
+        System.out.println("Fall back to use Randoop...");
         explorer  = new ForwardGenerator(
             model,
             null, //this is for achieving instrumented coverage information, ignore here
@@ -213,6 +216,18 @@ public class TestGenMain {
       //add some visitors, that is execute the method sequence as soon as it is constructed
       //also add the theory contract here
       List<ExecutionVisitor> visitors = this.getExecutionVisitors();
+      
+      //TODO add theory checking visitors here
+      if(checkTheory) {
+        TheoryFinder theoryFinder = new TheoryFinder(classesToTest);
+        List<ObjectContract> theories = theoryFinder.findAllTheories();
+        ExecutionVisitor theoryVisitor = new TheoryCheckingVisitor(theories, true);
+        visitors.add(theoryVisitor);
+        System.out.println("Find " + theories.size() + " theories in total.");
+        for(ObjectContract theory : theories) {
+          System.out.println("   " + theory.toCommentString());
+        }
+      }
       
       //add all these visitors to the MultiVisitor
       explorer.executionVisitor.visitors.addAll(visitors);
@@ -250,9 +265,7 @@ public class TestGenMain {
      * The classes to be test are composed from 2 parts, The first from
      * the randoop argument, the other one is from the Model
      * */
-    private Set<Class<?>> findAllClasses(String[] args, Map<Class<?>, ClassModel> models) {
-      PalusUtil.checkNull(args);
-      //TODO need to be compatiable with randoop
+    private Set<Class<?>> findAllClassesInModels(Map<Class<?>, ClassModel> models) {
       Set<Class<?>> retClasses = new LinkedHashSet<Class<?>>();
       
       //add classes from model
@@ -264,12 +277,6 @@ public class TestGenMain {
           }
         }
       }
-      
-      //XXXFIXME add a sample class containing all sample param value
-      //retClasses.add(tests.SomeParamValues.class);
-      
-      //add from command
-      //retClasses.addAll(this.getSampleTestingClass());
       
       return retClasses;
     }
@@ -328,6 +335,50 @@ public class TestGenMain {
     }
     
     /**
+     * Remove the theory checking statements
+     * */
+    private void removeTheoryCheckingStatement(List<StatementKind> model) {
+      List<StatementKind> toBeRemoved = new LinkedList<StatementKind>();
+      for(StatementKind statement : model) {
+        if(statement instanceof RMethod) {
+          RMethod rmethod = (RMethod)statement;
+          Theory t = rmethod.getMethod().getAnnotation(Theory.class);
+          if(t != null ) {
+            toBeRemoved.add(statement);
+          }
+        } else if (statement instanceof RConstructor) {
+          RConstructor rconstructor = (RConstructor)statement;
+          Constructor<?> constr = rconstructor.getConstructor();
+          Class<?> ownerClazz = constr.getDeclaringClass();
+          RunWith annotation = ownerClazz.getAnnotation(RunWith.class);
+          if(annotation != null) {
+            toBeRemoved.add(statement);
+          }
+        }
+      }
+      //remove that
+      model.removeAll(toBeRemoved);
+    }
+    
+    /**
+     * Remove the ignorable statements
+     * */
+    private void removeIgnorableStatements(List<StatementKind> model) {
+      List<StatementKind> toBeRemoved = new LinkedList<StatementKind>();
+      for(StatementKind statement : model) {
+        if(statement instanceof RMethod) {
+          RMethod rmethod = (RMethod)statement;
+          IgnorableMethod t = rmethod.getMethod().getAnnotation(IgnorableMethod.class);
+          if(t != null ) {
+            toBeRemoved.add(statement);
+          }
+        }
+      }
+      //remove that
+      model.removeAll(toBeRemoved);
+    }
+    
+    /**
      * Get all execution visitors to serve as oracle checking
      * */
     private List<ExecutionVisitor> getExecutionVisitors() {
@@ -347,14 +398,14 @@ public class TestGenMain {
       
       //add regression capture visitor
       visitors.add(new RegressionCaptureVisitor());
-      
-      //TODO add theory checking visitors here
-      if(checkTheory) {
-        TheoryFinder theoryFinder = new TheoryFinder(new ArrayList<Class<?>>());
-        List<ObjectContract> theories = theoryFinder.findAllTheories();
-        ExecutionVisitor theoryVisitor = new TheoryCheckingVisitor(theories, true);
-        visitors.add(theoryVisitor);
-      }
+//      
+//      //TODO add theory checking visitors here
+//      if(checkTheory) {
+//        TheoryFinder theoryFinder = new TheoryFinder(new ArrayList<Class<?>>());
+//        List<ObjectContract> theories = theoryFinder.findAllTheories();
+//        ExecutionVisitor theoryVisitor = new TheoryCheckingVisitor(theories, true);
+//        visitors.add(theoryVisitor);
+//      }
       
       return visitors;
     }
@@ -424,25 +475,34 @@ public class TestGenMain {
        }
     }
     
-    private Set<Class<?>> getAllRelevantClasses(Map<Class<?>, ClassModel> models) {
+    private Set<Class<?>> getModelOwnerClasses(Map<Class<?>, ClassModel> models) {
       Set<Class<?>> set = new LinkedHashSet<Class<?>>();
-      for(ClassModel model : models.values()) {
-        for(Transition t : model.getAllTransitions()) {
-          set.add(t.getOwnerClass());
-//          Class[] params = t.getParamClasses();
-//          for(Class<?> param : params) {
-//            set.add(param);
-//          }
+      
+      if(models != null) {
+        for(ClassModel model : models.values()) {
+          for(Transition t : model.getAllTransitions()) {
+            set.add(t.getOwnerClass());
+//            Class[] params = t.getParamClasses();
+//            for(Class<?> param : params) {
+//              set.add(param);
+//            }
+          }
         }
+        System.out.println("Add " + set.size() + " more classes");
       }
-      System.out.println("Add " + set.size() + " more classes");
       return set;
     }
     
-    /**read from the provided class file */
     
+    
+    /**
+     * A simple cached class list for tested classes
+     * */
     private static List<Class<?>> cached_list = null;
     
+    /**
+     * Read from the provided class file 
+     * */
     public static List<Class<?>> readClassFromFile() {
       if(cached_list != null) {
         return cached_list;
@@ -459,7 +519,7 @@ public class TestGenMain {
             String className = line.trim();
             if(!className.equals("")) { 
                //System.out.println(className);
-               System.out.println("Class name: " + className);
+               System.out.println("   Tested Class: " + className);
                Class<?> clazz = Class.forName(className);
                classToTest.add(clazz);
             }
@@ -473,56 +533,8 @@ public class TestGenMain {
           e.printStackTrace();
         }
       }
-      
       cached_list = classToTest;
       
       return classToTest;
-    }
-    
-    /**Only for testing*/
-    private List<Class<?>> getSampleTestingClass() {
-      List<Class<?>> retClasses = new LinkedList<Class<?>>();
-
-      String[] classesToTest = new String[]{
-          "com.sqlmagic.tinysql.DBFHeader",
-          "com.sqlmagic.tinysql.FieldTokenizer",
-          "com.sqlmagic.tinysql.SimpleXMLTag",
-          "com.sqlmagic.tinysql.UtilString",
-          "com.sqlmagic.tinysql.Utils",
-          "com.sqlmagic.tinysql.dbfFile",
-          "com.sqlmagic.tinysql.dbfFileConnection",
-          "com.sqlmagic.tinysql.dbfFileDatabaseMetaData",
-          "com.sqlmagic.tinysql.dbfFileDriver",
-          "com.sqlmagic.tinysql.dbfFileTable",
-          "com.sqlmagic.tinysql.textFile",
-          "com.sqlmagic.tinysql.textFileConnection",
-          "com.sqlmagic.tinysql.textFileDriver",
-          "com.sqlmagic.tinysql.textFileTable",
-          "com.sqlmagic.tinysql.tinySQL",
-          "com.sqlmagic.tinysql.tinySQLCmd",
-          "com.sqlmagic.tinysql.tinySQLConnection",
-          "com.sqlmagic.tinysql.tinySQLDatabaseMetaData",
-          "com.sqlmagic.tinysql.tinySQLDriver",
-          "com.sqlmagic.tinysql.tinySQLException",
-          "com.sqlmagic.tinysql.tinySQLGlobals",
-          "com.sqlmagic.tinysql.tinySQLParser",
-          "com.sqlmagic.tinysql.tinySQLPreparedStatement",
-          "com.sqlmagic.tinysql.tinySQLResultSet",
-          "com.sqlmagic.tinysql.tinySQLResultSetMetaData",
-          "com.sqlmagic.tinysql.tinySQLStatement",
-          "com.sqlmagic.tinysql.tinySQLTable",
-          "com.sqlmagic.tinysql.tinySQLWhere",
-          "com.sqlmagic.tinysql.tsColumn",
-          "com.sqlmagic.tinysql.tsResultSet",
-          "com.sqlmagic.tinysql.tsRow"
-      };
-      for(String className : classesToTest) {
-        try {
-          retClasses.add(Class.forName(className));
-        } catch (ClassNotFoundException e) {
-          e.printStackTrace();
-        }
-      }
-      return retClasses;
     }
 }

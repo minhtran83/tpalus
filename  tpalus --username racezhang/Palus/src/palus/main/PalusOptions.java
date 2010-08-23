@@ -2,12 +2,9 @@
 
 package palus.main;
 
-import org.apache.tools.ant.types.resources.Files;
-
 import java.util.LinkedList;
 import java.util.List;
 
-import palus.PalusUtil;
 import palus.analysis.MethodRecommender;
 import palus.model.ClassesToModel;
 import palus.model.ModelConstructor;
@@ -89,7 +86,7 @@ public class PalusOptions {
   public static boolean remove_extended_seq = true;
   
   @Option("Print model coverage information to the standard output after generation")
-  public static boolean print_model_coverage = true;
+  public static boolean print_model_coverage = false;
   
   @Option("Exhaustively diversify the generated sequence, that is diversifying it with each method within the same class")
   public static boolean exhaustive_diversify_seq = false;
@@ -100,6 +97,8 @@ public class PalusOptions {
   @Option("Use tf-idf algorithm for static analysis to find related method")
   public static boolean use_tf_idf = false;
   
+  @Option("Shortcut for processing large trace files")
+  public static boolean process_large_trace = false;
   
   /**
    * Parse the argument options and assign the value to the right place
@@ -169,6 +168,13 @@ public class PalusOptions {
     ModelSequences.removeExtendedSequence = PalusOptions.remove_extended_seq;
     
     MethodRecommender.use_tf_idf = PalusOptions.use_tf_idf;
+    
+    //a short cut
+    if(PalusOptions.process_large_trace) {
+      ModelConstructor.processing_all_traces = false;
+      ModelConstructor.MAX_INSTANCE_PER_MODEL = 4;
+      ClassesToModel.only_model_user_provided = true;
+    }
   }
   
   /**
@@ -221,11 +227,13 @@ public class PalusOptions {
    * A simple driver for testing options
    * */
   public static void main(String[] args) {
-    args = new String[] {"--time_limit", "100", "--class_file", "./hello", "--trace_file", "./world"};
+    args = new String[] {"--time_limit", "100", "--class_file", "./hello", "--trace_file", "./world", "--process_all_trace", "false"};
     Options options = new Options("Palus usage options", PalusOptions.class);
     String[] file_args = options.parse_or_usage(args);
     
-    System.out.println(PalusOptions.time_limit);
+    System.out.println(PalusOptions.process_all_trace);
+    
+    System.out.println(file_args.length);
     
 //    System.out.println(options.usage());
     if(PalusOptions.help) {

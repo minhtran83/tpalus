@@ -12,7 +12,7 @@ import randoop.ObjectContract;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -20,13 +20,13 @@ import java.util.List;
  *
  */
 public class TheoryFinder {
-  private final List<Class<?>> classList;
+  private final Collection<Class<?>> classList;
   
-  public TheoryFinder(List<Class<?>> classList) {
+  public TheoryFinder(Collection<Class<?>> classList) {
     PalusUtil.checkNull(classList);
     //this.classList = classList;
     //for testing
-    this.classList = this.getSampleTheoryClass();
+    this.classList = classList;
   }
   
   public List<ObjectContract> findAllTheories() {
@@ -35,6 +35,9 @@ public class TheoryFinder {
     
     for(Class<?> clazz : classList) {
       RunWith annotation = clazz.getAnnotation(RunWith.class);
+      if(annotation == null) {
+        continue;
+      }
       if(annotation.value() != Theories.class) {
         continue;
       }
@@ -63,14 +66,14 @@ public class TheoryFinder {
     return contracts;
   }
   
-  
-  private List<Class<?>> getSampleTheoryClass() {
-    List<Class<?>> retClasses = new LinkedList<Class<?>>();
-    try {
-      retClasses.add(Class.forName("tests.SomeTest"));
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
-    }
-    return retClasses;
-  }
+//  
+//  private List<Class<?>> getSampleTheoryClass() {
+//    List<Class<?>> retClasses = new LinkedList<Class<?>>();
+//    try {
+//      retClasses.add(Class.forName("tests.SomeTest"));
+//    } catch (ClassNotFoundException e) {
+//      e.printStackTrace();
+//    }
+//    return retClasses;
+//  }
 }
