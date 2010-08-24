@@ -1,3 +1,5 @@
+<wiki:toc max_depth="2" />
+
 = This page is still under construction=
 
 = What is Palus? =
