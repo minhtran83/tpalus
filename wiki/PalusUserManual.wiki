@@ -65,3 +65,8 @@ The first 2 steps are the same with *Example 1*
 ===where to find the generated tests?===
 
 In the above 2 examples, all generated tests will reside in $PALUS_DIR/tests folder, under the tests package
+
+More examples to evaluate Palus could be found [http://code.google.com/p/tpalus/wiki/MoreExamples here]
+
+
+===Writing Project-Specific Testing Oracle for Effective Bug Finding===
