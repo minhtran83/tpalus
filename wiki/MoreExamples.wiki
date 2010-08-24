@@ -13,7 +13,7 @@ tinySQL is a lightweight, 100% Java SQL engine that also includes a JDBC driver.
 
 ==SAT4J Solver==
 
-SAT4J is an efficient solver for SAT problems. It could be downloadeded [http://www.sat4j.org/ here]
+SAT4J is an efficient solver for SAT problems. It could be downloaded [http://www.sat4j.org/ here]
 
 ==Rhnio Java Script Interpreter==
 
