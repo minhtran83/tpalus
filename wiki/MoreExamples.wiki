@@ -6,6 +6,7 @@
 
 Here, we give more examples on using Palus to automatically create test for complex and highly constrained Java programs. Palus has various configuration options, you may need to change the best option combinations for your own project.
 
+For the following programs, the version used in evaluating Palus could also be downloaded from the [http://code.google.com/p/tpalus/downloads/list downloads] tab
 
 ==TinySQL DBMS engine==
 
@@ -15,7 +16,7 @@ tinySQL is a lightweight, 100% Java SQL engine that also includes a JDBC driver.
 
 SAT4J is an efficient solver for SAT problems. It could be downloaded [http://www.sat4j.org/ here]
 
-==Rhnio Java Script Interpreter==
+==Rhino Java Script Interpreter==
 
 Rhino is an open-source implementation of JavaScript written entirely in Java. It is typically embedded into Java applications to provide scripting to end users. It could be downloaded [http://www.mozilla.org/rhino/ here]
 
