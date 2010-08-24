@@ -3,7 +3,7 @@
 Here, we give more examples on using Palus to automatically create test for complex and highly constrained Java programs. Palus has various configuration options, you may need to change the best option combinations for your own project.
 
 
-===TinySql DBMS engine===
+===TinySQL DBMS engine===
 
 
 ===SAT4J Solver===
