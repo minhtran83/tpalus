@@ -72,3 +72,27 @@ In the above 2 examples, all generated tests will reside in $PALUS_DIR/tests fol
 ==Writing Project-Specific Testing Oracle for Effective Bug Finding==
 
 Palus integrates the [http://dspace.mit.edu/bitstream/handle/1721.1/40090/MIT-CSAIL-TR-2008-002.pdf theory] framework in [http://www.junit.org/ JUnit] into the test generation engine. This permits programmers to write project-specific testing oracles, and Palus will automatically check its correctness during test generation.
+
+Here is an example from the Junit theory [http://dspace.mit.edu/bitstream/handle/1721.1/40090/MIT-CSAIL-TR-2008-002.pdf theory] paper, suppose we are testing the bag data structure in apache-common-collections. We could write a general specification for the bag class as follows:
+
+{{{
+@RunWith(Theories.class)
+public class ApacheCollectionTheory {
+  @Theory
+  public void bagAddItemToContainIt(Bag bag, Object item) {
+   Assume.assumeTrue(bag != null && item !=null);
+   try {
+       bag.add(item);
+   } catch (Exception e) {
+     Assert.assertTrue(false);
+   }
+   Assert.assertTrue(bag.contains(item));
+  }
+}
+}}}
+
+The above simple theory specify the specification that each bag implementation should obey. That is, there should be no exception when adding non-null items to a bag, and after the add operation, the bag should contain the added item.
+
+Users could simply put this class to the classlist.txt file as the input of Palus. Palus will automatically extract the theory and check its correctness, when it sees a Bag and Object instances during testing generation. This simple theory find several violations (bugs) in the latest apache-common release.
+
+*Note*: please turn on the option *--use-theory-check* when starting Palus.
