@@ -50,6 +50,14 @@ SAT4J is an efficient solver for SAT problems. [http://www.sat4j.org/ Here] is i
 
 The jar for experiment could be downloaded [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/experiment-program/sat4j-jdk1.6.jar here]. The class file could be downloaded [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/sat4jexperiment/sat4jclass.txt here]
 
+1. collect a sample execution trace
+
+{{{java -javaagent:./palus-0.1.jar=sat4j -cp ./palus-0.1.jar:./sat4j-jdk1.6.jar:./asm-all-3.1.jar org.sat4j.BasicLauncher ./sample.cnf}}}
+
+2. generate tests
+
+{{{java -Xmx2G -cp ./palus-0,.1.jar:asm-all-3.1.jar:./plume.jar:./sat4j-jdk1.6.jar palus.main.OfflineMain --time_limit 100 --class_file ./sat4jclass.txt --trace_file sat4j_trace.model}}}
+
 ==JSAP Command Line Parser===
 
 ==Rhino Java Script Interpreter==
