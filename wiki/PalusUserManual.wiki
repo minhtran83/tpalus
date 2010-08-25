@@ -16,8 +16,9 @@ Execute the following command:
 
 java -cp ./palus-0.1.jar:./asm-all-3.1.jar:./plume.jar palus.main.OfflineMain --help
 
+==Examples==
 
-== Example 1 (a toy example) ===
+=== Example 1 (a toy example) ===
 
 The needed class files are included in the palus-0.1.jar.
 
@@ -39,7 +40,7 @@ The needed class files are included in the palus-0.1.jar.
 
    java -cp ./palus-0.1.jar:./asm-all-3.1.jar:./plume.jar palus.main.OfflineMain --time_limit 10 --class_file ./toydatabase.txt --trace_file ./toydb_trace.model
 
-== Example 2 (a real-world program: bcel 5.2 library) ===
+=== Example 2 (a real-world program: bcel 5.2 library) ===
 
 The first 2 steps are the same with *Example 1*
 
