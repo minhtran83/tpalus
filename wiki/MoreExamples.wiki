@@ -10,7 +10,35 @@ For the following programs, the version used in evaluating Palus could also be d
 
 ==TinySQL DBMS engine==
 
-tinySQL is a lightweight, 100% Java SQL engine that also includes a JDBC driver. It could be downloaded [http://www.jepstone.net/tinySQL/ here]
+tinySQL is a lightweight, 100% Java SQL engine that also includes a JDBC driver. [http://www.jepstone.net/tinySQL/ Here] is its homepage.
+
+The jar could be downloaded [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/experiment-program/tinsql-jdk1.6.jar here].
+
+tinySQL has a command line user interface, which allows users to interact with the database engine.
+
+1. collect a sample execution trace
+   {{{ java -agent:./palus-0.1.jar=tinysql -cp ./tinysql-jdk1.6.jar:./asm-all-3.1.jar:$CLASSPATH com.sqlmagic.tinysql.tinySQLCmd}}}
+
+   You will see a command line prompt like:
+
+   {{{tinySQL>}}}
+
+2. Feed the command line with some inputs. Here is 10 lines of simple command:
+
+   {{{
+help commands
+show tables
+drop table TEST
+create table TEST (shortcol char(12))
+select * from TEST
+insert into TEST (shortcol) values ('hell world')
+select * from TEST
+update TEST set shortcol = 'sai' where TRIM(shortcol)='hell world'
+select * from TEST
+exit
+   }}}
+
+3. Generate tests using the saved trace information
 
 ==SAT4J Solver==
 
