@@ -60,17 +60,23 @@ The jar for experiment could be downloaded [http://code.google.com/p/tpalus/sour
 
 ==JSAP Command Line Parser===
 
-1. collect a sample execute trace
+1. collect a sample execution trace
 
-{{{java -javaagent:./palus-0.1.jar=jsap -cp ./palus-0.1.jar:./jsap-2.1-exp.jar:./asm-all-3.1.jar:./junit-4.8.2.jar com.martiansoftware.jsap.TestAll}}}
+{{{java -javaagent:./palus-0.1.jar=jsap -cp ./palus-0.1.jar:./jsap-2.1-exp.jar:./asm-all-3.1.jar:./junit-4.8.2.jar:./ant.jar:./rundoc-0.1.1.jar:./snip-0.1.1.jar:./xpp3_min-1.1.3.4.jar:./xstream-1.3.1.jar com.martiansoftware.jsap.TestAll}}}
 
 2. 
 
 
 ==Rhino Java Script Interpreter==
 
+
 Rhino is an open-source implementation of JavaScript written entirely in Java. It is typically embedded into Java applications to provide scripting to end users. It could be downloaded [http://www.mozilla.org/rhino/ here]
 
+1. collect a sample execution via running an embedded example
+
+{{{java -javaagent:./palus-0.1.jar=rhino -cp ./palus-0.1.jar:./rhino-exp.jar:./asm-all-3.1.jar DynamicScopes}}}
+
+2. generate tests
 
 ==Apache Common Collections==
 
