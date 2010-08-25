@@ -52,7 +52,7 @@ import randoop.util.Randomness;
 import randoop.util.Reflection;
 
 /**
- * @author saizhang@google.com (Your Name Here)
+ * @author saizhang@google.com (Sai Zhang)
  *
  */
 public class TestGenMain {

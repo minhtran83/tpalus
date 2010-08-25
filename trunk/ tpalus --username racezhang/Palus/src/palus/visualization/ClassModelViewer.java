@@ -24,17 +24,31 @@ import palus.model.ModelNode;
 import palus.model.Transition;
 
 /**
- * @author saizhang@google.com (Your Name Here)
+ * This class provides a simple graphical viewer to view the shape of the
+ * created class model
+ * 
+ * <em>Note:</em> this class is poorly implemented, only for experimental purpose. 
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  *
  */
 public class ClassModelViewer {
+  /**
+   * The class model to view
+   * */
   private final ClassModel model;
   
+  /**
+   * Default constructor
+   * */
   public ClassModelViewer(ClassModel model) {
     PalusUtil.checkNull(model);
     this.model = model;
   }
   
+  /**
+   * Pop up the Window
+   * */
   public void viewModel() {
     ModelViewer viewer = new ModelViewer("Model created for class: " + this.model.getModelledClass()
         , model);
@@ -110,7 +124,7 @@ public class ClassModelViewer {
   }
   
   /**
-   * A small testing main
+   * A small testing driver
    * */
   public static void main(String[] args) {
     ClassModelViewer viewer = new ClassModelViewer(new ClassModel(japa.parser.ASTHelper.class));

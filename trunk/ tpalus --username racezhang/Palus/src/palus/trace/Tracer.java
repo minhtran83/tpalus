@@ -10,40 +10,45 @@ import palus.PalusUtil;
  * @author saizhang@google.com (Sai Zhang)
  */
 public class Tracer {
-	
+
+  /**
+   * A reentrant flag to determine tracing the current method or not
+   * */
   private static boolean switchOff = false;
   
+  /**
+   * A flag to control whether to output the current trace information
+   * to standard output or not
+   * */
   private static boolean verbose = true;
   
+  /**
+   * Turn off the reentrant flag. Stop tracing the trace event.
+   * */
   public static void switchOff() {
 	  switchOff = true;
   }
   
+  /**
+   * Turn on the reentrant flag. Continue tracing the trace event.
+   * */
   public static void switchOn() {
 	  switchOff = false;
   }
   
+  /**
+   * Turn off the verbose flag. Do not print out in the standard output.
+   * */
   public static void verboseOff() {
       verbose = false;
   }
   
+  /**
+   * Turn on the verbose flag. Print out in the standard output.
+   * */
   public static void verboseOn() {
       verbose = true;
   }
-   
-//  public static void traceMethodEntryArgs(Object[] objs) {
-//	  if(switchOff) {
-//		  return;
-//	  }
-//	  //TraceStack.pushParamsToStack(objs, true);
-//  }
-//  
-//  public static void traceMethodExitArgs(Object[] objs) {
-//	  if(switchOff) {
-//		  return;
-//	  }
-//	  //TraceStack.pushParamsToStack(objs, false);
-//  }
   
   /**
    * Tracing the method entry information

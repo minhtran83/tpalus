@@ -99,8 +99,8 @@ public class InputClassFileCreator {
         outputFile = args[1];
     } else {
       //for experiment purpose only
-      dirPath = "/home/saizhang/workspace/Bcel5.2/bin";//;"/home/saizhang/workspace/tiny-sql-2/bin";
-      outputFile = "/home/saizhang/workspace/Bcel5.2/bin/bcelclass.txt";
+      dirPath = "/home/saizhang/workspace/google-collections/bin";//;"/home/saizhang/workspace/tiny-sql-2/bin";
+      outputFile = "/home/saizhang/workspace/google-collections/bin/googlecollection.txt";
     }
     InputClassFileCreator.outputClassList(dirPath, outputFile);
   }

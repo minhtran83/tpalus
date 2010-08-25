@@ -71,11 +71,12 @@ public class OfflineMain {
   
   private static void experiment_configure_options() {
     
-    fall_back_to_randoop = true;
+    //fall_back_to_randoop = true;
     
     //TraceAnalyzer.PROJECT_NAME = "html_parser_";//"tinysql_";//"toy_db";// "sat4j_";//
-    TestGenMain.timelimit = 50;
-    palulu = false;
+    TestGenMain.timelimit = 20;
+    TestGenMain.checkTheory = false;
+    //palulu = true;
     OfflineMain.buildFromTrace = true;
     String class_txt_file = //"./bcelexperiment/bcelclass.txt";
       //"./toyexperiment/toydatabase.txt";
@@ -85,6 +86,7 @@ public class OfflineMain {
       //"./apachecollectionexperiment/apacheclass.txt";
       ////"./shtmlparserexperiment/htmlparserclass.txt";
     //"./sat4jexperiment/sat4jclass.txt";"./jsap2.1experiment/jsapclass.txt";
+      //"./tinysqlexperiment/tinysqlclass.txt";
     
     ModelConstructor.processing_all_traces = false;
     ModelConstructor.MAX_INSTANCE_PER_MODEL = 4;
@@ -116,7 +118,7 @@ public class OfflineMain {
         ModelBasedGenerator.only_random_uncovered_statements = false;
         ModelBasedGenerator.use_abstract_state_as_selector = true; //use abstract profile
         ModelBasedGenerator.merge_equivalent_decoration = true; //merge equivalent decoration?
-        TestGenMain.printModelCoverage = false; //print the model coverage
+        TestGenMain.printModelCoverage = true; //print the model coverage
         TestGenMain.classFilePath = class_txt_file;
         SequenceDiversifier.exhaustiveDiversifyModel = false; //diversify with every stmt
         ModelSequences.removeExtendedSequence = true;
