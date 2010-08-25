@@ -134,7 +134,7 @@ public void test414() throws Throwable {
 
 }}}
 
-*Note*: please turn on the option *--use-theory-check* when starting Palus.
+*Note*: please turn on the option *--use_theory_check* when starting Palus.
 
 ==Other Annotation Support==
 
