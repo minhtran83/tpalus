@@ -1,0 +1,1 @@
+java -javaagent:./itest.jar org.sat4j.BasicLauncher ./sat4jexperiment/inputcnf/sample.cnf
