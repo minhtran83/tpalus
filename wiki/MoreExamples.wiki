@@ -40,8 +40,7 @@ exit
 
 3. Generate tests  via the following command:
 
-{{{ java -Xmx2G -cp ./palus-0.1.jar:./asm-all-3.1.jar:./plume.jar:./tinysql-jdk1.6.jar palus.main.OfflineMain --time_limit 50 --class_file ./tinysqlclass.txt --trace_file tinysql_trace.model
-}}}
+{{{ java -Xmx2G -cp ./palus-0.1.jar:./asm-all-3.1.jar:./plume.jar:./tinysql-jdk1.6.jar palus.main.OfflineMain --time_limit 50 --class_file ./tinysqlclass.txt --trace_file tinysql_trace.model}}}
 
 A group of *sample tests* generated in an experimental environment could be found [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/tinysqlexperiment/tinysql_tests.tar.bz2 here]
 
