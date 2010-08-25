@@ -23,7 +23,18 @@ Rhino is an open-source implementation of JavaScript written entirely in Java. I
 
 ==Apache Common Collections==
 
-The Java Collections Framework was a major addition in JDK 1.2. It added many powerful data structures that accelerate development of most significant Java applications. It could be downloaded [http://commons.apache.org/collections/ here].
+The Java Collections Framework was a major addition in JDK 1.2. It added many powerful data structures that accelerate development of most significant Java applications. [http://commons.apache.org/collections/ Here] is its homepage.
+
+You can download the version for experiment [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/experiment-program/apache-3.2-exp.jar here] with a text [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/apachecollectionexperiment/apacheclass.tx file] with all classes under test
+
+1. collect a sample execution trace via the following command:
+   
+{{{   java -javaagent:./palus-0.1.jar=apache -cp ./palus-0.1.jar:./asm-all-3.1.jar:./apache-3.2-exp.jar:./junit-4.8.2.jar:$CLASSPATH org.apache.commons.collections.TestAll}}}
+
+2. generate tests via the following command:
+
+{{{ java -Xmx2G -cp ./palus-0.1.jar:./asm-all-3.1.jar:./plume.jar:./apache-3.2-exp.jar palus.main.OfflineMain --time_limit 50 --class_file ./apacheclass.txt --trace_file apache_trace.model --switch_time_to_random 6000 --process_large_trace}}}
+
 
 =Comparison with Randoop=
 
