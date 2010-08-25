@@ -12,7 +12,7 @@ For the following programs, the version used in evaluating Palus could also be d
 
 tinySQL is a lightweight, 100% Java SQL engine that also includes a JDBC driver. [http://www.jepstone.net/tinySQL/ Here] is its homepage.
 
-The jar could be downloaded [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/experiment-program/tinsql-jdk1.6.jar here].
+The jar could be downloaded [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/experiment-program/tinsql-jdk1.6.jar here]. The class file could be found [[http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/tinysqlexperiment/tinysqlclass.txt tinySQL]
 
 tinySQL has a command line user interface, which allows users to interact with the database engine.
 
@@ -38,7 +38,12 @@ select * from TEST
 exit
    }}}
 
-3. Generate tests using the saved trace information
+3. Generate tests  via the following command:
+
+{{{ java -Xmx2G -cp ./palus-0.1.jar:./asm-all-3.1.jar:./plume.jar:./tinysql-jdk1.6.jar palus.main.OfflineMain --time_limit 50 --class_file ./tinysqlclass.txt --trace_file tinysql_trace.model
+}}}
+
+A group of *sample tests* generated in an experimental environment could be found [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/tinysqlexperiment/tinysql_tests.tar.bz2 here]
 
 ==SAT4J Solver==
 
@@ -79,3 +84,7 @@ A part of Palus is built on top of the Randoop test generation engine. Palus' re
 
 
 You may find the classtxt file for evaluation useful. [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/tinysqlexperiment/tinysqlclass.txt tinySQL], [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/sat4jexperiment/sat4jclass.txt SAT4J], [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/rhinoexperiment/rhinoclass.txt Rhino], [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/bcelexperiment/bcelclass.txt BCEL], [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/jsap2.1experiment/jsapclass.txt JSAP], [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/apachecollectionexperiment/apacheclass.txt Apache Commons]
+
+=Known bugs=
+
+Randoop has a known bug reported [http://code.google.com/p/randoop/issues/detail?id=14 here], which will lead Palus crash in some nondeterminstic circumstances. The Randoop developers are working in fixing this bug, and we recommend users to run Palus multiple times.
