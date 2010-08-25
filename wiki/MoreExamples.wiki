@@ -40,6 +40,8 @@ The {{{org.apache.commons.collections.TestAll}}} contains a subset of  entries o
 
 You may note from the generated tests, the Palus approach is *not* a panaceas. Unlike the above examples, the tests generated tests by Palus achieves almost the same (or even less) coverage than Randoop. The major reason is that apache collections do not have many constrains to build a legal sequence. Thus, the model inferred from dynamic execution will confine the exploration of the test generation engine. In contrast, a pure random approach may create more diverse sequence. More explainations will be discussed in an upcoming technique report which describes the techniques used in Palus.
 
+A possible way to increase coverage is to turn on the {{{-exhaustive_diversify_seq}}} option, which will slightly improve the test coverage, but generate more tests.
+
 =Comparison with Randoop=
 
 A part of Palus is built on top of the Randoop test generation engine. Palus' release jar contains a slightly modified Randoop version (fixing known bugs and some syntax edits to relax method visibility for extension). You can invoke Randoop using the following command:
