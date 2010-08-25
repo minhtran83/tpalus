@@ -14,6 +14,11 @@ import palus.AbstractState;
 import palus.PalusUtil;
 import randoop.Globals;
 
+/**
+ * The base class of all kinds of trace events
+ * 
+ * @author saizhang@google.com (Sai Zhang)
+ */
 public abstract class TraceEvent implements Serializable {
 	
 	private final int id; //is useless i think	

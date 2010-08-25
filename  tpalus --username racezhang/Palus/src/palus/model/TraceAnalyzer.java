@@ -28,8 +28,8 @@ import randoop.Globals;
 
 public class TraceAnalyzer {
   
-    public static String PROJECT_NAME = "toy_db";////"bcel_";//"apache_";//"rhino_";
-    ////"apache_";//"jsap_";//"html_parser_";//"tinysql_";// "sat4j_";//"jdtcore_";
+    public static String PROJECT_NAME =  "apache_";////"toy_db";////"bcel_";//"apache_";//"rhino_";
+    ////"jsap_";//"html_parser_";// "sat4j_";//"jdtcore_";"tinysql_repro_";//
   
 	//the raw traces from program execution
 	private final List<TraceEvent> traces;
