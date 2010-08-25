@@ -37,6 +37,7 @@ The {{{org.apache.commons.collections.TestAll}}} contains a subset of  entries o
 
 {{{ java -Xmx2G -cp ./palus-0.1.jar:./asm-all-3.1.jar:./plume.jar:./apache-3.2-exp.jar palus.main.OfflineMain --time_limit 50 --class_file ./apacheclass.txt --trace_file apache_trace.model --switch_time_to_random 6000 --process_large_trace}}}
 
+A group of generated *sample tests* (with *coverage chart*) by Palus in 20s, 50s, 100s, 150s in an experiment environment could be found [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/apachecollectionexperiment/apache_collection_tests_coverage.tar.bz2 here]
 
 You may note from the generated tests, that the Palus approach is *not* a panaceas. Unlike the above examples, the tests generated tests by Palus achieves almost the same (or even less) coverage than Randoop. The major reason is that apache collections do not have many constrains to build a legal sequence. Thus, the model inferred from dynamic execution will confine the exploration of the test generation engine. In contrast, a pure random approach may create more diverse sequence. More explainations will be discussed in an upcoming technique report which describes the techniques used in Palus.
 
