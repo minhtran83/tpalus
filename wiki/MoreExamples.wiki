@@ -27,8 +27,9 @@ The Java Collections Framework was a major addition in JDK 1.2. It added many po
 
 =Comparison with Randoop=
 
-A part of Palus is built on top of the Randoop test generation engine. Palus' release jar contains a slightly modified Randoop version (only some syntax edits to relax method visibility for extension). You can use all invoke Randoop using the following command:
+A part of Palus is built on top of the Randoop test generation engine. Palus' release jar contains a slightly modified Randoop version (fixing known bugs and some syntax edits to relax method visibility for extension). You can use all invoke Randoop using the following command:
 
-java -cp palus-0.1.jar:$YOUR_CLASS_PATH randoop.main.Main [http://randoop.googlecode.com/hg/doc/index.html#command-line-options randoop_args]
+{{{java -cp palus-0.1.jar:$YOUR_CLASS_PATH randoop.main.Main [http://randoop.googlecode.com/hg/doc/index.html#command-line-options randoop_args]
+}}}
 
-You may find the classtxt file used for the evaluation programs useful. [tinySQL], [SAT4J], [Rhino], [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/bcelexperiment/bcelclass.txt BCEL], [JSAP], [Apache Commons]
+You may find the classtxt file used for the evaluation programs useful. [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/tinysqlexperiment/tinysqlclass.txt tinySQL], [SAT4J], [Rhino], [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/bcelexperiment/bcelclass.txt BCEL], [JSAP], [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/apachecollectionexperiment/apacheclass.txt Apache Commons]
