@@ -46,9 +46,9 @@ A group of *sample tests* generated in an experimental environment could be foun
 
 ==SAT4J Solver==
 
-SAT4J is an efficient solver for SAT problems. [http://www.sat4j.org/ Here] is its homepage.
+SAT4J is an efficient solver for SAT problems. [http://www.sat4j.org/ Here] is its homepage. 
 
-The jar for experiment could be downloaded [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/experiment-program/sat4j-jdk1.6.jar here]. The class file could be downloaded [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/sat4jexperiment/sat4jclass.txt here]
+The jar for experiment could be downloaded [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/experiment-program/sat4j-jdk1.6.jar here]. The class file could be downloaded [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/sat4jexperiment/sat4jclass.txt here]. A sample cnf file could be found [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/experiment-program/sample.cnf here].
 
 1. collect a sample execution trace
 
