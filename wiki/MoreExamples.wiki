@@ -60,23 +60,33 @@ The jar for experiment could be downloaded [http://code.google.com/p/tpalus/sour
 
 ==JSAP Command Line Parser===
 
+JSAP is a Java Simple Argument Parser. [http://martiansoftware.com/jsap/ Here] is its homepage.
+
+A jar for experiment could be downloaded [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/experiment-program/jsap-2.1-exp.jar here], and [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/jsap2.1experiment/jsapclass.txt here] is the class file.
+
 1. collect a sample execution trace
 
 {{{java -javaagent:./palus-0.1.jar=jsap -cp ./palus-0.1.jar:./jsap-2.1-exp.jar:./asm-all-3.1.jar:./junit-4.8.2.jar:./ant.jar:./rundoc-0.1.1.jar:./snip-0.1.1.jar:./xpp3_min-1.1.3.4.jar:./xstream-1.3.1.jar com.martiansoftware.jsap.TestAll}}}
 
-2. 
+2. generate tests
+
+{{{java -Xmx2G -cp ./palus-0,.1.jar:asm-all-3.1.jar:./plume.jar:./jsap-2.1-exp.jar:./asm-all-3.1.jar:./junit-4.8.2.jar:./ant.jar:./rundoc-0.1.1.jar:./snip-0.1.1.jar:./xpp3_min-1.1.3.4.jar:./xstream-1.3.1.jar palus.main.OfflineMain --time_limit 100 --class_file ./jsapclass.txt --trace_file jsap_trace.model}}}
 
 
 ==Rhino Java Script Interpreter==
 
 
-Rhino is an open-source implementation of JavaScript written entirely in Java. It is typically embedded into Java applications to provide scripting to end users. It could be downloaded [http://www.mozilla.org/rhino/ here]
+Rhino is an open-source implementation of JavaScript written entirely in Java. It is typically embedded into Java applications to provide scripting to end users.  [http://www.mozilla.org/rhino/ Here] is its homepage.
+
+A jar for experiment could be downloaded [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/experiment-program/rhino-exp.jar here]. And [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/rhinoexperiment/rhinoclass.txt here] is the class file.
 
 1. collect a sample execution via running an embedded example
 
 {{{java -javaagent:./palus-0.1.jar=rhino -cp ./palus-0.1.jar:./rhino-exp.jar:./asm-all-3.1.jar DynamicScopes}}}
 
 2. generate tests
+
+{{{java -Xmx2G -cp ./palus-0,.1.jar:asm-all-3.1.jar:./plume.jar:./rhino-exp.jar palus.main.OfflineMain --time_limit 100 --class_file ./rhinoclass.txt --trace_file rhino_trace.model}}}
 
 ==Apache Common Collections==
 
