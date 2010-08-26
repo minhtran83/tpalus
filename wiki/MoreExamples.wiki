@@ -112,7 +112,7 @@ A possible way to increase coverage is to turn on the {{{-exhaustive_diversify_s
 
 =Comparison with Randoop=
 
-A part of Palus is built on top of the Randoop test generation engine. Palus' release jar contains a slightly modified Randoop version (fixing known bugs and some syntax edits to relax method visibility for extension). You can invoke Randoop using the following command:
+A part of Palus is built on top of the Randoop test generation engine. Palus' release jar contains a slightly modified Randoop version (fixing known bugs before Randoop's next release and do some syntax edits to relax method visibility for extension). You can invoke Randoop using the following command:
 
 {{{java -cp palus-0.1.jar:$YOUR_CLASS_PATH randoop.main.Main }}}[http://randoop.googlecode.com/hg/doc/index.html#command-line-options randoop_args]
 
