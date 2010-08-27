@@ -95,6 +95,7 @@ The Java Collections Framework was a major addition in JDK 1.2. It added many po
 You can download the version for experiment [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/experiment-program/apache-3.2-exp.jar here] with a text [http://code.google.com/p/tpalus/source/browse/trunk/%20tpalus%20--username%20racezhang/Palus/apachecollectionexperiment/apacheclass.tx file] with all classes under test
 
 1. collect a sample execution trace via the following command:
+
    
 {{{   java -javaagent:./palus-0.1.jar=apache -cp ./palus-0.1.jar:./asm-all-3.1.jar:./apache-3.2-exp.jar:./junit-4.8.2.jar:$CLASSPATH org.apache.commons.collections.TestAll}}}
 
