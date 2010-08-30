@@ -8,7 +8,7 @@ Here, we give more examples on using Palus to automatically create test for comp
 
 For the following programs, the version used in evaluating Palus could also be downloaded from the [http://code.google.com/p/tpalus/downloads/list downloads] tab
 
-*Note:* the following example is tested on Java Hotspot (TM) Server VM (build 1.6.0_01-b06, mixed mode). At least, we know it does not work well for some of the JDKs (e.g. OpenJDK version 1.6.0_v3)
+*Note:* the following example is tested on Java Hotspot (TM) Server VM (build 1.6.0_01-b06, mixed mode). At least, we know it does not work well for some of the JDKs (e.g. OpenJDK version 1.6.0_v3). You may find [http://mindprod.com/jgloss/runerrormessages.html#NOCLASSDEFFOUNDERROR this] webpage useful when diagnosing errors.
 
 ==TinySQL DBMS engine==
 
