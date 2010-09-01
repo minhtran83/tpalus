@@ -8,6 +8,7 @@ import palus.model.ClassModel;
 import palus.model.ModelNode;
 import palus.model.Transition;
 import plume.Pair;
+import randoop.Globals;
 import randoop.Sequence;
 import randoop.util.Randomness;
 import randoop.util.Reflection;
@@ -18,6 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -130,6 +132,7 @@ public class ModelSequences {
     Transition transition = transitions.get(Randomness.nextRandomInt(transitions.size()));
     
     //update the statistic
+    this.stats.incrRootCount();
     this.stats.incrModelNodeCoverage(clazz, root);
     this.stats.incrTransitionCoverage(clazz, transition);
     
@@ -188,6 +191,7 @@ public class ModelSequences {
     this.currSequence = baseSequence;
     
     //update statistic
+    this.stats.incrExtCount();
     this.stats.incrModelNodeCoverage(modelClass, startNode);
     this.stats.incrTransitionCoverage(modelClass, transitionToExtend);
     
@@ -262,5 +266,55 @@ public class ModelSequences {
       }
       nodeSequencesMap.get(destNode).add(sequence);
     }
+  }
+  
+  /***
+   * Gets a snapshot of the current model sequence state. Dump the number of sequences
+   * at each ModelNode
+   * */
+  public String snapshot() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("-------------Start snapshot of current model sequence state-----------------"
+        + Globals.lineSep);
+    
+    for(Entry<Class<?>, Map<ModelNode, List<Sequence>>> entry : modelSequences.entrySet()) {
+      //get the clazz, node, and sequences
+      Class<?> clazz = entry.getKey();
+      Map<ModelNode, List<Sequence>> nodeSequences = entry.getValue();
+      //get the corresponding class model
+      ClassModel model = models.get(clazz);
+      //get a snapshot of each class
+      sb.append("Model for Class: " + clazz.getName() + Globals.lineSep);
+      for(Entry<ModelNode, List<Sequence>> nodeEntry : nodeSequences.entrySet()) {
+        ModelNode node = nodeEntry.getKey();
+        List<Sequence> sequences = nodeEntry.getValue();
+        sb.append("   node: " + node.getNodeId() + ": " + sequences.size() +  Globals.lineSep);
+      }
+      sb.append("Nodes without sequences: ");
+      Set<ModelNode> allNodes = model.getAllNodes();
+      Set<ModelNode> coveredNodes = nodeSequences.keySet();
+      for(ModelNode node : allNodes) {
+        if(!coveredNodes.contains(node)) {
+          sb.append(", " + node.getNodeId());
+        }
+      }
+      sb.append(Globals.lineSep);
+    }
+    
+    Set<Class<?>> allClasses = models.keySet();
+    Set<Class<?>> coveredClasses = modelSequences.keySet();
+    if(allClasses.size() != coveredClasses.size()) {
+      sb.append("Note, uncovered classes: ");
+      for(Class<?> clazz : allClasses) {
+        if(!coveredClasses.contains(clazz)) {
+          sb.append(", " + clazz.getName());
+        }
+      }
+    }
+    sb.append(Globals.lineSep);
+    sb.append("-------------End snapshot of current model sequence state__-----------------" 
+        + Globals.lineSep);
+    
+    return sb.toString();
   }
 }

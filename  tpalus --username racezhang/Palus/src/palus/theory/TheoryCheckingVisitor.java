@@ -20,7 +20,6 @@ import randoop.ExceptionalExecution;
 import randoop.ExecutableSequence;
 import randoop.ExecutionOutcome;
 import randoop.ExecutionVisitor;
-import randoop.Globals;
 import randoop.NormalExecution;
 import randoop.NotExecuted;
 import randoop.ObjectContract;

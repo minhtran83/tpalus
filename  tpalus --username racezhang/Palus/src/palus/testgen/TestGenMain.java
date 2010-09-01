@@ -398,7 +398,7 @@ public class TestGenMain {
       
       //add regression capture visitor
       visitors.add(new RegressionCaptureVisitor());
-//      
+//      //XXX remove to the above place
 //      //TODO add theory checking visitors here
 //      if(checkTheory) {
 //        TheoryFinder theoryFinder = new TheoryFinder(new ArrayList<Class<?>>());
@@ -417,9 +417,13 @@ public class TestGenMain {
       System.out.println("Outputing generated tests ... total num: " + explorer.stats.outSeqs.size());
       //fetch all generated sequence
       List<ExecutableSequence> sequences = new ArrayList<ExecutableSequence>();
-      for (ExecutableSequence p : explorer.stats.outSeqs) {
+      List<ExecutableSequence> generated_sequences = explorer.stats.outSeqs;
+      List<ExecutableSequence> unique_generated_sequences = RedundantSequenceFilters.filterRepetitiveSequences(generated_sequences);
+      for (ExecutableSequence p : unique_generated_sequences) {
         sequences.add(p);
       }
+      System.out.println("Remove: " + (generated_sequences.size() - unique_generated_sequences.size())
+          + " redundant sequences. ");
       //get an object default constructor, and constructor a "dummy" statement
       // Object o = new Object();
       RConstructor objectConstructor = null;

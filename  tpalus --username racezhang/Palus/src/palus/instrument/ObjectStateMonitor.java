@@ -55,6 +55,9 @@ public class ObjectStateMonitor extends AbstractTransformer implements
 		if (this.shouldSkipClass(cn)) {
 			return;
 		}
+		if(!ClassesToInstrument.instrumentClass(cn.name)) {
+		  return;
+		}
 		//skip inner or anonymous class
 		if(cn.name.indexOf("$") != -1) {
 			return;

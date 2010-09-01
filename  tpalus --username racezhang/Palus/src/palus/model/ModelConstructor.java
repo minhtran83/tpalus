@@ -286,7 +286,7 @@ public class ModelConstructor {
 	        model.addTransition(srcToConnectingNode);
 	        
 	        //save the TraceEvent and Transition relations here XXX not a good design
-	        //TraceTransitionManager.addInitTraceEventTransitionPair(traceAndPosition.event, srcToConnectingNode);
+	        TraceTransitionManager.addInitTraceEventTransitionPair(traceAndPosition.event, srcToConnectingNode);
 	        Log.log("adding event to trace-transition map: " + traceAndPosition.event.toString()
 	            + " position: " + traceAndPosition.position.toIntValue());
 	        
@@ -299,8 +299,6 @@ public class ModelConstructor {
 	        //sect the current source node to be the new node
 	        currentSrc = connectingNode;
 	    }
-	    
-	   // System.out.println("exit the loop");
 	}
 	
 	/**

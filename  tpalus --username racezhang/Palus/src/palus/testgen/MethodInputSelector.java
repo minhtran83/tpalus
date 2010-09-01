@@ -16,6 +16,7 @@ import palus.model.ModelNode;
 import palus.model.Transition;
 import palus.model.Transition.Decoration;
 import palus.model.Transition.DecorationValue;
+import plume.Pair;
 import randoop.ArrayDeclaration;
 import randoop.BugInRandoopException;
 import randoop.HelperSequenceCreator;
@@ -126,7 +127,7 @@ public class MethodInputSelector {
               PalusUtil.createPrimitiveOrStringValueFromString(t, o.toString()))));
           l = arrayList;
         }
-      }else if(PalusUtil.isPrimitiveOrStringOneDimensionArrayType(t)) {
+      } else if(PalusUtil.isPrimitiveOrStringOneDimensionArrayType(t)) {
         //get value for primitive
         value = getDecorationValue(statement, decoration, i);
         if(value != null && value.getArrayValue() !=null && value.isPrimitiveOrStringOneDimensionArray()) {
@@ -137,17 +138,47 @@ public class MethodInputSelector {
         }
       }
       
+      DecorationValue thiz = decoration.getThisValue();
+      if(thiz.hasDependenceEdge()) {
+        System.out.println("root Has dependence edge, this");
+      }
+      DecorationValue[] params = decoration.getParamValues();
+      for(int paramIndex = 0; paramIndex < params.length; paramIndex++) {
+        if(params[paramIndex].hasDependenceEdge()) {
+          System.out.println("root has dependence edge, param: " + paramIndex);
+        }
+      }
+      
+      ///xxx
+      if(isReceiver) {
+        value = decoration.getThisValue();
+      } else if (i > 0 && !isReceiver) {
+        value = getDecorationValue(statement, decoration, i);
+      }
+      
+      if(value != null ) {
+//        System.out.println("For root, the value is not null., the dependence edge is null: " + (value.getDependenceEdge() == null)
+//            + ", transition is: " + transition.toSignature() + ", position: " + position + ", isReciever: " + isReceiver
+//            + ",i: " + i + " , modelled class: " + transition.getModelledClass());
+        if(value.getDependenceEdge() != null) {
+          System.out.println("For root, it has dependence edges. for i: " + i + ", l is null? " + (l == null)
+            + ", position: " + position + ",  isreceiver?: " + isReceiver + ", in modelling: "
+            + transition.getModelledClass());
+        }
+      }
+      
       //XXX select from the dependence edge
-      if(l == null && value != null) {
+      if(l == null && value != null && Randomness.nextRandomBool() /*flip a coin here*/) {
         DependenceEdge edge = value.getDependenceEdge();
         //XXX look for a proper sequence
         if(edge != null) {
           ModelNode dependentNode = edge.getDependentNode();
           PalusUtil.checkNull(dependentNode);
+          //System.out.println("The dependence edge is not null");
           //looking for sequence from that model node
           List<Sequence> lists = generator.getSequenceFromModelSequence(dependentNode);
-          if(lists != null) {
-            Log.log("Success in picking up a sequence from dependence edge.");
+          if(lists != null && !lists.isEmpty()) {
+            System.out.println("Success in picking up a sequence from dependence edge for root.");
             Sequence sequence = lists.get(Randomness.nextRandomInt(lists.size()));
             ArrayListSimpleList<Sequence> arrayList = new ArrayListSimpleList<Sequence>();
             arrayList.add(sequence);
@@ -157,13 +188,15 @@ public class MethodInputSelector {
       }
       
       //select based on the abstract state profile
-      if(l == null && value != null && ModelBasedGenerator.use_abstract_state_as_selector) {
+      if(l == null && value != null && ModelBasedGenerator.use_abstract_state_as_selector
+          && Randomness.nextRandomBool() /*flip a coin here*/) {
         AbstractState state = value.getAbstractState();
         PalusUtil.checkNull(state);
         Sequence s = generator.sequenceStates.randomChooseSequenceForState(t, state);
         if(s != null) {
           //XXX never executed?
-            Log.log("Choose abstract state of decoration values for root");
+            Log.log("Choose abstract state of decoration values for root, abstractstate: "
+                + state);
             ArrayListSimpleList<Sequence> list = new ArrayListSimpleList<Sequence>();
             list.add(s);
             l = list;
@@ -172,9 +205,11 @@ public class MethodInputSelector {
       
       //select from state of sequence pool
       if(l == null && ModelBasedGenerator.use_abstract_state_as_selector) {
-        Sequence s = generator.sequenceStates.randomSequence(t);
-        if(s != null) {
-          Log.log("Choose from abstract state pool for root seq, type: " + t + "!");
+        Pair<AbstractState, Sequence> stateSequence = generator.sequenceStates.randomSequence(t);
+        if(stateSequence != null) {
+          Sequence s = stateSequence.b;
+          Log.log("Choose from abstract state pool for root seq, type: " + t
+              + " using abstract: " + stateSequence.a + " !");
           ArrayListSimpleList<Sequence> list = new ArrayListSimpleList<Sequence>();
           list.add(s);
           l = list;
@@ -314,6 +349,7 @@ public class MethodInputSelector {
           l = arrayList;
         }
       } else {
+        //Not weird at all, like c.m(p), here isReceiver is false, and the transition models p
         Log.log("Weird position:  " + position + ", isReceiver: " + isReceiver
             + ", isStatic: " + isStatic + ", i:" + i + ", in transition: "
             + transition.toSignature());
@@ -356,17 +392,47 @@ public class MethodInputSelector {
         }
       }
       
+      //System.out.println("Transition id:" + transition.getTransitionID());
+      
+//      DecorationValue thiz = selectedDecoration.getThisValue();
+//      if(thiz.hasDependenceEdge()) {
+//        System.out.println("ext Has dependence edge, this" + ", is receiver? "
+//            + isReceiver + ",  l is null? " + (l==null) + ",  " + statement + ",  i: " + i
+//            + ", position: " + position + ", modelled: " + transition.getModelledClass() + "(" + transition.getTransitionID() + ")");
+//      }
+//      DecorationValue[] params = selectedDecoration.getParamValues();
+//      for(int paramIndex = 0; paramIndex < params.length; paramIndex++) {
+//        DecorationValue v = getDecorationValue(statement, selectedDecoration, paramIndex + 1);
+//        if(v.hasDependenceEdge()) {
+//          System.out.println("      ext has dependence edge, param: " + paramIndex + ",  position: " + position + ", i: " + i);
+//        }
+//      }
+      
+      //xxx
+      if(/*position == 0 && */isReceiver) {
+        value = selectedDecoration.getThisValue();
+      } else if (/*position > 0 &&*/ !isReceiver) {
+        value = getDecorationValue(statement, selectedDecoration, i);
+      } 
+      //System.out.println("Extending a sequence, value null? " + (value ==null) + ",  dependence edge: " + (value!= null ? value.getDependenceEdge() == null : "null"));
+      if(value != null && value.getDependenceEdge() != null && position > 0) {
+//          System.out.println("For extension, has dependence edges. for i: " + i + ", l is null? " + (l == null)
+//              + ", position: " + position + ",  isreceiver?: " + isReceiver + ", in modelling: "
+//              + transition.getModelledClass());
+      }
+      
     //XXX select from the dependence edge
-      if(l == null && value != null) {
+      if(l == null && value != null && Randomness.nextRandomBool() /*flip a coin here*/) {
         DependenceEdge edge = value.getDependenceEdge();
         //XXX look for a proper sequence
+        //flip a coin here
         if(edge != null) {
           ModelNode dependentNode = edge.getDependentNode();
           PalusUtil.checkNull(dependentNode);
           //looking for sequence from that model node
           List<Sequence> lists = generator.getSequenceFromModelSequence(dependentNode);
-          if(lists != null) {
-            Log.log("Success in picking up a sequence from dependence edge.");
+          if(lists != null && !lists.isEmpty()) {
+            System.out.println("Success in picking up a sequence from dependence edge, lists size: " + lists.size());
             Sequence sequence = lists.get(Randomness.nextRandomInt(lists.size()));
             ArrayListSimpleList<Sequence> arrayList = new ArrayListSimpleList<Sequence>();
             arrayList.add(sequence);
@@ -376,12 +442,14 @@ public class MethodInputSelector {
       }
       
       //select based on the abstract state profile
-      if(l == null && value != null && ModelBasedGenerator.use_abstract_state_as_selector) {
+      if(l == null && value != null && ModelBasedGenerator.use_abstract_state_as_selector
+          && Randomness.nextRandomBool() /*flip a coin here*/) {
         AbstractState state = value.getAbstractState();
         PalusUtil.checkNull(state);
         Sequence s = generator.sequenceStates.randomChooseSequenceForState(t, state);
         if(s != null) {
-            Log.log("Choose abstract state of decoration values for extension");
+            Log.log("Choose abstract state of decoration values for extension, for type: " + t
+                + ", using abstractstate: " + state);
             ArrayListSimpleList<Sequence> list = new ArrayListSimpleList<Sequence>();
             list.add(s);
             l = list;
@@ -389,9 +457,11 @@ public class MethodInputSelector {
       }
       
       if(l == null /*&& ModelBasedGenerator.use_abstract_state_as_selector*/) {
-        Sequence s = generator.sequenceStates.randomSequence(t);
-        if(s != null) {
-          Log.log("Choose from abstract state pool for extension seq, type: " + t + "!");
+        Pair<AbstractState, Sequence> stateSequence = generator.sequenceStates.randomSequence(t);
+        if(stateSequence != null) {
+          Sequence s = stateSequence.b;
+          Log.log("Choose from abstract state pool for extension seq, type: " + t
+              + " using abstract type: " + stateSequence.a + "!");
           ArrayListSimpleList<Sequence> list = new ArrayListSimpleList<Sequence>();
           list.add(s);
           l = list;

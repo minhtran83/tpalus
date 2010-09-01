@@ -12,7 +12,6 @@ import java.util.Stack;
 import palus.Log;
 import palus.PalusUtil;
 import palus.model.serialize.TraceSerializer;
-import palus.testgen.TestGenMain;
 import palus.trace.ClinitEntryEvent;
 import palus.trace.ClinitExitEvent;
 import palus.trace.InitEntryEvent;
@@ -115,24 +114,6 @@ public class TraceAnalyzer {
       }
       System.out.println("Serialization successes!");
       System.out.println(Globals.lineSep);
-      
-      //the following is only for testing purpose
-//      System.out.println("Dump by class and instance to file: ");
-//      Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> traceMap = null;
-//      try {
-//          traceMap = extractTraceEventByClass(this.traces);
-//      } catch (ClassNotFoundException e) {
-//          e.printStackTrace();
-//          throw new RuntimeException(e);
-//      }
-//      //check the validity of the trace map before proceeding
-//      checkTraceMapValidity(traceMap);
-//      try {
-//        TraceDumper.dumpTraceEventsByClass(TRACE_DUMP_FILE, traceMap);
-//      } catch (IOException e) {
-//        e.printStackTrace();
-//      }
-//      System.out.println("Dump by class successes!");
 	}
 	
 	/**
@@ -179,10 +160,13 @@ public class TraceAnalyzer {
 		System.out.println("Finish computing the trace dependences");
 		System.out.println(Globals.lineSep);
 		//get all dependence information from traces
-		Log.log("Here is all the dependence information: ");
+		//Log.log("Here is all the dependence information: ");
 		Map<TraceEventAndPosition, TraceEventAndPosition> dependenceMap =
 		  TraceDependenceRepository.getTraceDependences();
-		Log.log(TraceDependenceRepository.getTraceDependenceInfo());
+		//Log.log(TraceDependenceRepository.getTraceDependenceInfo());
+		
+		System.out.println("Here is all trace dependence information:");
+		System.out.println(TraceDependenceRepository.getTraceDependenceInfo());
 		
 		//start create models from trace
 		System.out.println("Building models from the trace...");
@@ -197,7 +181,14 @@ public class TraceAnalyzer {
 		
 		//enhance the built class model with dependence information
 		if(dependences != null) {
+		    System.out.println(Globals.lineSep + "We found: " + dependences.size()
+		        + " dependence pairs to enhance the class model.");
 		    ClassModel.enhanceClassModel(models, dependences);
+		    System.out.println("Finish enhancing the model with dependence information.");
+//		    System.out.println("Exit on purpose!");
+//		    System.exit(1);
+		} else {
+		  System.out.println("No dependence relations found");
 		}
 		
 		return models;		
@@ -207,24 +198,13 @@ public class TraceAnalyzer {
 	 * Display the created models in GUI
 	 * @param models the models to visulaize
 	 * */
-	public void visualizeModels(Map<Class<?>, ClassModel>  models) {
+	void visualizeModels(Map<Class<?>, ClassModel>  models) {
 	  //TODO not stable enough
+	  //NOt used now.
       for(Entry<Class<?>, ClassModel> entry : models.entrySet()) {
           ClassModelViewer viewer = new ClassModelViewer(entry.getValue());
           viewer.viewModel();
       }
-	}
-	
-	/**
-	 * Generates new tests based on the model created from traces
-	 * @param models the class models created from execution traces
-	 * @param classes the classes under test
-	 * */
-	public void generateTests(Map<Class<?>, ClassModel>  models, List<Class<?>> classes) {
-      //TODO under construction
-      System.out.println("Start generating tests...");
-      TestGenMain testgen = new TestGenMain();
-      testgen.generateTests(new String[]{} /* XXX empty now*/, models);
 	}
 	
 	/**

@@ -19,6 +19,7 @@ import randoop.StatementKind;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -281,6 +282,10 @@ final class MethodRelations implements Opcodes {
       alreadyVisited.addAll(entry.getValue().calls());
       while(!worklist.isEmpty()) {
         Method first = worklist.remove(0);
+        //skip public calls
+        if(Modifier.isPublic(first.getModifiers())) {
+          continue;
+        }
         ReadWriteFields fields = methodReadWrites.get(first);
         if(fields == null) {
           continue;
@@ -341,7 +346,7 @@ final class MethodRelations implements Opcodes {
   }
   
   /**
-   * The tf-idf algorithm implementation
+   * A variant of tf-idf algorithm implementation (the global here is only for class-level)
    * */
   private Map<Method, List<Method>> computeRelatedMethodUseTfIdf(Map<Method, ReadWriteFields> methodAndReadWrites) {
     Map<Method, List<Method>> relatedMethodMap = new LinkedHashMap<Method, List<Method>>();

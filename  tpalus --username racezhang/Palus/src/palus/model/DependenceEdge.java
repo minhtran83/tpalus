@@ -6,6 +6,8 @@ import palus.PalusUtil;
 
 /**
  * This class connect one transition to a model node.
+ * 
+ * XXX Have not tested on Serilization part
  * */
 public class DependenceEdge implements Serializable {
 	
