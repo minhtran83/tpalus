@@ -4,8 +4,6 @@ package palus.model;
 
 import palus.Log;
 import palus.PalusUtil;
-import palus.trace.Stats;
-import palus.trace.TraceEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,11 +11,17 @@ import java.util.Map;
 import java.util.Stack;
 
 /**
- * @author saizhang@google.com (Your Name Here)
+ * @author saizhang@google.com (Sai Zhang)
  *
+ * A util class to remove unmatched traces in the instance class map.
+ * It is designed for safety reason, to make sure every list of traces are
+ * valid when passiing to the next phase
  */
 public class TraceProcessingUtils {
   
+  /**
+   * Remove unmatched traces per instances from the instance map
+   * */
   public static void removeUnmatchedTracesPerInstance(Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> instanceClassMap) {
     
     PalusUtil.checkNull(instanceClassMap);
@@ -31,6 +35,10 @@ public class TraceProcessingUtils {
     }
   }
   
+  /**
+   * Removes unmatched pairs from a list trace event.
+   * The algorithm is the same as {@code TraceAnalyzer#removeUnmatchedEvents(List<TraceEvent>)}
+   * */
   private static void removeUnmatchedPairs(List<TraceEventAndPosition> taps) {
   //All unmatched events found in the traces (to be removed at the end)
     List<TraceEventAndPosition> unmatchedEvents = new ArrayList<TraceEventAndPosition>();
@@ -69,7 +77,7 @@ public class TraceProcessingUtils {
                             topEvent = stack.pop();
                         }
                     }
-                    //evently we break out of the while loop
+                    //eventually we break out of the while loop
                     if(topEvent.event.isEntryEvent() && topEvent.event.getId() == tap.event.getId()) {
                     } else {
                       if(!stack.isEmpty()) {
@@ -83,7 +91,9 @@ public class TraceProcessingUtils {
     if(!stack.isEmpty()) {
       unmatchedEvents.addAll(stack);
     }
-    System.out.println("Process again, Size of all unmatched events to be removed: " + unmatchedEvents.size());
+    if(!unmatchedEvents.isEmpty()) {
+      System.out.println("Process again, Size of all unmatched events to be removed: " + unmatchedEvents.size());
+    }
     taps.removeAll(unmatchedEvents);
   }
 

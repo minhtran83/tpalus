@@ -452,6 +452,12 @@ public final class AbstractState implements java.io.Serializable {
         list.add(field);
       }
     }
-    return (Field[])list.toArray(new Field[0]);
+    //return (Field[])list.toArray(new Field[0]);
+    //convert to an array, the above concise code will lead to a warning
+    Field[] fields = new Field[list.size()];
+    for(int i = 0; i < list.size(); i++) {
+      fields[i] = list.get(i);
+    }
+    return fields;
   }
 }

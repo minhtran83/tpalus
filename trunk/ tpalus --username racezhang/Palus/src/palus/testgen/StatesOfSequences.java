@@ -4,6 +4,7 @@ package palus.testgen;
 
 import palus.AbstractState;
 import palus.PalusUtil;
+import plume.Pair;
 import randoop.ExecutionOutcome;
 import randoop.Globals;
 import randoop.NormalExecution;
@@ -21,22 +22,39 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 /**
- * @author saizhang@google.com (Your Name Here)
+ * Keeps a set of sequence which corresponds to an abstract state in each
+ * class model.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  *
  */
 public class StatesOfSequences {
   
+  /**
+   * Internal mapping: Class -> (Abstract State -> [Sequence])
+   * */
   private Map<Class<?>, Map<AbstractState, Set<Sequence>>> sequenceStates =
     new LinkedHashMap<Class<?>, Map<AbstractState, Set<Sequence>>>();
   
+  /**
+   * A subtype set for fast lookup
+   * */
   private SubTypeSet types = new SubTypeSet(false);
   
-  
+  /**
+   * Only used internally, in {@link ModelBasedGenerator#sequenceStates}
+   * */
   StatesOfSequences() {
     //package visibility
   }
   
-  public Sequence randomSequence(Class<?> clazz) {
+  /**
+   * Returns a pair of abstract state and its corresponding sequence for the
+   * given type {@code clazz}.
+   * 
+   * If no abstract state found for the give type, it returns null.
+   * */
+  public Pair<AbstractState, Sequence> randomSequence(Class<?> clazz) {
     if(!this.sequenceStates.containsKey(clazz)) {
       return null;
     }
@@ -46,9 +64,16 @@ public class StatesOfSequences {
     Map<AbstractState, Set<Sequence>> stateSequences = this.sequenceStates.get(chosenClass);
     AbstractState s = Randomness.randomSetMember(stateSequences.keySet());
     
-    return Randomness.randomSetMember(stateSequences.get(s));
+    Sequence selectedSequence =  Randomness.randomSetMember(stateSequences.get(s));
+    
+    return new Pair<AbstractState, Sequence>(s, selectedSequence);
   }
   
+  /**
+   * Returns a sequence for a given abstract state {@code state} randomly.
+   * 
+   * If there is no such abstract state, it returns null.
+   * */
   public Sequence randomChooseSequenceForState(Class<?> clazz, AbstractState state) {
     PalusUtil.checkNull(clazz);
     PalusUtil.checkNull(state);
@@ -62,6 +87,10 @@ public class StatesOfSequences {
     return Randomness.randomSetMember(stateSequences.get(state));
   }
   
+  /**
+   * Returns a list of sequences for a given type {@code clazz}. Each sequence
+   * corresponds to a different abstract state.
+   * */
   public List<Sequence> randomChooseDiffStateSequences(Class<?> clazz) {
     List<Sequence> retSeqs = new LinkedList<Sequence>();
     
@@ -82,6 +111,9 @@ public class StatesOfSequences {
     return retSeqs;
   }
   
+  /**
+   * Checks if there is any sequence generated for the given type {@code clazz}
+   * */
   public boolean hasSequence(Class<?> clazz) {
     return this.sequenceStates.containsKey(clazz);
   }

@@ -14,6 +14,7 @@ import java.util.Set;
 import palus.Log;
 import palus.PalusUtil;
 import palus.model.Transition.Decoration;
+import palus.model.Transition.DecorationValue;
 import palus.trace.Stats;
 import plume.Pair;
 import randoop.Globals;
@@ -472,24 +473,72 @@ public class ClassModel implements Serializable {
 	 * */
 	public static void enhanceClassModel(Map<Class<?>, ClassModel> models,
 	    Map<Pair<Transition, Position>, Pair<ModelNode, Position>> dependences) {
-	  //just for logging purpose
-	  Log.log("------- enhancing created models with dependence information -------");
+	  
+	  int count = 0;
+	  int node_count = 0;
+	  int tran_count = 0;
+	  List<String> dependenceForDebugging = new LinkedList<String>();
+	  
 	  for(Entry<Pair<Transition, Position>, Pair<ModelNode, Position>> entry : dependences.entrySet()) {
-	    Log.log(" transition: " + entry.getKey().a.getTransitionID()
-	        + " position: " + entry.getKey().b.toIntValue()
-	        + " depends on model node:" + entry.getValue().a.getNodeId()
-	        + " position: " + entry.getValue().b.toIntValue());
-	    
+	    Pair<Transition, Position> transitionAndPosition = entry.getKey();
+	    Pair<ModelNode, Position> nodeAndPosition = entry.getValue();
 	    //get the transition class
-	    Class<?> modelled = entry.getKey().a.getModelledClass();
-	    ClassModel model = models.get(modelled);
-	    Log.log("Model for: " + modelled + " contains transition:? " + entry.getKey().a.toSignature()
-	        + ":    " +  model.hasTransition(entry.getKey().a));
-	    modelled = entry.getValue().a.getModelledClass();
-	    model = models.get(modelled);
-	    Log.log("Model for: " + modelled + " contains node:?" + model.hasNode(entry.getValue().a));
-	    Log.log(Globals.lineSep);
+	    Class<?> modelledClassForTransition = transitionAndPosition.a.getModelledClass();
+	    Class<?> modelledClassForModelNode = nodeAndPosition.a.getModelledClass();
+	    //get the corresponding class model
+	    ClassModel transitionModel = models.get(modelledClassForTransition);
+	    ClassModel nodeModel = models.get(modelledClassForModelNode);
+	    
+	    //check the nullable
+	    PalusUtil.checkNull(transitionModel);
+	    PalusUtil.checkNull(nodeModel);
+	    
+	    if(transitionModel.hasTransition(transitionAndPosition.a)) {
+	      tran_count ++;
+	    }
+	    
+	    if(nodeModel.hasNode(nodeAndPosition.a)) {
+	      //System.out.println("   Has node");
+	      node_count++;
+	    }
+	    
+	    Transition transition = transitionAndPosition.a;
+	    Position transitionPos = transitionAndPosition.b;
+	    
+	    ModelNode node = nodeAndPosition.a;
+	    Position nodePos = nodeAndPosition.b;
+	    //no decoration?
+	    if(!transition.hasDecoration()) {
+	      continue;
+	    }
+	    //has the same decoration
+	    //XXX do not check the same decoration position here
+//	    if(!(transition.getUniqueDecorationPosition() == transitionPos.toIntValue())) {
+//	      continue;
+//	    }
+	    //add dependence edges to the decoration values
+	    for(Decoration decoration : transition.getDecorations()) {
+	      DecorationValue value = decoration.getDecorationByPosition(transitionPos);
+	      if(value != null) {
+	          //XXX could be double set here?
+	          value.setDependenceEdge(new DependenceEdge(transition, node));
+	          dependenceForDebugging.add(transition.getTransitionID() + ", " + transition.toSignature() + " * " + transitionPos + " *  " + "    depends on    " + node.getNodeId()
+	               + "   num of decorations: " + transition.getDecorationNum() + ", modelling class: " + modelledClassForTransition);
+	          count ++;
+	      } else {
+	        throw new BugInPalusException("The decoration value should not be null, for transition: "
+	            + transition.toSignature() + ", on position: " + transitionPos);
+	      }
+	    }
 	  }
+	  System.out.println("There are: " + node_count + " nodes.");
+	  System.out.println("There are: " + tran_count + " transitions. ");
+	  System.out.println("Enhance the model with: " + count + " dependence transitions.");
+	  for(String dependence : dependenceForDebugging) {
+	    System.out.println("    " + dependence);
+	  }
+	  //reclaim memory
+	  dependenceForDebugging.clear();
 	}
 	
 	/**
@@ -518,6 +567,15 @@ public class ClassModel implements Serializable {
 			}
 		}
 		return false;
+	}
+	
+	private Transition getTransitionBySignature(Transition transition) {
+	  for(Transition t : this.transitions) {
+	    if(t.toString().equals(transition.toString())) {
+	      return t;
+	    }
+	  }
+	  return null;
 	}
 	
 	private void checkExistence(ModelNode nodeToCheck) throws ModelNodeNotFoundException {
@@ -582,7 +640,7 @@ public class ClassModel implements Serializable {
             subTransitions.add(newTransition);
             subTransitions.remove(t);
             //XXX update the repository
-            ///TraceTransitionManager.replaceTransitions(t, newTransition);
+            TraceTransitionManager.replaceTransitions(t, newTransition);
           }
           Log.log("    number of sub transitions added: " + subTransitions.size()
               + ", after tobemerged node: " + tobeMerged.getNodeId());
@@ -618,7 +676,7 @@ public class ClassModel implements Serializable {
 	          //we go down one level to continue merging
 	          PalusUtil.checkTrue(destT.getSourceNode() == destNode && transition.getSourceNode() == tobeMerged);
 	          //XXX do the merge here, will cause error
-	          //TraceTransitionManager.mergeTransitions(destT, transition);
+	          TraceTransitionManager.mergeTransitions(destT, transition);
 	          //merge the decoration
 	          for(Decoration d : transition.getDecorations()) {
 	            if(!destT.hasDecorationValues(d)) {
@@ -641,7 +699,7 @@ public class ClassModel implements Serializable {
 	          subTransitions.add(newTransition);
 	          destNode.getClassModel().addTransitions(subTransitions);
 	          //XXX update the transition repository
-	          //TraceTransitionManager.replaceTransitions(transition, newTransition);
+	          TraceTransitionManager.replaceTransitions(transition, newTransition);
 	        }
 	      }
 	    }
@@ -822,7 +880,7 @@ public class ClassModel implements Serializable {
 	        newTransition.addDecorations(transition.makeClones(newTransition));
 	        this.addTransition(newTransition);
 	        //XXX update the trace transition mappings
-	        //TraceTransitionManager.replaceTransitions(transition, newTransition);
+	        TraceTransitionManager.replaceTransitions(transition, newTransition);
 	    }
 	    //delete other exit node (and its connecting edges)
 	    this.deleteModelNode(otherExit);

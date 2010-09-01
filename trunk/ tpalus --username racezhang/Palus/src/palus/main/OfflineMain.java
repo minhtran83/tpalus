@@ -74,7 +74,7 @@ public class OfflineMain {
     //fall_back_to_randoop = true;
     
     //TraceAnalyzer.PROJECT_NAME = "html_parser_";//"tinysql_";//"toy_db";// "sat4j_";//
-    TestGenMain.timelimit = 20;
+    TestGenMain.timelimit = 150;
     TestGenMain.checkTheory = false;
     //palulu = true;
     OfflineMain.buildFromTrace = true;
@@ -120,7 +120,7 @@ public class OfflineMain {
         ModelBasedGenerator.merge_equivalent_decoration = true; //merge equivalent decoration?
         TestGenMain.printModelCoverage = true; //print the model coverage
         TestGenMain.classFilePath = class_txt_file;
-        SequenceDiversifier.exhaustiveDiversifyModel = false; //diversify with every stmt
+        SequenceDiversifier.exhaustiveDiversifyModel = true; //diversify with every stmt
         ModelSequences.removeExtendedSequence = true;
         SequenceDiversifier.addReturnTypeRelatedStatement = true;
         MethodRecommender.use_tf_idf = false;

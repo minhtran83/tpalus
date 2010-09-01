@@ -33,8 +33,20 @@ public class ModelSequencesStats {
   private final Map<Class<?>, Map<Transition, Integer>> transitionCoverage =
     new LinkedHashMap<Class<?>, Map<Transition, Integer>>();
   
+  //the transitions that have been executed
   private final Map<Class<?>, Map<Transition, Integer>> executedTransitionCoverage =
     new LinkedHashMap<Class<?>, Map<Transition, Integer>>();
+  
+  
+  /**
+   * The number of selection from root
+   * */
+  private int root_count = 0;
+  
+  /**
+   * The number extension
+   * */
+  private int ext_count = 0;
   
   private final boolean auto_switch;
 
@@ -47,6 +59,14 @@ public class ModelSequencesStats {
     this.models = models;
     //the auto switch
     auto_switch = ModelBasedGenerator.auto_switch_to_random_test;
+  }
+  
+  void incrRootCount() {
+    this.root_count++;
+  }
+  
+  void incrExtCount() {
+    this.ext_count++;
   }
   
   void incrModelNodeCoverage(Class<?> clazz, ModelNode node) {
@@ -89,6 +109,27 @@ public class ModelSequencesStats {
     }
     //replace it with a new value
     transMap.put(transition, 1 + transMap.get(transition));
+  }
+  
+  public String snapShotOnChosenTransition() {
+    StringBuilder sb = new StringBuilder();
+    
+    sb.append("---------------start of chosen transition snapshot---------------" + Globals.lineSep);
+    sb.append("Count from root selection: " + this.root_count + Globals.lineSep);
+    sb.append("Count from extension: " + this.ext_count + Globals.lineSep);
+    for(Entry<Class<?>, Map<Transition, Integer>> entry : transitionCoverage.entrySet()) {
+      sb.append("Model for Class: " + entry.getKey().getName() +  Globals.lineSep);
+      Map<Transition, Integer> tranNums = entry.getValue();
+      sb.append("    the selection frequencey for transitions: ");
+      for(Transition t : tranNums.keySet()) {
+        sb.append("   " + t.getTransitionID() + " : " + tranNums.get(t));
+      }
+      sb.append(Globals.lineSep);
+    }
+    
+    sb.append("===============end of chosen transition snapshot=================");
+    
+    return sb.toString();
   }
   
   public String reportOnCoverage() {

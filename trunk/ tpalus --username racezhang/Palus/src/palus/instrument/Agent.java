@@ -9,7 +9,6 @@ import java.lang.instrument.Instrumentation;
 import palus.model.TraceAnalyzer;
 import palus.trace.TraceStack;
 import palus.trace.Tracer;
-import randoop.Globals;
 
 /**
  * The premain entry for instrumentation and postmortem analysis
@@ -21,11 +20,29 @@ public class Agent {
     
     //set the project name which change the trace file name storage location
     if(agentArgs != null) {
-      System.out.println("Project name: " + agentArgs);
-      System.out.println();
-      TraceAnalyzer.PROJECT_NAME = agentArgs;
+      String[] args = agentArgs.split("&");
+      System.out.println("Project name: " + args[0]);
+      TraceAnalyzer.PROJECT_NAME = args[0];
       Tracer.verboseOff(); //do not print out
+      
+      //set up the user provided file
+      if(args.length > 1) {
+        File file = new File(args[1].trim());
+        if(file.exists()) {
+          System.out.println("Only instrument user-provided classes in file: " + file.getAbsolutePath());
+          ClassesToInstrument.initInstrumentedClasses(file);
+          System.out.println("There are: " + ClassesToInstrument.numOfInstrumentedClasses()
+              + " classes to instrument.");
+        } else {
+          System.out.println("The user-provided class file does not exist: " + file.getAbsolutePath());
+          System.out.println("Instrument all defaut project classes!");
+        }
+      } else {
+        System.out.println("Instrument all defaut project classes!");
+      }
     }
+    
+    Tracer.verboseOff();
     
     final ObjectStateMonitor monitor = new ObjectStateMonitor();
     inst.addTransformer(monitor);

@@ -309,6 +309,20 @@ public class Transition implements Serializable {
 	    return true;
 	}
 	
+	public Position getUniqueDecorationPositionObject() {
+	  int intPosition = this.getUniqueDecorationPosition();
+	  if(intPosition == 0) {
+	    return Position.getThisPosition();
+	  } else if (intPosition == -1) {
+	    return Position.getRetPosition();
+	  } else if (intPosition > 0) {
+	    return Position.getParaPosition(intPosition);
+	  } else {
+	    throw new BugInPalusException("Illega position: " + intPosition
+	        + " in transition: " + this.toSignature());
+	  }
+	}
+	
 	public int getUniqueDecorationPosition() {
 	  PalusUtil.checkTrue(this.hasDecoration());
 	  PalusUtil.checkTrue(this.hasUniqueDecorationPosition());
@@ -509,6 +523,21 @@ public class Transition implements Serializable {
 		    return this.position;
 		}
 		
+		public DecorationValue getDecorationByPosition(Position p) {
+		  if(p.isRetPosition()) {
+		    return null;
+		  } else if(p.isThisPosition()) {
+		    return this.getThisValue();
+		  } else {
+		    int pInt = p.toIntValue();
+		    if(pInt < 1 || pInt > this.getParamValues().length) {
+		      return null;
+		    } else {
+		      return this.getParamValues()[pInt - 1];
+		    }
+		  }
+		}
+		
 		public DecorationValue getCurrentDecorationValue() {
 			if(this.isInThisPosition()) {
 				return this.getThisValue();
@@ -516,6 +545,30 @@ public class Transition implements Serializable {
 				//because 1 - param.length represents parameter
 				return this.getParamValues()[position - 1];
 			}
+		}
+		
+		public List<DecorationValue> getAllDecorationValues() {
+		  List<DecorationValue> values = new LinkedList<DecorationValue>();
+		  values.add(thiz);
+		  for(DecorationValue param : this.params) {
+		    values.add(param);
+		  }
+		  return values;
+		}
+		
+		public List<DecorationValue> getDecorationValueByType(Class<?> type) {
+		  PalusUtil.checkNull(type);
+		  List<DecorationValue> valuesOfType = new LinkedList<DecorationValue>();
+		  if(thiz.type.equals(type)) {
+		    valuesOfType.add(thiz);
+		  }
+		  for(DecorationValue param : this.params) {
+		    if(param.type.equals(type)) {
+		      valuesOfType.add(param);
+		    }
+		  }
+		  
+		  return valuesOfType;
 		}
 		
 		public DecorationValue getThisValue() {

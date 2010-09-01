@@ -100,6 +100,9 @@ public class PalusOptions {
   @Option("Shortcut for processing large trace files")
   public static boolean process_large_trace = false;
   
+  @Option("Checking user-written theory for output correctness")
+  public static boolean use_theory_check = false;
+  
   /**
    * Parse the argument options and assign the value to the right place
    * */
@@ -136,6 +139,8 @@ public class PalusOptions {
   private void configurePalus() {
     TestGenMain.timelimit = PalusOptions.time_limit;
     TestGenMain.classFilePath = PalusOptions.class_file;
+    TestGenMain.checkTheory = PalusOptions.use_theory_check;
+    
     
     //how about trace file
     OfflineMain.TRACE_OBJECT_FILE = PalusOptions.trace_file;

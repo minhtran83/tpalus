@@ -87,6 +87,10 @@ public class ModelBasedGenerator extends ForwardGenerator {
   //a method recommender which recommends related method
   protected final MethodRecommender recommender;
   
+  //tmp vars
+  private int root_count = 0;
+  private int ext_count = 0;
+  
   /**
    * The only constructor with a model parameter
    * */
@@ -262,7 +266,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
   /**
    * Model-based sequence generation
    * */
-  private Pair<ExecutableSequence, Transition> generateSequenceByModel() {    
+  private Pair<ExecutableSequence, Transition> generateSequenceByModel() {
     //the basic algorithm
     //1. randomly pick up a model, follow its root. randomly (or systematically?) pick up
     //   an outgoing edge (make sure it is public method). Then, create a new sequence
@@ -277,6 +281,18 @@ public class ModelBasedGenerator extends ForwardGenerator {
     //it has percentage_of_random_gen ratio to create a new sequence
     int nextRandomNum = Randomness.nextRandomInt(10);
     boolean createNewSequence = (nextRandomNum < ((int)(ratio_start_from_root * 10)));
+    
+    //keep the statistic for error diagnose
+    if(createNewSequence) {
+      this.root_count++;
+    } else {
+      this.ext_count++;
+    }
+    
+    Log.log("Choose from root? " + createNewSequence);
+    Log.log("Root chosen count: " + root_count + ", extension count: " + ext_count);
+    Log.log(this.modelSequences.getSequenceStats().snapShotOnChosenTransition());
+    
     //choose the create a new sequence or extend the existing one
     return createNewSequence ? this.createSequenceFromModelRoot() : this.extendAnExistingSequence();
   }
@@ -423,7 +439,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
     
     StatementKind statement = this.selectStatement(extendTransition);
     
-    Log.log("    in extension Select a transition: " + extendTransition);    
+    Log.log("    in extension Select a transition: " + extendTransition + ", transition id:" + extendTransition.getTransitionID());    
     if(statement == null) {
       //there could be many possibilities, e.g. abstract type, void type, declaring class unvisibile, etc.
       if(Reflection.isVisible(extendTransition.getOutputType())) {
@@ -443,7 +459,6 @@ public class ModelBasedGenerator extends ForwardGenerator {
     InputsAndSuccessFlag sequences
         = inputSelector.selectInputsForExtend(baseSequence, statement, extendTransition, components, this); 
       
-//      super.selectInputs(statement, this.components);
     if(!sequences.success) {
       Log.log("    can not selected inputs for statement");
       stats.statStatementNoArgs(statement);
@@ -465,12 +480,13 @@ public class ModelBasedGenerator extends ForwardGenerator {
       Log.log("    ignore new sequence too long: " + newSequence.size());
       return null;
     }    
-    super.randoopConsistencyTests(newSequence);    
-    if(this.allSequences.contains(newSequence)) {
-      stats.statStatementRepeated(statement);
-      Log.log("    repeated statement, ignore");
-      return null;
-    }    
+    super.randoopConsistencyTests(newSequence);
+    //XXX did not check redundant here
+//    if(this.allSequences.contains(newSequence)) {
+//      stats.statStatementRepeated(statement);
+//      Log.log("    repeated statement, ignore");
+//      return null;
+//    }    
     this.allSequences.add(newSequence);    
     for(Sequence s : sequences.sequences) {
       s.lastTimeUsed = java.lang.System.currentTimeMillis();
@@ -531,7 +547,6 @@ public class ModelBasedGenerator extends ForwardGenerator {
   private List<StatementKind> getModelUncoveredStatements(List<StatementKind> statements,
       Map<Class<?>, ClassModel> model) {
     List<StatementKind> uncovered = new LinkedList<StatementKind>();
-    
     Set<Class<?>> modelledClasses = model.keySet();
     for(StatementKind statement : statements) {
       Class<?> declaringClass = PalusUtil.getDeclaringClass(statement);
@@ -540,7 +555,6 @@ public class ModelBasedGenerator extends ForwardGenerator {
         uncovered.add(statement);
       }
     }
-    
     return uncovered;
   }
   
@@ -577,7 +591,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
   }
   
   /**
-   * Random test model uncovered statements
+   * Random sequence generation
    * */
   private ExecutableSequence randomSequenceForStatements(List<StatementKind> statements) {
     

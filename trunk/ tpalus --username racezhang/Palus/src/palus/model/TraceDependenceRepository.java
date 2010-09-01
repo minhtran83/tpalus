@@ -69,98 +69,133 @@ public class TraceDependenceRepository {
     PalusUtil.checkNull(traces);
     PalusUtil.checkNull(traceMap);
     
-    //check the sequence number validity of the trace
+    /**
+     * Double check the validity of the traces
+     * */
     checkTraceSeqNumberValidity(traces);
     
-    if(true) {
-      return;
-    }
-    
-    Log.log("start to compute trace dependence. trace size: " + traces.size()
-        + ", trace map size: " + traceMap.size());
-    
-    //then try to find the dependence trace event
+    /**
+     * Compute the dependences for each trace one by one
+     * */
     for(TraceEvent trace : traces) {
       //we only focus on these two kind of event
       if(!(trace instanceof MethodEntryEvent) && !(trace instanceof InitEntryEvent)) {
         continue;
       }
       
-      int uniqueTraceSeqID = trace.getTraceEventSequenceID();
+      /**
+       * find dependence for this object only for the method entry
+       * **/
+      if(trace instanceof MethodEntryEvent) {
+        Class<?> thisType = trace.getReceiverType();
+        int thisID = trace.getReceiverObjectID();
+        Position thizPosition = Position.getThisPosition();
+        //excluding the static method
+        if(thisID != 0) {
+          Pair<TraceEventAndPosition, TraceEventAndPosition> dependentPairThis =
+            findDependentTracePair(traceMap, thisType, thisID, thizPosition, trace);
+          if(dependentPairThis != null) {
+            traceDependences.put(dependentPairThis.a, dependentPairThis.b);
+          }
+        }
+      }
       
-      Log.log("Processing trace event: " + trace);
-      
-      //get the parameter
+      /**
+       * find dependence for the parameter objects
+       * **/
       String[] serilizableParamValues = trace.getSerializableParams();
       int[] paramIDs = trace.getParamObjectIDs();
+      //the length of parameter name and parameter id should be the same
       PalusUtil.checkTrue(serilizableParamValues.length == paramIDs.length);
-      
-      Log.log("   length of param: " + serilizableParamValues.length);
-      
-      //find dependence of each parameter
+      //find dependence for each parameter
       for(int i = 0; i < serilizableParamValues.length; i++) {
-        //get the parameter type, object instance, and object id
+        //get the parameter type, bject id, and correspoding position
         Class<?> paramType = trace.getParamType(i);
         int paramID = paramIDs[i];
-        Position p = Position.getParaPosition(i + 1); //from 1 to param.length
-        //prune out un-modelled class, including string, primtive types
-        if(!ClassesToModel.modelThisClass(paramType)) {
-          Log.log("      skip type: " + paramType);
-          continue;
-        }
-        
-        Log.log("      start finding dependence for type: " + paramType);
-        
-        //get the instance map
-        Map<Instance, List<TraceEventAndPosition>> instanceMap = traceMap.get(paramType);
-        if(instanceMap == null) {
-          throw new BugInPalusException("Class: " + paramType + " does not exit in trace map!");
-        }
-        //then try to find the instance which has the same object id
-        Instance desirable = new Instance(paramID, paramType);
-        List<TraceEventAndPosition> tapList = instanceMap.get(desirable);
-        if(tapList == null) {
-          throw new BugInPalusException("There is no event and position list for: " + desirable);
-        }
-        
-        Log.log("     - size of tap list: " + tapList.size());
-        
-        //selected the closest event in the trace
-        TraceEvent dependentEvent = null;
-        Position dependentPosition = null;
-        for(TraceEventAndPosition tap : tapList) {
-          TraceEvent event = tap.event;
-          Position position = tap.position;
-          if(!(event instanceof InitExitEvent) && !(event instanceof MethodExitEvent)) {
-            continue;
-          }
-          int eventID = event.getTraceEventSequenceID();
-          if(eventID > uniqueTraceSeqID) {
-            break;
-          } else {
-            if(position.isRetPosition() || position.isThisPosition()) {
-              dependentEvent = event;
-              dependentPosition = position;
-              //check
-              if(position.isRetPosition()) {
-                PalusUtil.checkTrue(event instanceof MethodExitEvent);
-              }
-            }
-          }
-        }
-        
-        //add dependent event to the map
-        if(dependentEvent != null && dependentPosition != null) {
-          TraceEventAndPosition keyTAP = new TraceEventAndPosition(trace, p);
-          TraceEventAndPosition valueTAP = new TraceEventAndPosition(dependentEvent, dependentPosition);
-          traceDependences.put(keyTAP, valueTAP);
-          Log.log("Found dependence trace: " + dependentEvent.getTraceEventSequenceID()
-              + " (position: " + dependentPosition.toIntValue() + ")"
-              + " for: " + trace.getTraceEventSequenceID() + " (position: " + p.toIntValue() + ")");
-          Log.log("Put into the traceDependences map, current size: " + traceDependences.size());
+        //note param position is from 1 to param.length
+        Position paramPosition = Position.getParaPosition(i + 1);
+        Pair<TraceEventAndPosition, TraceEventAndPosition> dependentPairParam =
+          findDependentTracePair(traceMap, paramType, paramID, paramPosition, trace);
+        //adding to the map
+        if(dependentPairParam != null) {
+          traceDependences.put(dependentPairParam.a, dependentPairParam.b);
         }
       }
     }
+  }
+  
+  
+  /**
+   * Finding dependence from the original trace
+   * 
+   * <em>Note: </em> we only consider the return value/this value in building
+   * dependence between traces.
+   * 
+   * @return a pair of {@link TraceEventAndPosition} objects, indicating that the position
+   * of the first trace event depends on the object produced by the second trace event of the
+   * corresponding position
+   * */
+  private static Pair<TraceEventAndPosition, TraceEventAndPosition> findDependentTracePair(
+      Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> traceMap, Class<?> objectType, int objectId,
+      Position objectPosition, TraceEvent trace) {
+    PalusUtil.checkNull(objectPosition);
+    PalusUtil.checkNull(trace);
+    
+    //check if it is the class in the model
+    if(!ClassesToModel.modelThisClass(objectType)) {
+      return null;
+    }
+    //get the unique trace id
+    int uniqueTraceSeqID = trace.getTraceEventSequenceID();
+    //get the instance map of a corresponding class
+    Map<Instance, List<TraceEventAndPosition>> instanceMap = traceMap.get(objectType);
+    if(instanceMap == null) {
+      //throw new BugInPalusException("Class: " + objectType + " does not exit in trace map!");
+      //should not throw exception, because it could be a main class, which have not been initialized
+      return null;
+    }
+    //then try to find the instance which has the same object id
+    Instance desirable = new Instance(objectId, objectType);
+    List<TraceEventAndPosition> tapList = instanceMap.get(desirable);
+    if(tapList == null) {
+      throw new BugInPalusException("There is no event and position list for: " + desirable);
+    }
+    //select the closest event in the trace
+    TraceEvent dependentEvent = null;
+    Position dependentPosition = null;
+    for(TraceEventAndPosition tap : tapList) {
+      TraceEvent event = tap.event;
+      Position position = tap.position;
+      if(!(event instanceof InitExitEvent) && !(event instanceof MethodExitEvent)) {
+        continue;
+      }
+      int eventID = event.getTraceEventSequenceID();
+      if(eventID > uniqueTraceSeqID) {
+        //leave the loop, because the current trace occurs after the event
+        break;
+      } else {
+        //XXX we only consider the return value and this value currently
+        if(position.isRetPosition() || position.isThisPosition()) {
+          dependentEvent = event;
+          dependentPosition = position;
+          //check, if it depends on the return type. It should be a method exit event
+          if(position.isRetPosition()) {
+            PalusUtil.checkTrue(event instanceof MethodExitEvent);
+          }
+        }
+      }
+    }
+    
+    if(dependentEvent != null && dependentPosition != null) {
+      TraceEventAndPosition keyTAP = new TraceEventAndPosition(trace, objectPosition);
+      TraceEventAndPosition valueTAP = new TraceEventAndPosition(dependentEvent, dependentPosition);
+      //return the pair
+      return new Pair<TraceEventAndPosition, TraceEventAndPosition>(keyTAP, valueTAP);
+    }
+    
+    //not found
+    return null;
+    
   }
   
   /**
@@ -170,43 +205,131 @@ public class TraceDependenceRepository {
    * @return Transition depends on a ModelNode
    * */
   public static Map<Pair<Transition, Position>, Pair<ModelNode, Position>> findModelDependence() {
-    
+    //if there is no dependence information
     if(traceDependences.isEmpty()) {
       Log.log("There is no dependence information.");
       return null;
     }
+    //the dependence map to return
     Map<Pair<Transition, Position>, Pair<ModelNode, Position>> transitionNodeMap
         = new LinkedHashMap<Pair<Transition, Position>, Pair<ModelNode, Position>>();
-    //find the dependent transitions
+    
+    /**
+     * Finding dependent transitions by both trace event and position
+     * */
     Set<Entry<TraceEventAndPosition, TraceEventAndPosition>> entries = traceDependences.entrySet();
     for(Entry<TraceEventAndPosition, TraceEventAndPosition> entry : entries) {
       TraceEventAndPosition keyTAP = entry.getKey();
-      Log.log(Globals.lineSep + Globals.lineSep);
       List<Transition> dependentTransitions =
         TraceTransitionManager.findTransitionsByTraceEventAndPosition(keyTAP.event, keyTAP.position);
-      // XXX it is a trick here entry.getKey() is the init/method entry event
+      //skip if there is no corresponding transitions here
+      if(dependentTransitions == null) {
+        continue;
+      }
+      // XXX Note that, it is a trick here entry.getKey() is the init/method entry event
       // entry.getValue() is the init/method exit event
       TraceEventAndPosition valueTAP = entry.getValue();
       TraceEvent pairEvent = valueTAP.event.getPairEvent(); //XXX be aware
       List<Transition> dependentOnTransitions =
         TraceTransitionManager.findTransitionsByTraceEventAndPosition(pairEvent, valueTAP.position);
+      //FIXME skip if there no corresponding transitions here
+      if(dependentOnTransitions == null) {
+        continue;
+      }
       
       Log.log(Globals.lineSep + Globals.lineSep);
       Log.log(" size of dependent transitions: " + dependentTransitions.size());
       Log.log(" size of dependent on transitions: " + dependentOnTransitions.size());
-      
+      //there should be only 1 corresponding transition for the give trace & position
       PalusUtil.checkTrue(dependentTransitions.size() == 1);
       PalusUtil.checkTrue(dependentOnTransitions.size() == 1);
-      
+      //get the transition
       Transition dependentTransition = dependentTransitions.get(0);
       Transition dependentOnTransition = dependentOnTransitions.get(0);
-      
+      //check the validity
       PalusUtil.checkNull(dependentTransition);
       PalusUtil.checkNull(dependentOnTransition.getDestNode());
       //add to the map
       transitionNodeMap.put(new Pair<Transition, Position>(dependentTransition, keyTAP.position),
           new Pair<ModelNode, Position>(dependentOnTransition.getDestNode(), valueTAP.position));
     }
+    
+    /**
+     * Enhance the transition map. The need of this step is because:
+     * (1) a trace event could correspond to multiple transitions
+     * (2) each transition will have DIFFERENT position. Here is an example:
+     * 
+     * a trace event:   METHOD-ENTRY:   x = y.m(a);
+     * may have several dependence:
+     *    1. y may depend on a trace event called:  y = foo();
+     *    2. a may depend on a trace event called:  a = bar();
+     *    
+     * Thus, there could be two entries in the {@code traceDependences} map as follows:
+     *   1. <transition-for-y, position: 0>    depends on    <transition-foo(), return-type>
+     *   2. <transition-for-a, position: 1>    depends on    <transition-bar(), return-type>
+     *   
+     * The preceding transition-for-y and transition-for-a actually both come from
+     * the trace event, named: METHOD-ENTRY: x = y.m(a).
+     * 
+     * Without the following code, we only add DecorationValue of transition-for-y at position 0,
+     * and let its dependence edge point to the return value of foo(); and another dependence
+     * edge of transition-for-a at position 1. However, the decoration-value (dependence edge)
+     * at position 1 of transition-for-y, and the decoration-value (dependence edge) at position 0
+     * of transition-for-a should also point to bar(), and foo(), respecitvely. The following
+     * code does this.
+     * 
+     * <em>Note: </em> the following code should be merged into the above after sufficient
+     * testing.
+     * */
+    for(Entry<TraceEventAndPosition, TraceEventAndPosition> entry : traceDependences.entrySet()) {
+      //the trace event and its position which depends on the result of another trace event
+      TraceEventAndPosition keyTAP = entry.getKey();
+      TraceEvent keyTraceEvent = keyTAP.event;
+      Position keyPosition = keyTAP.position;
+      
+      //the trace event and its position that produce the result
+      TraceEventAndPosition valueTAP = entry.getValue();
+      TraceEvent valuePairTraceEvent = valueTAP.event.getPairEvent();//XXX be aware
+      Position valuePosition = valueTAP.position;
+      
+      //get ALL transitions that is created from keyTraceEvent
+      List<Transition> allTransitions = TraceTransitionManager.findTransitionsByTraceEvent(keyTraceEvent);
+      //XXX a not-well tested part, it should not be null ideally
+      if(allTransitions == null) {
+        continue;
+      }
+      //get the transition by both trace event and position, like above
+      List<Transition> dependentOnTransitions = 
+        TraceTransitionManager.findTransitionsByTraceEventAndPosition(valuePairTraceEvent, valuePosition);
+      if(dependentOnTransitions == null) {
+        continue;
+      }
+      
+      PalusUtil.checkTrue(dependentOnTransitions.size() == 1);
+      Transition dependentOnTransition = dependentOnTransitions.get(0);
+      
+      //check the validity
+      PalusUtil.checkNull(dependentOnTransition);
+      PalusUtil.checkNull(dependentOnTransition.getDestNode());
+      //add the dependence for each transition
+      for(Transition transition : allTransitions) {
+        //new the transition, position pair
+        Pair<Transition, Position> keyPair = new Pair<Transition, Position>(transition, keyPosition);
+        
+        //check there should be no this pair in the map before
+        if(transitionNodeMap.containsKey(keyPair)) {
+          //it is entirely possible, for example, using the above code snippet
+          //1. when processing <transition-for-y, position: 0>    depends on    <transition-foo(), return-type>
+          //   it tries to add <transition-for-a, position: *0*>    depends on    <transition-bar(), return-type>
+          continue;
+        }
+//        System.out.println("@@@ New added pair: " + keyPair.a.getTransitionID() + ":"
+//            + keyPair.a.toSignature() + ",  position: " + keyPair.b);
+        transitionNodeMap.put(keyPair, 
+            new Pair<ModelNode, Position>(dependentOnTransition.getDestNode(), valuePosition));
+      }
+    }
+    
     return transitionNodeMap;
   }
 
