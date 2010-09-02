@@ -1,3 +1,4 @@
+// Copyright 2010 Google Inc. All Rights Reserved.
 package palus;
 
 import org.objectweb.asm.Opcodes;
@@ -25,7 +26,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * A simple collection of utility methods
+ * A simple collection of useful static methods
  * 
  * @author saizhang@google.com (Sai Zhang)
  */

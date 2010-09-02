@@ -1,11 +1,28 @@
+// Copyright 2010 Google Inc. All Rights Reserved.
 package palus.model;
 
 import palus.PalusUtil;
 import palus.trace.TraceEvent;
 
+/**
+ * A simple wrapper class. It wraps a {@link TraceEvent} and a {@link Position}
+ * object.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
+ *
+ */
 public class TraceEventAndPosition {
+    /**
+     * The wrapped {@link TraceEvent} object.
+     * */
 	public final TraceEvent event;
+	/**
+     * The wrapped {@link Position} object.
+     * */
 	public final Position position;
+	/**
+     * Default constructor. Just assigning values to the wrapped objects.
+     * */
 	public TraceEventAndPosition(TraceEvent event, Position position) {
 	    PalusUtil.checkNull(event);
 	    PalusUtil.checkNull(position);

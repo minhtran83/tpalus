@@ -24,7 +24,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * @author saizhang@google.com (Your Name Here)
+ * Provides serialization support for the built {@link ClassModel} object.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  *
  */
 public class ModelSerializer {
@@ -126,6 +128,9 @@ public class ModelSerializer {
     return retMap;
   }
   
+  /**
+   * A simple driver, containing some sample usage.
+   * */
   public static void main(String[] args) throws IOException, ClassNotFoundException {
     List<TraceEvent> events = TraceSerializer.deserializeObjectsFromTrace(new File(TraceAnalyzer.TRACE_OBJECT_FILE));
     TraceAnalyzer analyzer = new TraceAnalyzer(events);

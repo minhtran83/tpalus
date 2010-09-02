@@ -27,7 +27,7 @@ import palus.trace.TraceEvent;
 import randoop.Globals;
 
 /**
- * @author saizhang@google.com (Your Name Here)
+ * @author saizhang@google.com (Sai Zhang)
  *
  */
 public class OfflineMain {
@@ -155,7 +155,8 @@ public class OfflineMain {
     if(!fall_back_to_randoop) {
       if(buildFromTrace) {
         models = analyzer.createModels();
-        System.out.println("Serialize built models ...");
+
+        System.out.println(Globals.lineSep + "Serialize built models ...");
       
         ModelSerializer serializer = new ModelSerializer(models, new File(MODEL_OBJECT_FILE));
         serializer.serializeModelAsObject();

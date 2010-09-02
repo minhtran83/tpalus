@@ -1,3 +1,4 @@
+// Copyright 2010 Google Inc. All Rights Reserved.
 package palus;
 
 import java.io.ByteArrayOutputStream;
@@ -6,7 +7,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 /**
- * A simple logging util class
+ * A simple logging utility class
  * 
  * @author saizhang@google.com (Sai Zhang)
  */
@@ -17,7 +18,7 @@ public final class Log {
   public static final String lineSep = System.getProperty("line.separator");
 
   private Log() {
-    throw new IllegalStateException("no instance");
+    throw new IllegalStateException("can not be initialized");
   }
 
   public static final ByteArrayOutputStream bos;

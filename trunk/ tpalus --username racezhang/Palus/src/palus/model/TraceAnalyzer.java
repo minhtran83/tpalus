@@ -1,3 +1,4 @@
+// Copyright 2010 Google Inc. All Rights Reserved.
 package palus.model;
 
 import java.io.IOException;
@@ -25,6 +26,12 @@ import palus.visualization.ClassModelViewer;
 import plume.Pair;
 import randoop.Globals;
 
+/**
+ * The class for analyzing raw event traces after the sample execution.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
+ *
+ */
 public class TraceAnalyzer {
   
     public static String PROJECT_NAME =  "apache_";////"toy_db";////"bcel_";//"apache_";//"rhino_";
@@ -131,9 +138,8 @@ public class TraceAnalyzer {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
-		
+		//process the trace map further
 		TraceProcessingUtils.removeUnmatchedTracesPerInstance(traceMap);
-		
 		//check the validity of the trace map before proceeding
 		checkTraceMapValidity(traceMap);
 		
@@ -159,14 +165,12 @@ public class TraceAnalyzer {
         }
 		System.out.println("Finish computing the trace dependences");
 		System.out.println(Globals.lineSep);
-		//get all dependence information from traces
-		//Log.log("Here is all the dependence information: ");
+
 		Map<TraceEventAndPosition, TraceEventAndPosition> dependenceMap =
 		  TraceDependenceRepository.getTraceDependences();
-		//Log.log(TraceDependenceRepository.getTraceDependenceInfo());
 		
-		System.out.println("Here is all trace dependence information:");
-		System.out.println(TraceDependenceRepository.getTraceDependenceInfo());
+		System.out.println("All dependent trace event pair: " + dependenceMap.size());
+		Log.log(TraceDependenceRepository.getTraceDependenceInfo());
 		
 		//start create models from trace
 		System.out.println("Building models from the trace...");
@@ -175,7 +179,7 @@ public class TraceAnalyzer {
 		System.out.println("Finish building models!");
 		System.out.println(Globals.lineSep);
 		
-		//TODO enrich the model by adding dependence!
+		//enrich the built model by adding dependence!
 		Map<Pair<Transition, Position>, Pair<ModelNode, Position>> dependences
 		    = TraceDependenceRepository.findModelDependence();
 		
@@ -185,22 +189,20 @@ public class TraceAnalyzer {
 		        + " dependence pairs to enhance the class model.");
 		    ClassModel.enhanceClassModel(models, dependences);
 		    System.out.println("Finish enhancing the model with dependence information.");
-//		    System.out.println("Exit on purpose!");
-//		    System.exit(1);
 		} else {
 		  System.out.println("No dependence relations found");
 		}
-		
+		//System.exit(1);
 		return models;		
 	}
 	
 	/**
-	 * Display the created models in GUI
+	 * Displays the created models in GUI
 	 * @param models the models to visulaize
+	 * 
+	 * <em>Note:</em> this method has not been tested. Do not use it!
 	 * */
 	void visualizeModels(Map<Class<?>, ClassModel>  models) {
-	  //TODO not stable enough
-	  //NOt used now.
       for(Entry<Class<?>, ClassModel> entry : models.entrySet()) {
           ClassModelViewer viewer = new ClassModelViewer(entry.getValue());
           viewer.viewModel();
@@ -290,7 +292,7 @@ public class TraceAnalyzer {
 	}
 	
 	/**
-	 * Assign a unique sequence id to each trace event
+	 * Assigns a unique sequence id to each trace event
 	 * */
 	private void assignTraceSequenceID() {
 	  for(TraceEvent trace : this.traces) {
@@ -299,13 +301,13 @@ public class TraceAnalyzer {
 	}
 	
 	/**
-	 * Classify the trace events by class, and then by instance (distinguished by object id)
+	 * Classifies the trace events by class, and then by instance (distinguished by object id)
 	 * @param traces the trace events after preprocessing (e.g. removing unmatched pairs)
 	 * @return the classified trace events by class and instance
 	 * */
 	private Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> extractTraceEventByClass(List<TraceEvent> traces)
 	    throws ClassNotFoundException {
-	  
+	  //check the trace is a valid one
 	  checkTraceEvents(traces);
 	  
 		//the map classifying trace events by instances from different classes
@@ -348,7 +350,7 @@ public class TraceAnalyzer {
 				for(int i = 0; i < paramIds.length; i++) {
 					Position paramPosition = Position.getParaPosition(i + 1); //1 - param.length
 					int paramId = paramIds[i]; //XXX be aware, use declarative type or runtime type?
-					if(paramId != 0) {
+					if(paramId != 0) { //skip null object
 					     Class<?> paramType = event.getParamType(i); // XXX param.getClass();
 					     Log.log("parameter position trace: " + event.toString() + ", on position: " + paramPosition.toIntValue());
 						addEventToClassMap(retMap, paramId, paramType, event, paramPosition);
@@ -361,7 +363,7 @@ public class TraceAnalyzer {
 			if(event instanceof MethodEntryEvent) {
 				Position retPosition = Position.getRetPosition();
 				Class<?> retType = event.getReturnType();				
-				//XXX think more on this point
+				//XXX be aware using pair event
 				TraceEvent pairEvent = event.getPairEvent();
 				PalusUtil.checkNull(pairEvent);
 				PalusUtil.checkTrue(pairEvent instanceof MethodExitEvent);
@@ -379,11 +381,8 @@ public class TraceAnalyzer {
 				Class<?> retType = event.getReturnType();
 				if(retType != void.class && !retType.isPrimitive() && !PalusUtil.isPrimitive(retType)) {
 				    int retObjId = ((MethodExitEvent)event).getRetObjectID();
-					if(retObjId != 0) {
-						//do not need to check PalusUtil.checkTrue(retType.isAssignableFrom(retObj.getClass()));
-						//retObj.getClass() could be a subclass of retType
-					} else {
-						continue;
+					if(retObjId == 0) {
+					  continue;
 					}
 					addEventToClassMap(retMap, retObjId, retType, event, retPosition);
 				}
@@ -421,18 +420,16 @@ public class TraceAnalyzer {
 			map.put(type, new LinkedHashMap<Instance, List<TraceEventAndPosition>>());
 		}
 		Map<Instance, List<TraceEventAndPosition>> instanceEventMap = map.get(type);
-		assert instanceEventMap != null;
+		PalusUtil.checkNull(instanceEventMap);
 		
 		Instance instance = new Instance(objId, type);
 		if(!instanceEventMap.containsKey(instance)) {
 			instanceEventMap.put(instance, new ArrayList<TraceEventAndPosition>());
 		}
 		List<TraceEventAndPosition> eventList = instanceEventMap.get(instance);
-		assert eventList != null;
+		PalusUtil.checkNull(eventList);
 		
 		eventList.add(new TraceEventAndPosition(event, p));
-		
-		Log.log("    added to the map");
 	}
 	
 	
@@ -447,6 +444,9 @@ public class TraceAnalyzer {
 		checkTraceEventsAndPosition(tracesAndPositions);
 	}
 	
+	/**
+	 * Checks whether the given trace has unmatched trace event pairs.
+	 * */
 	public static void checkTraceEventsAndPosition(List<TraceEventAndPosition> traces) {
 		int error = 0;
 		Stack<TraceEvent> stack = new Stack<TraceEvent>();
@@ -500,13 +500,16 @@ public class TraceAnalyzer {
 			for(TraceEventAndPosition tap : traces) {
 	          System.out.println("-->" + tap.event.getUniqueTracePairID()  + "    " + tap.event);
 	        }
-	        
 			throw new RuntimeException("There are " + error + " errors after checkTraceEvents!");
 		} else {
-			Log.log("Check passed!");
+			//ok here
 		}
 	}
 	
+	/**
+	 * Checks whether the given trace map (that classified traces based on object instance)
+	 * has unmatched trace pair.
+	 * */
 	public static void checkTraceMapValidity(Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> traceMap) {
 	  Log.log("Trace map, entries: " + traceMap.entrySet().size());
       for(Class<?> cls : traceMap.keySet()) {

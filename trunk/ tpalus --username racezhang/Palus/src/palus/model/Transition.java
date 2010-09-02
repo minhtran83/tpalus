@@ -1,3 +1,4 @@
+// Copyright 2010 Google Inc. All Rights Reserved.
 package palus.model;
 
 import java.io.Serializable;
@@ -17,39 +18,88 @@ import palus.Log;
 import palus.PalusUtil;
 import palus.trace.Stats;
 
+/**
+ * Represents an edge entity in the built {@link ClassModel} object.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
+ *
+ */
 public class Transition implements Serializable {
-	
+	/**
+	 * A unique id for the transition object
+	 * */
 	private final int transitionId;
+	/**
+	 * The class for which this transition models
+	 * */
 	private final Class<?> modelledClass;
+	/**
+	 * The source node of the transition
+	 * */
 	private final ModelNode srcNode;
+	/**
+     * The destination node of the transition
+     * */
 	private final ModelNode destNode;
-	// Note that this className might not be the same as modelClass
-	// for instance this transition is a side-effected static call
+	
+	/**
+	 * A transition corresponds to a method or constructor call.
+	 * The following three fields stores the clas name, method name, and
+	 * method descriptor of the wrapper method call.
+	 * 
+	 * <em>Note: </em> this className might not be the same as {@link #modelledClass}
+     * For instance, this transition could be a side-effected static call, and
+     * models one of this parameter.
+	 * */
 	private final String className;
 	private final String methodName;
 	private final String methodDesc;
-	//the captured values and the position of current class
+	
+	/**
+	 * The captured decorations of this transition
+	 * */
 	public final List<Decoration> decorations = new ArrayList<Decoration>();
 	
-	//the transition on position, depends on the outcome of a model nodes
-	//private final List<ModelNode> dependence = new ArrayList<ModelNode>();
+	/**
+	 * * A flag indicating this transition a method or constructor.
+	 * True -> method, false -> constructor 
+	 * */
+	private /*final*/ boolean isMethodOrConstructor;
 	
-	//is this transition a method or constructor, true -> method, false -> constructor
-	private /*final*/ boolean isMethodOrConstructor;	
-	private transient /*final*/ Method method; /* need to call recover method after deserialization */
-	private transient /*final*/ Constructor<?> constructor; /* need to call recover method after deserialization */
+	/**
+	 * The {@link Method} object this transition represents. If the transition
+	 * corresponds to a normal method call.
+	 * 
+	 * <em>Note: </em> need to call recover method after de-serialization to recover
+	 * this field.
+	 * */
+	private transient /*final*/ Method method;
 	
-	//if it is a loop call, indicate how many loops there are
+	/**
+     * The {@link Constructor} object this transition represents. If the transition
+     * corresponds to a constructor call.
+     * 
+     * <em>Note: </em> need to call recover method after de-serialization to recover
+     * this field.
+     * */
+	private transient /*final*/ Constructor<?> constructor;
+	
+	/**
+	 * An unused flag.
+	 * To indicate if it is a loop call, how many loops there are.
+	 * */
 	private int loopNum = 0;
 	
+	/**
+	 * Constructor. Create a new transition object.
+	 * */
 	public Transition(ModelNode srcNode, ModelNode destNode, String className, String methodName, String methodDesc) {
 		PalusUtil.checkNull(srcNode);
 		PalusUtil.checkNull(destNode);
 		PalusUtil.checkNull(className);
 		PalusUtil.checkNull(methodName);
 		PalusUtil.checkNull(methodDesc);
-		//model the same class
-		//XXX check getClassModel() == getClassModel()?
+		//make sure source/dest node are modelling the same class
 		PalusUtil.checkTrue(srcNode.getModelledClass() == destNode.getModelledClass());
 		
 		this.modelledClass = srcNode.getModelledClass();
@@ -60,7 +110,7 @@ public class Transition implements Serializable {
 		this.methodDesc = methodDesc;
 		this.transitionId = Stats.genTransitionID();
 		
-		//deciede it is a method or constructor
+		//decide it is a method or constructor
 		Method m = this.tryToGetMethod();
 		Constructor<?> c = this.tryToGetConstructor();
 		PalusUtil.checkTrue( m != null || c != null);
@@ -70,13 +120,16 @@ public class Transition implements Serializable {
 		this.constructor = c;
 	}
 	
+	/**
+	 * Save the un-serializable fields' states
+	 * */
 	void saveForSerialization() {
 	  //empty on purpose
 	}
 	
 	/**
 	 * This method must be called after recovering from serialization, to recover
-	 * objec states
+	 * the object states of several fields
 	 * */
 	void recoverFromDeserialization() {
 	//deciede it is a method or constructor
@@ -89,14 +142,23 @@ public class Transition implements Serializable {
       this.constructor = c;
 	}
 	
+	/**
+	 * Returns the unique transition id
+	 * */
 	public int getTransitionID() {
 		return this.transitionId;
 	}
 	
+	/**
+	 * Returns the type this transition models
+	 * */
 	public Class<?> getModelledClass() {
 		return this.modelledClass;
 	}
 	
+	/**
+	 * Gets types of parameters to invoke this transition
+	 * */
 	public Class<?>[] getParamClasses() {
 	    if(this.isMethod()) {
 	      return this.getMethod().getParameterTypes();
@@ -105,8 +167,11 @@ public class Transition implements Serializable {
 	    }
 	}
 	
-	//for constructor return the class owner
-	//for other method, it is the return type
+	/**
+	 * Gets the return type of this transition. If it is a constructor,
+	 * returns the type it will create. Else, get the return type of
+	 * a normal method.
+	 * */
 	public Class<?> getOutputType() {
 	  if(this.isConstructor()) {
 	    return this.getConstructor().getDeclaringClass();
@@ -115,14 +180,23 @@ public class Transition implements Serializable {
 	  }
 	}
 	
+	/**
+	 * Checks is it a loop transition
+	 * */
 	public boolean isLoopTransition() {
 		return srcNode == destNode;
 	}
 	
+	/**
+	 * Checks is it wrapping a normal method
+	 * */
 	public boolean isMethod() {
 	  return this.isMethodOrConstructor;
 	}
 	
+	/**
+     * Checks is it wrapping a constructor
+     * */
 	public boolean isConstructor() {
 	  return !this.isMethodOrConstructor;
 	}
@@ -144,14 +218,8 @@ public class Transition implements Serializable {
 	public boolean isPublicTransition() {
 	  PalusUtil.checkTrue(this.method != null || this.constructor != null);
 	  if(this.method != null) {
-//	    if(Modifier.isPublic(this.method.getDeclaringClass().getModifiers())) {
-//	      return false;
-//	    }
 	    return Modifier.isPublic(this.method.getModifiers());
 	  } else {
-//	    if(Modifier.isPublic(this.constructor.getDeclaringClass().getModifiers())) {
-//	      return false;
-//	    }
 	    return Modifier.isPublic(this.constructor.getModifiers());
 	  }
 	}
@@ -210,6 +278,7 @@ public class Transition implements Serializable {
 	public void addDecoration(String serializableThiz, String[] serializableParams,
 	    Object[] serializableArray, AbstractState thizState, AbstractState[] paramStates,
 	    Transition transition, Position p) {
+	  //create a new decoration object, and add to this transition object.
 	  Decoration decoration = new Decoration(serializableThiz, serializableParams, serializableArray,
 	      thizState, paramStates, transition, p.toIntValue());
 	  this.addDecoration(decoration);
@@ -267,7 +336,7 @@ public class Transition implements Serializable {
 	}
 	
 	/**
-	 * return how many decoration has been merged
+	 * Returns how many decoration has been merged
 	 * */
 	int mergeEquivalentDecorations() {
 	  int orig_num = this.decorations.size();
@@ -337,7 +406,6 @@ public class Transition implements Serializable {
 	  for(Decoration decoration : this.decorations) {
 	    cloneDecorations.add(decoration.makeClone(t));
 	  }
-	  
 	  return cloneDecorations;
 	}
 	
@@ -437,8 +505,7 @@ public class Transition implements Serializable {
     }
 	
 	/**
-	 * The static inner class <code>Decoration</code>
-	 * A decoration represents the set of parameter values for a method
+	 * This decoration represents the set of parameter values for a method
 	 * call. It includes:
 	 *   this, (param1, param2, param3, .., param n)
 	 * 
@@ -452,10 +519,6 @@ public class Transition implements Serializable {
 		private final Transition transition;
 		private final DecorationValue thiz;
 		private final DecorationValue[] params;
-		
-		//XXX add abstract state here
-//		private final AbstractState thisState = null;
-//		private final AbstractState[] paramStates = null;
 		
 		/** the initial state, 0 represents this, number 1 - params.length
 		 * -1 represents the return value

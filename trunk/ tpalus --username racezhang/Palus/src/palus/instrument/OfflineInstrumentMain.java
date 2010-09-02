@@ -6,7 +6,7 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * @author saizhang@google.com (Your Name Here)
+ * @author saizhang@google.com (Sai Zhang)
  *
  */
 public class OfflineInstrumentMain {
@@ -18,6 +18,11 @@ public class OfflineInstrumentMain {
   public static String dest_dir = "/home/saizhang/project/benchmarks/mess-test-dir/sat4j_instrumented/";
   
   public static void main(String[] args) throws IOException {
+    
+    if(args.length == 2) {
+      source_dir = args[0];
+      dest_dir = args[1];
+    }
     
     File sourceDir = new File(source_dir);
     File destDir = new File(dest_dir);

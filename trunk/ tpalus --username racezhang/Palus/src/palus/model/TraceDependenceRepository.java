@@ -19,8 +19,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 /**
- * The class keep track of the relations between every trace events. The current
- * implementation mainly focuses on the the parameters of a constructor/method
+ * This class keeps track of the dependent relations between trace events. The current
+ * implementation mainly focuses on the the receivers/parameters of a constructor/method
  * call entry event. For example:
  * 
  * Trace event 1: A a = new A();
@@ -29,26 +29,33 @@ import java.util.Set;
  * Trace event 4: b.bar(a);
  * 
  * This class analyzes the trace to find out the a object in trace event 3 comes
- * from trace event 2. Thus, a 'dependence edge' between them is established.
+ * from trace event 2. Thus, a 'dependence edge' between them will be established.
+ * 
+ * This class also analyzes that the object a (b) in trace event 2 (4) comes from the
+ * result of trace event 1 (3). That relation might seems to be trivial, but could
+ * be useful if there are multiple constructors with long method-call sequences.
  * 
  * TODO one possible limitation: it has not consider the side-effect of parameter.
  * For instance, in the current implementation, it also identifies that the a object
  * in trace event 4 comes from 2, instead of the state after trace event 3.
  * 
  * To overcome this:
- * 1. use a parameter immutability analysis to identify which method has side-effects.
+ * 1. use a parameter mutability analysis to identify which method has side-effects.
  * 2. employ some heuristics.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
+ * 
  * */
 public class TraceDependenceRepository {
   
   /**
-   * The data structure keeps the trace dependences. It represents:
+   * The data structure keeping the trace dependences. It represents:
    * the position in: key.position of key.traceevent depends on the output of
    * the value.position of value.traceevent
    * 
    * There are some constraints (limitations) here. First, the key.position only
-   * in parameters, key.traceevent only belongs to InitEntryEvent and MethodEntryEvent.
-   * value.position only in ret value and receiver position, and value.event only
+   * in parameters/receiver, key.traceevent could only be InitEntryEvent or MethodEntryEvent.
+   * value.position only in ret value or receiver position, and value.event only
    * belongs to InitExitEvent and MethodExitEvent
    * */
   private static Map<TraceEventAndPosition, TraceEventAndPosition> traceDependences =
@@ -64,33 +71,26 @@ public class TraceDependenceRepository {
    * @throws ClassNotFoundException 
    * @throws BugInPalusException 
    * */
-  public static void buildTraceDependences(List<TraceEvent> traces, Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> traceMap)
+  public static void buildTraceDependences(List<TraceEvent> traces, Map<Class<?>,
+      Map<Instance, List<TraceEventAndPosition>>> traceMap)
     throws ClassNotFoundException, BugInPalusException {
+    //no null input
     PalusUtil.checkNull(traces);
     PalusUtil.checkNull(traceMap);
-    
-    /**
-     * Double check the validity of the traces
-     * */
+    // Double check the validity of the traces, there should be no missing trace here
     checkTraceSeqNumberValidity(traces);
-    
-    /**
-     * Compute the dependences for each trace one by one
-     * */
+    ///Compute the dependences for each trace one by one
     for(TraceEvent trace : traces) {
       //we only focus on these two kind of event
       if(!(trace instanceof MethodEntryEvent) && !(trace instanceof InitEntryEvent)) {
         continue;
       }
-      
-      /**
-       * find dependence for this object only for the method entry
-       * **/
+      //find dependence for "this object" only for the method entry
       if(trace instanceof MethodEntryEvent) {
         Class<?> thisType = trace.getReceiverType();
         int thisID = trace.getReceiverObjectID();
         Position thizPosition = Position.getThisPosition();
-        //excluding the static method
+        //excluding the static method, and constructor
         if(thisID != 0) {
           Pair<TraceEventAndPosition, TraceEventAndPosition> dependentPairThis =
             findDependentTracePair(traceMap, thisType, thisID, thizPosition, trace);
@@ -99,10 +99,9 @@ public class TraceDependenceRepository {
           }
         }
       }
-      
-      /**
-       * find dependence for the parameter objects
-       * **/
+
+      //find dependence for the parameter objects
+      //the serializable params are only used for getting the number of parameters
       String[] serilizableParamValues = trace.getSerializableParams();
       int[] paramIDs = trace.getParamObjectIDs();
       //the length of parameter name and parameter id should be the same
@@ -126,7 +125,9 @@ public class TraceDependenceRepository {
   
   
   /**
-   * Finding dependence from the original trace
+   * Finding dependence from the original trace. Returns a pair of trace event and
+   * its corresponding position, indicating the object in the position of key trace event
+   * depends on the object in the position of the value trace event.
    * 
    * <em>Note: </em> we only consider the return value/this value in building
    * dependence between traces.
@@ -175,6 +176,7 @@ public class TraceDependenceRepository {
         break;
       } else {
         //XXX we only consider the return value and this value currently
+        //ignoring the possible parameter mutability
         if(position.isRetPosition() || position.isThisPosition()) {
           dependentEvent = event;
           dependentPosition = position;
@@ -193,7 +195,7 @@ public class TraceDependenceRepository {
       return new Pair<TraceEventAndPosition, TraceEventAndPosition>(keyTAP, valueTAP);
     }
     
-    //not found
+    //we have not found its dependent trace for the given object
     return null;
     
   }
@@ -214,9 +216,7 @@ public class TraceDependenceRepository {
     Map<Pair<Transition, Position>, Pair<ModelNode, Position>> transitionNodeMap
         = new LinkedHashMap<Pair<Transition, Position>, Pair<ModelNode, Position>>();
     
-    /**
-     * Finding dependent transitions by both trace event and position
-     * */
+    //Finding dependent transitions by both trace event and position
     Set<Entry<TraceEventAndPosition, TraceEventAndPosition>> entries = traceDependences.entrySet();
     for(Entry<TraceEventAndPosition, TraceEventAndPosition> entry : entries) {
       TraceEventAndPosition keyTAP = entry.getKey();
@@ -323,8 +323,8 @@ public class TraceDependenceRepository {
           //   it tries to add <transition-for-a, position: *0*>    depends on    <transition-bar(), return-type>
           continue;
         }
-//        System.out.println("@@@ New added pair: " + keyPair.a.getTransitionID() + ":"
-//            + keyPair.a.toSignature() + ",  position: " + keyPair.b);
+        Log.log("@@@ New added pair: " + keyPair.a.getTransitionID() + ":"
+            + keyPair.a.toSignature() + ",  position: " + keyPair.b);
         transitionNodeMap.put(keyPair, 
             new Pair<ModelNode, Position>(dependentOnTransition.getDestNode(), valuePosition));
       }
