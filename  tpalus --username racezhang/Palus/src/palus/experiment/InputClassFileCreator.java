@@ -74,7 +74,7 @@ public class InputClassFileCreator {
   }
   
   /**
-   * Output all non-inner non-annoymous class name from a given directory
+   * Output all non-inner non-anonymous class name from a given directory
    * */
   public static void outputClassList(String dirPath, String outputFile) throws IOException {
     List<File> files = getFilesInDir(dirPath, ".class", "$");

@@ -1,3 +1,4 @@
+// Copyright 2010 Google Inc. All Rights Reserved.
 package palus.model;
 
 import java.io.Serializable;
@@ -5,9 +6,13 @@ import java.io.Serializable;
 import palus.PalusUtil;
 
 /**
- * This class connect one transition to a model node.
+ * Represents the direct state transition dependence relation from one transition
+ * to another model node. It indicates that the transition (actually a method call)
+ * requires the object state of the dependent model node.
  * 
- * XXX Have not tested on Serilization part
+ * @author saizhang@google.com (Sai Zhang)
+ * 
+ * <em>Note:</em> XXX Have not tested on serialization part
  * */
 public class DependenceEdge implements Serializable {
 	
@@ -15,6 +20,9 @@ public class DependenceEdge implements Serializable {
 	private final Transition transition;
 	private final ModelNode dependentNode;
 	
+	/**
+	 * The only constructor
+	 * */
 	public DependenceEdge(Transition transition, ModelNode node) {
 		PalusUtil.checkNull(transition);
 		PalusUtil.checkNull(node);

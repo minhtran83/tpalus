@@ -19,7 +19,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * @author saizhang@google.com (Your Name Here)
+ * Provides serialization support for the  {@link TraceEvent} list.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  *
  */
 public class TraceSerializer {

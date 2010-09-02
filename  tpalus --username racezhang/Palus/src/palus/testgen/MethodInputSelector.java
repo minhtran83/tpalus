@@ -138,16 +138,16 @@ public class MethodInputSelector {
         }
       }
       
-      DecorationValue thiz = decoration.getThisValue();
-      if(thiz.hasDependenceEdge()) {
-        System.out.println("root Has dependence edge, this");
-      }
-      DecorationValue[] params = decoration.getParamValues();
-      for(int paramIndex = 0; paramIndex < params.length; paramIndex++) {
-        if(params[paramIndex].hasDependenceEdge()) {
-          System.out.println("root has dependence edge, param: " + paramIndex);
-        }
-      }
+//      DecorationValue thiz = decoration.getThisValue();
+//      if(thiz.hasDependenceEdge()) {
+//        System.out.println("root Has dependence edge, this");
+//      }
+//      DecorationValue[] params = decoration.getParamValues();
+//      for(int paramIndex = 0; paramIndex < params.length; paramIndex++) {
+//        if(params[paramIndex].hasDependenceEdge()) {
+//          System.out.println("root has dependence edge, param: " + paramIndex);
+//        }
+//      }
       
       ///xxx
       if(isReceiver) {
@@ -156,16 +156,16 @@ public class MethodInputSelector {
         value = getDecorationValue(statement, decoration, i);
       }
       
-      if(value != null ) {
+//      if(value != null ) {
 //        System.out.println("For root, the value is not null., the dependence edge is null: " + (value.getDependenceEdge() == null)
 //            + ", transition is: " + transition.toSignature() + ", position: " + position + ", isReciever: " + isReceiver
 //            + ",i: " + i + " , modelled class: " + transition.getModelledClass());
-        if(value.getDependenceEdge() != null) {
-          System.out.println("For root, it has dependence edges. for i: " + i + ", l is null? " + (l == null)
-            + ", position: " + position + ",  isreceiver?: " + isReceiver + ", in modelling: "
-            + transition.getModelledClass());
-        }
-      }
+//        if(value.getDependenceEdge() != null) {
+//          System.out.println("For root, it has dependence edges. for i: " + i + ", l is null? " + (l == null)
+//            + ", position: " + position + ",  isreceiver?: " + isReceiver + ", in modelling: "
+//            + transition.getModelledClass());
+//        }
+//      }
       
       //XXX select from the dependence edge
       if(l == null && value != null && Randomness.nextRandomBool() /*flip a coin here*/) {
@@ -178,7 +178,7 @@ public class MethodInputSelector {
           //looking for sequence from that model node
           List<Sequence> lists = generator.getSequenceFromModelSequence(dependentNode);
           if(lists != null && !lists.isEmpty()) {
-            System.out.println("Success in picking up a sequence from dependence edge for root.");
+            Log.log("Success in picking up a sequence from dependence edge for root.");
             Sequence sequence = lists.get(Randomness.nextRandomInt(lists.size()));
             ArrayListSimpleList<Sequence> arrayList = new ArrayListSimpleList<Sequence>();
             arrayList.add(sequence);
@@ -432,7 +432,7 @@ public class MethodInputSelector {
           //looking for sequence from that model node
           List<Sequence> lists = generator.getSequenceFromModelSequence(dependentNode);
           if(lists != null && !lists.isEmpty()) {
-            System.out.println("Success in picking up a sequence from dependence edge, lists size: " + lists.size());
+            Log.log("Success in picking up a sequence from dependence edge, lists size: " + lists.size());
             Sequence sequence = lists.get(Randomness.nextRandomInt(lists.size()));
             ArrayListSimpleList<Sequence> arrayList = new ArrayListSimpleList<Sequence>();
             arrayList.add(sequence);

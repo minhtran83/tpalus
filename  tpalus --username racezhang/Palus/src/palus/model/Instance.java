@@ -1,13 +1,27 @@
+// Copyright 2010 Google Inc. All Rights Reserved.
 package palus.model;
 
 import palus.PalusUtil;
 
+/**
+ * Represents an object instance during Java execution.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
+ * 
+ * */
 public final class Instance {
-	
-	//the object id in JVM
+	/**
+	 * The object id from JVM. 0 for null object.
+	 * */
 	public final int objId;
+	/**
+	 * Object type. Can not be null.
+	 * */
 	public final Class<?> type;
 	
+	/**
+	 * Constructor. Initialize an instance.
+	 * */
 	public Instance(int objectId, Class<?> type) {
 	  PalusUtil.checkNull(type);
 	  this.type = type;
@@ -15,19 +29,18 @@ public final class Instance {
 	}
 	
 	/**
-	 * Check is the current instance a primitive or primitive wrapper type
+	 * Checks whether the current instance is a primitive or primitive wrapper
 	 * */
 	public boolean isPrimitiveType() {
 		return type.isPrimitive() || PalusUtil.isPrimitive(type);
 	}
 	
+	/**
+	 * Checks whether the current instance is a string type
+	 * */
 	public boolean isStringType() {
 		return type.equals(java.lang.String.class);
 	}
-	
-//	public AbstractState abstractState() {
-//		return null;
-//	}
 	
 	@Override
 	public int hashCode() {

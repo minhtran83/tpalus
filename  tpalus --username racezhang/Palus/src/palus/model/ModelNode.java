@@ -1,3 +1,4 @@
+// Copyright 2010 Google Inc. All Rights Reserved.
 package palus.model;
 
 import java.io.Serializable;
@@ -9,36 +10,63 @@ import palus.PalusUtil;
 import palus.trace.Stats;
 import randoop.Globals;
 
+/**
+ * Represents a node entity in the built {@link ClassModel} object.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
+ *
+ */
 public class ModelNode implements Serializable {
+    /**
+     * A unique node id
+     * */
 	private final int nodeid;
-	private final Class<?> modelledClass;
-	//private final AbstractState state;
 	
+	/**
+	 * The type of modelled class
+	 * */
+	private final Class<?> modelledClass;
+	
+	/**
+	 * The incoming edges. Can not be made to final.
+	 * */
 	private /*final*/ transient List<Transition> inEdges = new ArrayList<Transition>();
+	
+	/**
+     * The outgoing edges. Can not be made to final.
+     * */
 	private /*final*/ transient List<Transition> outEdges = new ArrayList<Transition>();
 
-	//can not make it final because we need to merge models
+	/**
+	 * The class model which the node belongs to.
+	 * <em>Note:</em> this field can not make to be final because we need to merge models.
+	 * */
     private ClassModel classModel;
     
-    //a flag for test generation purpose. True means that this could be
-    //a terminate node for test generation
+    /**
+     * An (unused) flag for test generation purpose. If the flag is true, the sequence
+     * reaching this node could stop growing.
+     * */
     private boolean stopFlag = false;
-    //use for serialization purpose
-    int[] in_edge_transition_id;
+    
+    /**
+     * Two internally used fields. Only for serialization purpose.
+     * */
+    private int[] in_edge_transition_id;
     private int[] out_edge_transition_id;
 	
+    /**
+     * Constructor. Constructs a new model node.
+     * */
 	public ModelNode(ClassModel classModel) {
 		PalusUtil.checkNull(classModel);
 		this.classModel = classModel;
 		this.modelledClass = classModel.getModelledClass();
 		this.nodeid = Stats.genModelNodeID();
-		
-		//XXX untouched yet
-		//this.state = null;
 	}
 	
 	/**
-	 * called before serialization
+	 * An internally used method. This method should be called before serialization.
 	 * */
 	void saveForSerialization() {
 	  this.in_edge_transition_id = new int[this.inEdges.size()];
@@ -51,17 +79,12 @@ public class ModelNode implements Serializable {
 	  for(Transition t : outEdges) {
 	    this.out_edge_transition_id[i++] = t.getTransitionID();
 	  }
-	  
-//	  if(this.isExitNode() && this.modelledClass.getName().equals("com.sqlmagic.tinysql.tinySQLParser")) {
-//	    System.out.println("in edge size: " + inEdges.size());
-//	    for(i = 0; i < inEdges.size(); i++) {
-//	      System.out.println("   in edge id: " + this.in_edge_transition_id[i]);
-//	    }
-//	    System.out.println("out edge size: " + outEdges.size());
-//	    
-//	  }
 	}
 	
+	/**
+	 * An internally used method. This method should be called after deserialization
+	 * to recover the state of a model node object.
+	 * */
 	void recoverFromDeserialization() {
 	  PalusUtil.checkNull(classModel);
 	  this.inEdges = new ArrayList<Transition>();
@@ -78,14 +101,24 @@ public class ModelNode implements Serializable {
 	  }
 	}
 	
+	/**
+	 * Checks if the current node is a root node.
+	 * 
+	 * <em>Note:</em> This implementation is not reliable enough. It only checks
+	 * whether the incoming edge set is empty.
+	 * */
 	public boolean isRootNode() {
-		//XXX not reliable enough
 	    PalusUtil.checkNull(this.inEdges);
 		return this.inEdges.size() == 0;
 	}
 	
+	/**
+     * Checks if the current node is an exit node.
+     * 
+     * <em>Note:</em> This implementation is not reliable enough. It only checks
+     * whether the outgoing edge set is empty.
+     * */
 	public boolean isExitNode() {
-	  //XXX not reliable enough
 	  PalusUtil.checkNull(this.outEdges);
 	  return this.outEdges.size() == 0;
 	}
@@ -98,9 +131,13 @@ public class ModelNode implements Serializable {
 		return this.outEdges.size();
 	}
 	
+	   /**
+     * Adds a given transition as the outgoing edges.
+     * If the transition has already existed, it does nothing.
+     * */
 	public void addOutgoingEdge(Transition transition) {
 		PalusUtil.checkNull(transition);
-		assert transition.getSourceNode() == this;
+		PalusUtil.checkTrue(transition.getSourceNode() == this);
 		
 		if(!this.outEdges.contains(transition)) {
 		    this.outEdges.add(transition);
@@ -125,9 +162,13 @@ public class ModelNode implements Serializable {
 		return this.inEdges.size();
 	}
 	
+	/**
+	 * Adds a given transition as the incoming edges.
+	 * If the transition has already existed, it does nothing.
+	 * */
 	public void addIncomingEdge(Transition transition) {
 		PalusUtil.checkNull(transition);
-		assert transition.getDestNode() == this;
+		PalusUtil.checkTrue(transition.getDestNode() == this);
 		
 		if(!this.inEdges.contains(transition)) {
 		    this.inEdges.add(transition);
@@ -164,9 +205,11 @@ public class ModelNode implements Serializable {
 	  this.stopFlag = false;
 	}
 	
-	/** If there is no matched transition, just return null.
+	/**
+	 * If there is no matched transition, just return null.
 	 * A transitions's signature only consists of its class name, method desc,
-	 * and method name*/
+	 * and method name
+	 * */
 	public Transition getOutgoingTranisitionBySignature(Transition transition) {
 	  for(Transition t : this.outEdges) {
 	    if(t.toSignature().equals(transition.toSignature())) {
@@ -178,7 +221,7 @@ public class ModelNode implements Serializable {
 	
 	/**
 	 * This method returns a matched transition based on its signature and the
-	 * position of its decorations
+	 * position of its decorations.
 	 * */
 	public Transition getOutgoingTransitionBySignatureAndPosition(Transition transition) {
 	  for(Transition t : this.outEdges) {
@@ -199,7 +242,7 @@ public class ModelNode implements Serializable {
 	}
 	
 	/**
-	 * Dump the basic information of this node
+	 * Dump the basic information of this node for debugging purpose
 	 * */
 	public String getNodeInfo() {
 	  StringBuilder sb = new StringBuilder();
@@ -234,7 +277,8 @@ public class ModelNode implements Serializable {
 	}
 	
 	/**
-	 * Checking the invariant of this class
+	 * Checking the invariant of this class.
+	 * For each instance of this class, this method should hold.
 	 * */
 	public void checkRep() {
 	    PalusUtil.checkTrue(this.nodeid >= 0);

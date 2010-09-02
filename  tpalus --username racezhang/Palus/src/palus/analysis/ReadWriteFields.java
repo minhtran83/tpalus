@@ -14,6 +14,8 @@ import java.util.Set;
  * of a class
  * 
  * @author saizhang@google.com (Sai Zhang)
+ * 
+ * <em>Note:</em> this class only has package visibility
  */
 class ReadWriteFields {
   

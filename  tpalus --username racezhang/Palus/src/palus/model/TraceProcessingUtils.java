@@ -11,21 +11,22 @@ import java.util.Map;
 import java.util.Stack;
 
 /**
- * @author saizhang@google.com (Sai Zhang)
- *
- * A util class to remove unmatched traces in the instance class map.
+ * A utility class to remove unmatched traces in the instance class map.
  * It is designed for safety reason, to make sure every list of traces are
- * valid when passiing to the next phase
+ * valid when passing to the next phase
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  */
 public class TraceProcessingUtils {
   
   /**
-   * Remove unmatched traces per instances from the instance map
+   * Removes unmatched traces for every instance from the given instance map
    * */
-  public static void removeUnmatchedTracesPerInstance(Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> instanceClassMap) {
-    
+  public static void removeUnmatchedTracesPerInstance(Map<Class<?>, Map<Instance,
+      List<TraceEventAndPosition>>> instanceClassMap) {
+    //a valid map
     PalusUtil.checkNull(instanceClassMap);
-    
+    //process each instance
     for(Class<?> clz : instanceClassMap.keySet()) {
       Map<Instance, List<TraceEventAndPosition>> instanceMap = instanceClassMap.get(clz);
       for(Instance instance : instanceMap.keySet()) {
@@ -96,5 +97,4 @@ public class TraceProcessingUtils {
     }
     taps.removeAll(unmatchedEvents);
   }
-
 }

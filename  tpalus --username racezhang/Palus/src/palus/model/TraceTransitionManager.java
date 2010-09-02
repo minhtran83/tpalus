@@ -4,19 +4,24 @@ package palus.model;
 
 import palus.Log;
 import palus.PalusUtil;
-import palus.model.Transition.Decoration;
 import palus.trace.InitEntryEvent;
 import palus.trace.MethodEntryEvent;
 import palus.trace.TraceEvent;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 /**
- * @author saizhang@google.com (Your Name Here)
- * FIXME maybe not a good design here, static method should be stateless
+ * Maintains the relation between {@link TraceEvent} and {@link Transition}
+ * objects. It keeps track of the which transitions come from a same trace events,
+ * and which trace events are merged into a same transition.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
+ * 
+ * <em>Note:</em>FIXME maybe not a good design here, static method should be stateless
  */
 public class TraceTransitionManager {
 
@@ -24,7 +29,7 @@ public class TraceTransitionManager {
    * The following two maps have the same content. They are used
    * for fast lookup operations.
    * 
-   * Image there could be receiver, parameter objects on a transition, so that
+   * Imagine that there could be receiver, parameter objects on a transition, thus
    * a TraceEvent could map to multiple transitions, and one transition could
    * represent multiple TraceEvents (after merging the model)
    * */
@@ -40,7 +45,7 @@ public class TraceTransitionManager {
    * <em>Note: </em> given a trace event, there could be more than one corresponding transitions.
    * For instance, a trace event like :  return-type class-type.method(arg-type)
    * could be converted into three transitions, each is used to model:
-   *   return-type, class-type, and arg-type, respectively
+   *   return-type, class-type, and arg-type, respectively.
    *   
    * <em>Potential bugs:</em> it could return null, since the trace transition management
    * part is not well-tested yet.
@@ -55,8 +60,8 @@ public class TraceTransitionManager {
   }
   
   /**
-   * Find transitions in the {@code traceToTransition} map which has decoration at a specific position,
-   * and is constructed from a {@code TraceEvent} object.
+   * Find transitions in the {@code traceToTransition} map which has decorations at a specific position,
+   * and such transition is constructed from a {@code TraceEvent} object.
    * 
    * <em>Note:</em> given a trace event and a position, there could be at most one corresponding
    * Transition. Thus, this method always return a list containing a single element. If could return
@@ -77,41 +82,38 @@ public class TraceTransitionManager {
     //PalusUtil.checkNull(transitions);
     //XXX FIXME
     if(transitions == null) {
+      Log.log("Potential bugs in findTransitionByTraceEventAndPosition method, no transitions found!");
       return null;
     }
-    
-    Log.log(" size of transitions: " + transitions.size());
-    
+
     for(Transition transition : transitions) {
-      //log for debugging
-      Log.log("   Transition: " + transition + " on : ");
-      for(Decoration d : transition.decorations) {
-        Log.log("        " + d.toString() + ",   position: " + d.getPosition());
-      }
       //find the transition on a particular position
       if(transition.hasDecorationOnPosition(position)) {
         retList.add(transition);
       }
     }
     
-    Log.log(" ret list size: " + retList.size());
+    Log.log("size of transitions: " + transitions.size()
+        + ", ret list size after filtering: " + retList.size());
     
     return retList;
   }
   
   /**
-   * Add trace and transition dependence to the empty maps
-   * Note that here the trace event is only for InitEntryEvent and MethodEntryEvent
+   * Add trace and transition dependence to the empty map.
+   * 
+   * <em>Note:</em> that here the trace event is only for InitEntryEvent and MethodEntryEvent type.
    * */
   public static void addInitTraceEventTransitionPair(TraceEvent trace, Transition transition) {
     PalusUtil.checkNull(trace);
     PalusUtil.checkNull(transition);
     PalusUtil.checkTrue(trace instanceof InitEntryEvent || trace instanceof MethodEntryEvent);
-    //PalusUtil.checkTrue(!traceToTransition.containsKey(trace)); this is not really true
-    //because a trace event could be mapped to multiple transitions. but at the init state
-    //a transition could only be mapped to one trace (it will be mapped to more when doing
-    //the merging procedure.
+    
+    //note that the trace could be already in the map, since a trace could correspond
+    //to multiple transitions. However, the transition could not be in the map yet,
+    //since the transition is newly created.
     PalusUtil.checkTrue(!transitionToTrace.containsKey(transition));
+    
     //add to trace to transition list
     if(!traceToTransition.containsKey(trace)) {
       traceToTransition.put(trace, new LinkedList<Transition>());
@@ -121,6 +123,8 @@ public class TraceTransitionManager {
        traceToTransition.get(trace).add(transition);
     } else {
       //copy the decoration
+      //XXX why it will be the case here???, but it has no harm
+      System.err.println("is it a case here?");
       Transition existed = traceToTransition.get(trace).get(index);
       existed.addDecorations(transition.makeClones(existed));
     }
@@ -131,18 +135,24 @@ public class TraceTransitionManager {
   }
   
   /**
-   * Update two trace/transition maps. To substitute the tobeReplaced transition by
-   * afterReplacing transition
+   * Updates two trace/transition maps. To substitute the {@code tobeReplaced} transition by
+   * the {@code afterReplacing} transition.
    * */
   public static void replaceTransitions(Transition tobeReplaced, Transition afterReplacing) {
     PalusUtil.checkNull(tobeReplaced);
     PalusUtil.checkNull(afterReplacing);
     PalusUtil.checkTrue(!tobeReplaced.equals(afterReplacing));
-    //FIXME relax it
+   
+    //FIXME relax it {@link ClassModel#mergeNode, ClassModel#unifyAllExitNodes}
+    //there are newly created transition (afterReplacing), which is not in the map now!
     if(!transitionToTrace.containsKey(tobeReplaced)) {
+      System.err.println("unfixed bugs?");
       return;
     }
-    //PalusUtil.checkTrue(transitionToTrace.containsKey(tobeReplaced));
+    if(transitionToTrace.containsKey(afterReplacing)) {
+      System.err.println("why contains afterReplacing, a brand new transition");
+    }
+
     //start the replacement, update the transitionToTrace map
     List<TraceEvent> events = transitionToTrace.get(tobeReplaced);
     transitionToTrace.remove(tobeReplaced);
@@ -158,8 +168,8 @@ public class TraceTransitionManager {
   }
   
   /**
-   * When two transitions are going to merged, their attached traceevents are
-   * also merged, and these two maps are updated
+   * When two transitions are going to merged, their attached trace events are
+   * also merged, and these two maps are updated correspondingly.
    * 
    * XXX there would be some problems for this method. during the merge process
    * there would be new transition created
@@ -169,12 +179,15 @@ public class TraceTransitionManager {
     PalusUtil.checkNull(tobeMerged);
     PalusUtil.checkTrue(!host.equals(tobeMerged));
     //FIXME relax it
-    if(!transitionToTrace.containsKey(host) || !transitionToTrace.containsKey(tobeMerged)) {
+    if(!transitionToTrace.containsKey(host))  {
+      System.err.println("why does not contain the host transition? id: " + host.getTransitionID());
       return;
     }
-//    
-//    PalusUtil.checkTrue(transitionToTrace.containsKey(host));
-//    PalusUtil.checkTrue(transitionToTrace.containsKey(tobeMerged));
+    
+    if(!transitionToTrace.containsKey(tobeMerged)) {
+      System.err.println("why does not contain the tobemerged transition? id: " + tobeMerged.getTransitionID());
+      return;
+    }
     
     Log.log("Merge transition: " + tobeMerged.getTransitionID() + " to: " + host.getTransitionID());
     
@@ -184,7 +197,7 @@ public class TraceTransitionManager {
     List<TraceEvent> hostTraces = transitionToTrace.get(host);
     List<TraceEvent> tobeMergedTraces = transitionToTrace.get(tobeMerged);
     
-    //add all trace from tobemergedtraces to hosttraces
+    //add all trace from tobemerged trace to the host trace
     hostTraces.addAll(tobeMergedTraces);
     
     //change the trace to transition mapping
@@ -199,5 +212,46 @@ public class TraceTransitionManager {
     }
     //change the transition to trace mapping
     transitionToTrace.remove(tobeMerged);
+  }
+  
+  /**
+   * Removes a list of transitions from two maps
+   * */
+  public static void removeTransitions(Collection<Transition> transitions) {
+    PalusUtil.checkNull(transitions);
+    for(Transition transition : transitions) {
+      removeTransition(transition);
+    }
+  }
+  
+  /**
+   * Removes a given transition from two maps
+   * */
+  public static void removeTransition(Transition transition) {
+    PalusUtil.checkNull(transition);
+    Log.log("Removing transition: " + transition.getTransitionID() + " from trace transition manager");
+    
+    if(!transitionToTrace.containsKey(transition)) {
+      //System.err.println("no transition for remove");
+      return;
+    }
+    List<TraceEvent> events = transitionToTrace.get(transition);
+    PalusUtil.checkNull(events);
+    
+    //remove transition for each trace event
+    for(TraceEvent event : events) {
+      if(!traceToTransition.containsKey(event)) {
+        System.err.println("no event in the map");
+        continue;
+      }
+      List<Transition> transitions = traceToTransition.get(event);
+      boolean removed = transitions.remove(transition);
+      if(!removed) {
+        System.err.println("no transition in the trace event map");
+      }
+    }
+    
+    //remove the transition
+    transitionToTrace.remove(transition);
   }
 }

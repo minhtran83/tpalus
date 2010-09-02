@@ -1,3 +1,4 @@
+// Copyright 2010 Google Inc. All Rights Reserved.
 package palus.model;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
@@ -19,34 +20,62 @@ import palus.trace.Stats;
 import plume.Pair;
 import randoop.Globals;
 
+/**
+ * The core class in Palus. It represents a legal call sequence model built
+ * from observed executions.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
+ *
+ */
 public class ClassModel implements Serializable {
-	
+	/**
+	 * A unique id for each class model
+	 * */
     private final int classModelID;
+    /**
+     * The class which this model represents
+     * */
 	private final Class<?> modelledClass;
+	/**
+	 * The set of all model nodes
+	 * */
 	private final Set<ModelNode> nodes = new LinkedHashSet<ModelNode>();
+	/**
+	 * The set of all model transitions
+	 * */
 	private final Set<Transition> transitions = new LinkedHashSet<Transition>();
 	
-	//can not make them to be final, need to change during model merging
-	private ModelNode root = null;	
+	/**
+	 * The model root node. 
+	 * <em>Note: </em> can not make it to be final, since it needs to change
+	 * during model merging process.
+	 * */
+	private ModelNode root = null;
+	
+	/**
+     * The model exit node. 
+     * <em>Note: </em> can not make it to be final, since it needs to change
+     * during model merging process.
+     * */
 	private ModelNode exit = null;
-	
-	//keep track of its dependence information between transitions
-//	private Map<Pair<Transition, Position>, Pair<ModelNode, Position>> dependence
-//	    = new LinkedHashMap<Pair<Transition, Position>, Pair<ModelNode, Position>>();
-	//
-	
-	//the flag to control different strategy in deleting non-public transitions
-	//it could be either:
-	// (1) if the flag is true, delete the non-public transition, and all
-	//     its unreachable sub-transitions afterwards (which could be public
-	//     transitions.
-	// (2) if the flag is not true, delete the non-public transition, but move
-	//     the next level calls up. e.g.
-	//     m1 calls m2, then calls m3. If using the first strategy, when deleting
-	//     m2 call, m3 will also be deleted, but using the second strategy, the
-	//     call chain would be m1 calls m3
+
+	/**
+	 * The flag to control different strategy in deleting non-public transitions
+	 * it could be either:
+	 * (1) if the flag is true, delete the non-public transition, and all
+	 *     its unreachable sub-transitions afterwards (which could be public
+	 *     transitions.
+	 * (2) if the flag is not true, delete the non-public transition, but move
+	 *     the next level calls up. e.g.
+	 *     m1 calls m2, then calls m3. If using the first strategy, when deleting
+	 *     m2 call, m3 will also be deleted, but using the second strategy, the
+	 *     call chain would be m1 calls m3
+	 * */
 	public static boolean use_delete_in_removing_nonpublic = true;
 	
+	/**
+	 * Creates an empty class model for the given type
+	 * */
 	public ClassModel(Class<?> modelledClass) {
 		PalusUtil.checkNull(modelledClass);
 		this.modelledClass = modelledClass;
@@ -107,6 +136,7 @@ public class ClassModel implements Serializable {
 	public void addRoot(ModelNode root) {
 		PalusUtil.checkTrue(this.root == null);
 		PalusUtil.checkNull(root);
+		PalusUtil.checkTrue(root.isRootNode());
 		if(!this.nodes.contains(root)) {
 		  this.nodes.add(root);
 		} else {
@@ -124,6 +154,7 @@ public class ClassModel implements Serializable {
 	public void addExit(ModelNode exit) {
 	  PalusUtil.checkTrue(this.exit == null);
 	  PalusUtil.checkNull(exit);
+	  PalusUtil.checkTrue(exit.isExitNode());
 	  if(!this.nodes.contains(exit)) {
 	    this.nodes.add(exit);
 	  } else {
@@ -135,7 +166,7 @@ public class ClassModel implements Serializable {
 	/**
 	 * This method is used during model merging
 	 * */
-	public void resetExit(ModelNode newExit) {
+	private void resetExit(ModelNode newExit) {
 	  PalusUtil.checkNull(this.exit);
 	  //XXX PalusUtil.checkTrue(!this.exit.isExitNode() ||  !this.nodes.contains(exit));
 	  PalusUtil.checkNull(newExit);
@@ -177,7 +208,9 @@ public class ClassModel implements Serializable {
 	 * */
 	public void deleteModelNode(ModelNode node) throws ModelNodeNotFoundException {
 	  PalusUtil.checkNull(node);
-	  PalusUtil.checkNull(this.root != null);
+	  PalusUtil.checkNull(this.root);
+	  //can not delete a root
+	  PalusUtil.checkTrue(this.root != node);
 	  
 	  this.checkExistence(node);
 	  //remove its transitions
@@ -194,6 +227,9 @@ public class ClassModel implements Serializable {
 	  }
 	  //remove the node
 	  this.nodes.remove(node);
+	  //update the trace transition repository
+	  TraceTransitionManager.removeTransitions(outEdges);
+	  TraceTransitionManager.removeTransitions(inEdges);
 	}
 	   
     public void addTransition(Transition transition) throws ModelNodeNotFoundException {
@@ -218,7 +254,7 @@ public class ClassModel implements Serializable {
     }
     
     /**
-     * return how many decoration has been merged
+     * Returns how many decoration has been merged
      * */
     public int mergeEquivalentDecorations() {
       int total_num = 0;
@@ -228,6 +264,9 @@ public class ClassModel implements Serializable {
       return total_num;
     }
     
+    /**
+     * Merges all redundant decorations for a set of class models
+     * */
     public static int mergeEquivalentDecorations(Map<Class<?>, ClassModel> models) {
       PalusUtil.checkNull(models);
       int total_num = 0;
@@ -238,7 +277,7 @@ public class ClassModel implements Serializable {
     }
 
     /**
-     * get the total number of decoration values
+     * Gets the total number of decoration values
      * */
     public int getDecorationNum() {
       int total_num = 0;
@@ -248,6 +287,9 @@ public class ClassModel implements Serializable {
       return total_num;
     }
     
+    /**
+     * Gets the total number of decoration values for a set of class models
+     * */
     public static int getDecorationNum(Map<Class<?>, ClassModel> models) {
       PalusUtil.checkNull(models);
       int total_num = 0;
@@ -274,9 +316,11 @@ public class ClassModel implements Serializable {
 		//XXX think about is there any information loss here??
 	    try {
 	        Log.log("------------ merging start ---------------");
-            mergeNode(this.root, model.root);
+	        //a set to keep track that no node pair will processed twice!
+	        Set<Pair<Integer, Integer>> already_merged = new LinkedHashSet<Pair<Integer, Integer>>();
+            mergeNode(this.root, model.root, already_merged);
             //System.out.println("finish merging");
-            //do some postprocessing about all merged nodes
+            //do some post-processing about all merged nodes
             //remove dangling edges
             this.removeDanglingAndLoopEdges(); 
             //unify all exit nodes, and check the invariant after merge
@@ -295,8 +339,7 @@ public class ClassModel implements Serializable {
 	public void removeNonPublicTransitions() throws ModelNodeNotFoundException {
 	  //first check the invariant before removal
 	  this.checkRep();
-	  
-	  //first find all nonpublic transitions
+	  //first find all non-public transitions
 	  Set<Transition> nonPublicTransitions = new HashSet<Transition>();
 	  for(Transition transition : this.transitions) {
 	    if(transition.isMethod()) {
@@ -320,15 +363,17 @@ public class ClassModel implements Serializable {
 	  for(Transition nonPublicTransition : nonPublicTransitions) {
 	    nonPublicTransition.getSourceNode().getAllOutgoingEdges().remove(nonPublicTransition);
 	    nonPublicTransition.getDestNode().getAllIncomingEdges().remove(nonPublicTransition);
-	    //XXX update the repository?
+        //remove the transition
 	    this.transitions.remove(nonPublicTransition);
 	  }
+	  //update the trace transition repository
+      TraceTransitionManager.removeTransitions(nonPublicTransitions);
 	  
-	  Log.log("In class model: " + this.getModelledClass() + ", remove: "
-	      + nonPublicTransitions.size() + " transitions out of " + this.transitions.size());
-	  for(Transition nonPublic : nonPublicTransitions) {
-	    Log.log("    removed non public transition: " + nonPublic.getTransitionID());
-	  }
+//	  Log.log("In class model: " + this.getModelledClass() + ", remove: "
+//	      + nonPublicTransitions.size() + " transitions out of " + this.transitions.size());
+//	  for(Transition nonPublic : nonPublicTransitions) {
+//	    Log.log("    removed non public transition: " + nonPublic.getTransitionID());
+//	  }
 	  
 	  //to unify the exit nodes
 	  //two possibilities: 1) the original exit has no incoming edges
@@ -534,8 +579,9 @@ public class ClassModel implements Serializable {
 	  System.out.println("There are: " + node_count + " nodes.");
 	  System.out.println("There are: " + tran_count + " transitions. ");
 	  System.out.println("Enhance the model with: " + count + " dependence transitions.");
+	  Log.log("Enhancing models with dependence information.");
 	  for(String dependence : dependenceForDebugging) {
-	    System.out.println("    " + dependence);
+	    Log.log("    " + dependence);
 	  }
 	  //reclaim memory
 	  dependenceForDebugging.clear();
@@ -569,14 +615,14 @@ public class ClassModel implements Serializable {
 		return false;
 	}
 	
-	private Transition getTransitionBySignature(Transition transition) {
-	  for(Transition t : this.transitions) {
-	    if(t.toString().equals(transition.toString())) {
-	      return t;
-	    }
-	  }
-	  return null;
-	}
+//	private Transition getTransitionBySignature(Transition transition) {
+//	  for(Transition t : this.transitions) {
+//	    if(t.toString().equals(transition.toString())) {
+//	      return t;
+//	    }
+//	  }
+//	  return null;
+//	}
 	
 	private void checkExistence(ModelNode nodeToCheck) throws ModelNodeNotFoundException {
 		PalusUtil.checkNull(nodeToCheck);
@@ -594,13 +640,28 @@ public class ClassModel implements Serializable {
 	 * It is a recursive method to merge the same transitions below each node
 	 * @throws ModelNodeNotFoundException 
 	 * */
-	private void mergeNode(ModelNode destNode,  ModelNode tobeMerged) throws ModelNodeNotFoundException {
+	private void mergeNode(ModelNode destNode,  ModelNode tobeMerged, Set<Pair<Integer, Integer>> mergedPairs)
+	    throws ModelNodeNotFoundException {
 	    //no need to merge
 	    if(destNode == tobeMerged) {
 	      Log.log("Two nodes are identical, we return! dest node: " + destNode.getNodeId()
 	          +", tobeMerged node: " + tobeMerged.getNodeId());
 	      return;
 	    }
+	    
+	    //then we check whether these two nodes have been merged before, if so,
+	    //we just return.
+	    Integer destNodeId = destNode.getNodeId();
+	    Integer tobeMergedId = tobeMerged.getNodeId();
+	    Pair<Integer, Integer> mergingPair = new Pair<Integer, Integer>(destNodeId, tobeMergedId);
+	    if(mergedPairs.contains(mergingPair)) {
+	      Log.log("The pair: " + destNodeId + ", " + tobeMergedId + " has already been processed.");
+	      return;
+	    } else {
+	      //add to the set
+	      mergedPairs.add(mergingPair);
+	    }
+	    
 	    //System.out.print("merging...");
 	    //if both are exit nodes, the recursion ends
 	    if(destNode.isExitNode() && tobeMerged.isExitNode()) {
@@ -686,7 +747,7 @@ public class ClassModel implements Serializable {
 	          /** merge recursively */
 	          Log.log(" Find the same transition, so recusrively proceed, dest node/to be merged nodes:  "
 	              + destT.getDestNode().getNodeId() + " " + transition.getDestNode().getNodeId());
-	          this.mergeNode(destT.getDestNode(), transition.getDestNode());
+	          this.mergeNode(destT.getDestNode(), transition.getDestNode(), mergedPairs);
 	        } else {
 	          Log.log(" -- add new edge from node: " + destNode.getNodeId() + " to node: "
 	              + transition.getDestNode().getNodeId());
@@ -809,7 +870,7 @@ public class ClassModel implements Serializable {
 	  }
 	  this.transitions.removeAll(loop);
 	  //XXX design flaws, for the exit and root node
-	  
+	  TraceTransitionManager.removeTransitions(loop);	  
 	}
 	
 	/** To ease the merging process, we tolerance the existence of multiple

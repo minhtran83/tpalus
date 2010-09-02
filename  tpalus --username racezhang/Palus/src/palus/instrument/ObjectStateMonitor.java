@@ -22,7 +22,10 @@ import java.security.ProtectionDomain;
 import java.util.List;
 
 /**
- * @author saizhang@google.com (Your Name Here)
+ * The load-time instrumenter performing instrumentation to record
+ * method entry/exit information (including receiver, parameter, ret type objects).
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  * 
  */
 public class ObjectStateMonitor extends AbstractTransformer implements

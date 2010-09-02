@@ -15,7 +15,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * @author saizhang@google.com (Your Name Here)
+ * Provides simple utility method for dumping traces to be human-readable
+ * text
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  *
  */
 public class TraceDumper {
