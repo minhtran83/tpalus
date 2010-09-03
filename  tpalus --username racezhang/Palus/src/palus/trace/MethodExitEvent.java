@@ -1,3 +1,4 @@
+// Copyright 2010 Google Inc. All Rights Reserved.
 package palus.trace;
 
 import java.lang.reflect.Method;
@@ -7,14 +8,20 @@ import org.objectweb.asm.Type;
 
 import palus.PalusUtil;
 
+/**
+ * Represents the exit event of a normal method
+ * 
+ * @author saizhang@google.com (Sai Zhang)
+ */
 public class MethodExitEvent extends TraceEvent {
-
-	//private transient final Object retObj; /* can not serialize it, because you never know what is the runtime type*/
+    /**
+     * The return object id
+     * */
 	private final int retObjID;
-	//for serialization
+    /**
+     * The return object. Only for primitive and string type.
+     * */
 	private final String retObjString;
-	
-	//XXX do not need to capture the abstract state here
 	
 	public MethodExitEvent(int id, Object retObj, String className, String methodName,
 	    String methodDesc, Object thiz, Object[] params) {
@@ -28,10 +35,6 @@ public class MethodExitEvent extends TraceEvent {
 		  retObjString = null;
 		}
 	}
-
-//	public Object getRetObject() {
-//		return retObj;
-//	}
 	
 	public int getRetObjectID() {
 	  return this.retObjID;
