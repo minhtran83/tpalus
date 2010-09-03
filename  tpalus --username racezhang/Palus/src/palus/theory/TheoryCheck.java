@@ -11,7 +11,12 @@ import randoop.ObjectContractUtils;
 import randoop.Variable;
 
 /**
- * @author saizhang@google.com (Your Name Here)
+ * The class used for checking the correctness of a given {@link TheoryCheck}.
+ * A {@link TheoryCheck} is also an {@link ObjectContract}, which will be
+ * evaluated at runtime to check the correctness of some specified object
+ * properties.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  *
  */
 public class TheoryCheck implements Check {

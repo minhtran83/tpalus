@@ -27,6 +27,8 @@ import palus.trace.TraceEvent;
 import randoop.Globals;
 
 /**
+ * The entry class for test generation.
+ * 
  * @author saizhang@google.com (Sai Zhang)
  *
  */

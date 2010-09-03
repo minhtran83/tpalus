@@ -35,7 +35,9 @@ import randoop.util.Reflection;
 import randoop.util.Timer;
 
 /**
- * @author saizhang@google.com (Your Name Here)
+ * A generator which uses model to guide the creation of sequences.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  *
  */
 public class ModelBasedGenerator extends ForwardGenerator {

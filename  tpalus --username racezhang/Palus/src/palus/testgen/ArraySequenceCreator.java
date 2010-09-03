@@ -23,13 +23,15 @@ import randoop.util.Randomness;
 import randoop.util.SimpleList;
 
 /**
- * @author saizhang@google.com (Your Name Here)
+ * Creates array sequences as inputs.
  * 
- * Guessing:
- * The following kind of array may be interests
+ * The following kind of array may be of interests
  * 1. empty array
  * 2. array that contains null
  * 3. array that contains duplicate element (alias)
+ * 
+ * @author saizhang@google.com (Sai Zhang)
+ * 
  */
 public class ArraySequenceCreator {
   
@@ -72,11 +74,6 @@ public class ArraySequenceCreator {
     } else {
       //System.err.println("Create the array in a new way!");
     }
-    
-    //the sequence to produce array declaration
-    
-//    System.out.println(Globals.lineSep + Globals.lineSep+ "is candidate pool empty? " + candidateFromExists.isEmpty());
-//    System.out.println("is candidatesWithOutputTypeFromComponent from component empty? " + candidatesWithOutputTypeFromComponent.isEmpty());
 
     List<Sequence> sequencePool = new ArrayList<Sequence>();
     sequencePool.addAll(candidateFromExists.toJDKList());
@@ -104,20 +101,12 @@ public class ArraySequenceCreator {
     
     //get all element
     s = Sequence.concatenate(arrayElements);
-     
-   // System.out.println("s size: " + s.size() + ",  var list size: " + variableIndices.size());
     
     List<Variable> varList = new ArrayList<Variable>();
     for(Integer idex : variableIndices) {
       //System.out.println("   index: " + idex);
       varList.add(s.getVariable(idex - 1));
     }
-    
-    
-    //create the array declaration
-//    System.out.println(Globals.lineSep + Globals.lineSep + "Array declaration: " + decl);
-//    System.out.println(Globals.lineSep + " type: " + type.getName());
-//    System.out.println(Globals.lineSep + " component type: " + componentType.getName());
     s = s.extend(decl, varList);
     
     //create the array simple list

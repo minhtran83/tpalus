@@ -26,7 +26,10 @@ import randoop.util.Reflection.Match;
 import randoop.util.SimpleList;
 
 /**
- * @author saizhang@google.com (Your Name Here)
+ * Diversifies a generated legal sequence with recommended related method by
+ * static analysis.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  */
 
 //TODO
