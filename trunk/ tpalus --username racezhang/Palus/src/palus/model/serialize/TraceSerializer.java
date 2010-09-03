@@ -25,15 +25,26 @@ import java.util.List;
  *
  */
 public class TraceSerializer {
-  
+  /**
+   * The list of events to serialize
+   * */
   private final List<TraceEvent> events;
   
+  /**
+   * The file to which the trace list serializes.
+   * */
   private final File file;
   
+  /**
+   * Constructor. Initialize the traces and the serialized file.
+   * */
   public TraceSerializer(List<TraceEvent> events, String fileName) throws IOException {
     this(events, new File(fileName));
   }
   
+  /**
+   * Constructor. Initialize the traces and the serialized file.
+   * */
   public TraceSerializer(List<TraceEvent> events, File file) throws IOException {
     PalusUtil.checkNull(events);
     PalusUtil.checkNull(file);
@@ -45,6 +56,9 @@ public class TraceSerializer {
     }
   }
   
+  /**
+   * Saves the traces as pure text.
+   * */
   public void serializeTracesAsText() throws IOException {
     BufferedWriter bw = new BufferedWriter(new FileWriter(this.file));
     for(TraceEvent event : events) {
@@ -54,6 +68,9 @@ public class TraceSerializer {
     bw.close();
   }
   
+  /**
+   * Saves the traces as binary object.
+   * */
   public void serializeTracesAsObject() throws IOException {
     FileOutputStream out = new FileOutputStream(file);
     ObjectOutputStream oos = new ObjectOutputStream(out);
@@ -70,6 +87,9 @@ public class TraceSerializer {
     out.close();
   }
   
+  /**
+   * Reads the trace list from a binary file.
+   * */
   public static List<TraceEvent> deserializeObjectsFromTrace(File file) throws IOException, ClassNotFoundException {
     List<TraceEvent> events = new LinkedList<TraceEvent>();
     FileInputStream fin = new FileInputStream(file);

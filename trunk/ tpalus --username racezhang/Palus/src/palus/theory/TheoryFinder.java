@@ -16,12 +16,20 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * @author saizhang@google.com (Your Name Here)
+ * A simple class to find all {@link Theory} declarations from bytecode.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  *
  */
 public class TheoryFinder {
+  /**
+   * A list of classes from where to find theories
+   * */
   private final Collection<Class<?>> classList;
   
+  /**
+   * Constructor. Initializes the class list. 
+   * */
   public TheoryFinder(Collection<Class<?>> classList) {
     PalusUtil.checkNull(classList);
     //this.classList = classList;
@@ -29,6 +37,10 @@ public class TheoryFinder {
     this.classList = classList;
   }
   
+  /**
+   * Search the method declarations in the given class list, and extract the
+   * declared theories from them.
+   * */
   public List<ObjectContract> findAllTheories() {
     //classList.getClass().get
     List<ObjectContract> contracts = new ArrayList<ObjectContract>();
@@ -65,15 +77,4 @@ public class TheoryFinder {
     
     return contracts;
   }
-  
-//  
-//  private List<Class<?>> getSampleTheoryClass() {
-//    List<Class<?>> retClasses = new LinkedList<Class<?>>();
-//    try {
-//      retClasses.add(Class.forName("tests.SomeTest"));
-//    } catch (ClassNotFoundException e) {
-//      e.printStackTrace();
-//    }
-//    return retClasses;
-//  }
 }

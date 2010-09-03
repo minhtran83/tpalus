@@ -47,7 +47,7 @@ public class ClassModelViewer {
   }
   
   /**
-   * Pop up the Window
+   * Pops up the Window
    * */
   public void viewModel() {
     ModelViewer viewer = new ModelViewer("Model created for class: " + this.model.getModelledClass()

@@ -20,16 +20,25 @@ import randoop.Globals;
 import randoop.ObjectContract;
 
 /**
- * @author saizhang@google.com (Your Name Here)
+ * The contract performing runtime evaluation via reflection invocation of a
+ * given {@link Theory}, and its arguments needed.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  *
  */
 public final class TheoryContract implements ObjectContract {
 
+  /**
+   * The theory to be evaluated.
+   * */
   public final Method theory;
   
-  //maintains a map between class and its corresponding object
-  //note that for theory class, the execution of theory should
-  //not change the state of its owner object
+  /**
+   * The object instance of the given theory class. 
+   * 
+   * <em>Note: </em>the execution of theory should not change the state of its
+   * owner object.
+   * */
   public final Object obj;
   
   
@@ -49,7 +58,9 @@ public final class TheoryContract implements ObjectContract {
     return theory.hashCode();
   }
   
-  //the constructor
+  /**
+   * The constructor to initialize the checked theory and its object instance
+   * */
   public TheoryContract(Method theory) {
     PalusUtil.checkNull(theory);
     this.checkTheoryValidity(theory);
@@ -63,6 +74,9 @@ public final class TheoryContract implements ObjectContract {
     return true;
   }
 
+  /**
+   * Execute the theory method reflectively using the given {@code objects}.
+   * */
   @Override
   public boolean evaluate(Object... objects) throws Throwable {
     assert objects.length == this.theory.getParameterTypes().length;
@@ -107,6 +121,9 @@ public final class TheoryContract implements ObjectContract {
     return true;
   }
 
+  /**
+   * Gets the needed parameter types for invoking a theory.
+   * */
   public Class<?>[] getParameterTypes() {
     return this.theory.getParameterTypes();
   }
@@ -163,7 +180,7 @@ public final class TheoryContract implements ObjectContract {
   }
   
   /**
-   * Create new instance for the theory class
+   * Creates new instance for the theory class
    * */
   private Object createNewInstance(Method theory) {
     Class<?> owner = theory.getDeclaringClass();
@@ -179,7 +196,7 @@ public final class TheoryContract implements ObjectContract {
   }
 
   /**
-   * Check if the input methods are really theory checkers
+   * Checks if the input methods are really theory checkers
    * */
   private void checkTheoryValidity(Method theory) {
       //check the theory annotation

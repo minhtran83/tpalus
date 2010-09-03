@@ -23,10 +23,10 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 /**
- * @author saizhang@google.com (Your Name Here)
- *
  * This class keeps history of all generated sequence, and maps them to  the
- * built model
+ * built model.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  */
 public class ModelSequences {
 

@@ -14,7 +14,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * @author saizhang@google.com (Your Name Here)
+ * Keeps the statistics of current model node, transition selection frequency,
+ * as well as the number successfully executed transitions.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  *
  */
 public class ModelSequencesStats {

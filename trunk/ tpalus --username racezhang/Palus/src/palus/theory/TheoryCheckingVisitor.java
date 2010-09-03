@@ -29,21 +29,27 @@ import randoop.StatementKind;
 import randoop.Variable;
 
 /**
- * @author saizhang@google.com (Your Name Here)
+ * A visitor class that evaluate a list of {@link TheoryContract} at runtime
+ * for the objects created from sequences.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  *
  */
 public class TheoryCheckingVisitor implements ExecutionVisitor {
-  
-  //a list of contracts
+  /**
+   * A list of contracts to be checked
+   * */
   private final List<TheoryContract> contracts;
   
-  // to be compatible with randoop's, if true, do oracle checking at the end
-  //of the last statement. if false, checking oracle for statement one by
-  //one
+  /**
+   * This flag is used to be compatible with randoop. If set to be true, the visitor
+   * will do oracle checking at the end at the last statement. if false, it checks
+   * oracle for statement one by one.
+   * */
   private final boolean checkAtEndOfExec;
 
   /**
-   * Take a list of TheoryContract and a flag, which indicate how to check the sequence
+   * Take a list of TheoryContract and a flag, which indicates how to check the sequence
    * */
   public TheoryCheckingVisitor(List<ObjectContract> contracts, boolean checkAtEndOfExec) {
     this.contracts = new ArrayList<TheoryContract>();
@@ -369,8 +375,7 @@ public class TheoryCheckingVisitor implements ExecutionVisitor {
     //get a list of input values, each element is a list of inputs (variable, object pair)
     List<List<Pair<Variable, Object>>> crossProducts = new LinkedList<List<Pair<Variable, Object>>>();
     
-    //calcuate the cross product, the initial list
-    
+    //Calculate the cross product, the initial list    
     crossProducts.add(new LinkedList<Pair<Variable, Object>>());
     //then iterate through each type
     for(int i = 0; i < requiredTypes.length; i++) {
@@ -382,21 +387,23 @@ public class TheoryCheckingVisitor implements ExecutionVisitor {
     for(Class<?> requiredType : requiredTypes) {
       num = num * inputMap.get(requiredType).size();
     }
-    //System.out.println("num: " + num + ", cross product size: " + crossProducts.size());
-    //PalusUtil.checkTrue(crossProducts.size() == num);
+
     //the size of each list should be the same
     for(List<Pair<Variable, Object>> list : crossProducts) {
       //System.out.println("list.size: " + list.size() + ",  require type length: " + requiredTypes.length);
       PalusUtil.checkTrue(list.size() == requiredTypes.length);
     }
     
-    //System.out.println(Globals.lineSep + Globals.lineSep);
-    
     return crossProducts;
   }
   
-  private List<List<Pair<Variable, Object>>> cross(List<List<Pair<Variable, Object>>> existed, List<Pair<Variable, Object>> newAdded) {
-    
+  /**
+   * A helper functiont to compute cross product between an existing list with
+   * a new element.
+   * */
+  private List<List<Pair<Variable, Object>>> cross(List<List<Pair<Variable, Object>>> existed,
+      List<Pair<Variable, Object>> newAdded) {
+    //the return list
     List<List<Pair<Variable, Object>>> retList = new LinkedList<List<Pair<Variable, Object>>>();
     
     for(List<Pair<Variable, Object>> exist : existed) {

@@ -2,6 +2,7 @@
 
 package palus.model.serialize;
 
+import palus.PalusUtil;
 import palus.model.ClassModel;
 import palus.model.ModelNode;
 import palus.model.TraceAnalyzer;
@@ -30,11 +31,23 @@ import java.util.Map.Entry;
  *
  */
 public class ModelSerializer {
+  /**
+   * The model to be serialized.
+   * */
   private final Map<Class<?>, ClassModel> models;
   
+  /**
+   * The file where the models to serialize
+   * */
   private final File file;
   
+  /**
+   * Constructor. Initializes the models to be serialized, and its destination
+   * file.
+   * */
   public ModelSerializer(Map<Class<?>, ClassModel> models, File file) {
+    PalusUtil.checkNull(models);
+    PalusUtil.checkNull(file);
     this.models = models;
     this.file = file;
   }
@@ -76,6 +89,9 @@ public class ModelSerializer {
     bw.close();
   }
   
+  /**
+   * Serializes the model in binary form on the disk. 
+   * */
   public void serializeModelAsObject() throws IOException {
     FileOutputStream out = new FileOutputStream(file);
     ObjectOutputStream oos = new ObjectOutputStream(out);
@@ -96,7 +112,12 @@ public class ModelSerializer {
     out.close();
   }
   
-  public static Map<Class<?>, ClassModel> deserializeObjectsFromFile(File file) throws IOException, ClassNotFoundException {
+  /**
+   * De-serializes the models from a give file.
+   * */
+  public static Map<Class<?>, ClassModel> deserializeObjectsFromFile(File file)
+    throws IOException, ClassNotFoundException {
+    //the models to return.
     Map<Class<?>, ClassModel> retMap = new LinkedHashMap<Class<?>, ClassModel>();
     FileInputStream fin = new FileInputStream(file);
     ObjectInputStream ois = new ObjectInputStream(fin);

@@ -21,7 +21,10 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 /**
- * @author saizhang@google.com (Your Name Here)
+ * Keeps the collection of potential values (fetched from annotation) for
+ * a specific method in a specific class.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  *
  */
 public class ParamValueCollections {
@@ -33,13 +36,13 @@ public class ParamValueCollections {
     new HashMap<String, Map<String, Set<Object>>>();
   
   /**
-   * all unclaimed values, maybe due to the incorrect specification
+   * All unclaimed values, maybe due to the incorrect specification
    * by users (mis-spell class name)
    */
   public final Set<Object> unclaimed = new HashSet<Object>();
   
   /**
-   * Classify and add value and object to the map
+   * Classifies and adds value and object to the map
    * */
   public void addParamValue(ParamValue value, Object obj) {
     String className = value.className();
@@ -58,7 +61,7 @@ public class ParamValueCollections {
   }
   
   /**
-   * Pick up randomly a value of a given type for a method
+   * Picks up randomly a value of a given type for a method
    * */
   public Object nextRandomObject(String className, String methodName, Class<?> type) {
     if(!this.methodValues.containsKey(className)) {
@@ -92,7 +95,7 @@ public class ParamValueCollections {
   }
   
   /**
-   * Get a set of all primitive unclaimed fields
+   * Gets a set of all primitive unclaimed fields
    * */
   public Collection<Object> allUnclaimedPrimitiveObjects() {
     Set<Object> primitiveObjects = new HashSet<Object>();
@@ -110,7 +113,7 @@ public class ParamValueCollections {
   }
   
   /**
-   * Get a set of non-primitive unclaimed fields
+   * Gets a set of non-primitive unclaimed fields
    * */
   public Collection<Object> allNonPrimitiveUnclaimedObjects() {
     Set<Object> nonPrimitives = new HashSet<Object>();
@@ -128,7 +131,7 @@ public class ParamValueCollections {
   }
   
   /**
-   * Print out the content
+   * Prints out the content
    * */
   public String showContent() {
     StringBuilder sb = new StringBuilder();
@@ -169,7 +172,7 @@ public class ParamValueCollections {
   }
   
   /**
-   * Check is the class name and method name really exists
+   * Checks if the class name and method name really exists
    * */
   private boolean isValid(String className, String methodName) {
     boolean valid = false;

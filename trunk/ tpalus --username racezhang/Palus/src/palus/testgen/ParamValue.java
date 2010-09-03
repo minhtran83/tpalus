@@ -8,8 +8,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @author saizhang@google.com (Your Name Here)
  * An annotation to specify legal input value for each method
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  * 
  */
 @Retention(RetentionPolicy.RUNTIME)

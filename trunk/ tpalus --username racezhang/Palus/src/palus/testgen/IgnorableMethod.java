@@ -8,7 +8,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @author saizhang@google.com (Your Name Here)
+ * An annotation indicating that this method should not be used for test generation.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  *
  */
 

@@ -12,6 +12,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
+ * Fetches annotated by {@link ParamValue} values from the class file.
+ * 
  * @author saizhang@google.com (Your Name Here)
  *
  */

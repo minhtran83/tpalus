@@ -12,9 +12,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * @author saizhang@google.com (Your Name Here)
- *
- * Used to remove some unnecessary checker, such as IsNotNull
+ * Removes  some unnecessary checkers like {@link IsNotNull}.
+ * 
+ * @author saizhang@google.com (Sai Zhang)
  */
 public class SequenceCheckFilters {
 

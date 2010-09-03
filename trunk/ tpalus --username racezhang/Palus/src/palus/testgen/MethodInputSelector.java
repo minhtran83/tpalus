@@ -37,8 +37,9 @@ import randoop.util.Reflection.Match;
 import randoop.util.SimpleList;
 
 /**
- * @author saizhang@google.com (Your Name Here)
- * A helper method for selecting inputs for a specific transition and statement
+ * A helper class for selecting inputs for a specific transition and statement
+ *  
+ * @author saizhang@google.com (Sai Zhang)
  */
 public class MethodInputSelector {
   

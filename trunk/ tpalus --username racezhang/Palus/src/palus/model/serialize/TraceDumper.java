@@ -16,20 +16,29 @@ import java.util.Map.Entry;
 
 /**
  * Provides simple utility method for dumping traces to be human-readable
- * text
+ * text.
  * 
  * @author saizhang@google.com (Sai Zhang)
  *
  */
 public class TraceDumper {
   
+  /**
+   * The suffix of a trace dumping file.
+   * */
+  private static final String SUFFIX = "_trace.txt";
+  
+  /**
+   * Dump traces of each class in a given {@code traceMap} to an individual file.
+   * */
   public static void dumpTraceEventsByClass(String fileName,
       Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> traceMap) throws IOException {
     //for each class we traverse it
     for(Entry<Class<?>, Map<Instance, List<TraceEventAndPosition>>> entry : traceMap.entrySet()) {
-      File file = new File(entry.getKey().getName() + "_trace.txt");
+      //creates a file for each entry
+      File file = new File(entry.getKey().getName() + SUFFIX);
       BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-      
+      //dump traces to the file
       Map<Instance, List<TraceEventAndPosition>> map = entry.getValue();
       bw.write("Instance num: " + map.size() + Globals.lineSep + Globals.lineSep);
       for(Entry<Instance, List<TraceEventAndPosition>> instanceEntry : map.entrySet()) {
