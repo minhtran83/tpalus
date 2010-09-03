@@ -1,3 +1,4 @@
+// Copyright 2010 Google Inc. All Rights Reserved.
 package palus.trace;
 
 import org.objectweb.asm.Type;
@@ -15,58 +16,104 @@ import palus.PalusUtil;
 import randoop.Globals;
 
 /**
- * The base class of all kinds of trace events
+ * The base class of all kinds of trace events.
  * 
  * @author saizhang@google.com (Sai Zhang)
  */
 public abstract class TraceEvent implements Serializable {
-	
-	private final int id; //is useless i think	
+	/**
+	 * The traced method id during instrumentation.
+	 * <em>Note: </em> it is useless here
+	 * */
+	private final int id;
+	/**
+	 * The declaration class name of the traced method
+	 * */
 	private final String className;	
-	private final String methodName;	
+	/**
+	 * The name of the traced method
+	 * */
+	private final String methodName;
+	/**
+	 * The descriptor of the traced method
+	 * */
 	private final String methodDesc;	
-	//private transient final Object thiz; /* can not serialize this, because you do not know what the runtime type it is*/
+	/**
+	 * The receiver object id for the traced method.
+	 * <em>Note: </em> we do not save an Object instance here, because you never
+	 * you what its runtime type is. That may impede from serialization.
+	 * */
 	private final int thizID;
-	//private transient final Object[] params; /*can not serialize it, because you do not know what the runtime type it is*/
+	/**
+	 * The object id list for the parameters in the traced method.
+	 * <em>Note: </em> we do not save an Object array here, because you never
+	 * know what its runtime type is. That may impede from serialization.
+	 * */
 	private final int[] paramIDs;
-	
-	//caching the type information of this and params
+	/**
+	 * The type of the receiver in the traced method
+	 * */
 	private /*final*/ Class<?> cachedThisType = null;
+	/**
+	 * The types of parameters in the traced method
+	 * */
 	private final Class<?>[] cachedParamTypes;
-	
-	//the object profiles
-	//when this abstract state objects are recovered from serialization, the client
-	//need to call thei recover state method
+	/**
+	 * The abstract object profile value for the receiver in the traced method.
+	 * <em>Note: </em> when an abstract state object is recovered from serialization,
+	 * the client code needs to call its recover state method.
+	 * */
 	private final AbstractState thizProfile;
+	/**
+     * The abstract object profile values for the parameter objects in the traced method.
+     * <em>Note: </em> when an abstract state object is recovered from serialization,
+     * the client code needs to call its recover state method.
+     * */
 	private final AbstractState[] paramProfiles;
-	
-	//the following two are only used for keeping values of primitive types
-	//serialization thiz
+	/**
+	 * The String value of the receiver object.
+	 * <em>Note: </em> I believe it is useless here. This is only for a primitive
+	 * or string type. However, such types wont be appear in the receiver place.
+	 * */
 	private final String serializableThis;
-	//serialization params
+	/**
+     * The String values of the parameter objects.
+     * <em>Note: </em> They are only for primitive or string type parameters.
+     * */
 	private final String[] serializableParams;
-	//The structure for keeping the content of 1-dimension primitive or string array
-	//or keep the object id of non-primitive or string array
-	//for example, the content of this array is all NULL initially, if there are
-	//two parameters:
-	//  param 1:  {"hello", "world"}
-	//  param 2:  {object1, object2}
-	//The content of this array will be:
-	//  serializableArrays[1] = {"hello", "world"}
-	//  serializableArrays[2] = {objectid(object1), objectid(object2)}
+	/**
+	 * The structure for keeping the content of 1-dimension primitive or string array
+	 * or keep the object id of non-primitive or string array
+	 * for example, the content of this array is all NULL initially, if there are
+	 * two parameters:
+	 * param 1:  {"hello", "world"}
+	 *  param 2:  {object1, object2}
+	 * The content of this array will be:
+	 *  serializableArrays[1] = {"hello", "world"}
+	 *  serializableArrays[2] = {objectid(object1), objectid(object2)}
+	 * */
 	private final Object[] serializableArrays;
-	
-	//a unique trace pair id, for quick matching the pair (entry vs exit)
+	/**
+	 * A unique trace pair id, for quick matching the pair (entry and exit event)
+	 * */
 	private int unique_trace_pair_id = -1;
-	//currently each TraceEvent is paired with one entry and one exit
+	/**
+	 * The corresponding entry (or exit) event of the current exit (or entry) event.
+	 * */
 	private TraceEvent pair = null;	
-	//a unique trace sequence id based on occurrence time stamp,
-	//for quick identify the consequences. The field is designed as final
+	/**
+	 * A unique trace sequence id based on occurrence time stamp,
+     * for quick identify the consequences. The field is designed as final.
+	 * */
 	private int traceEventSequenceId = -1;	
-	//a positive id representing the stack of depth when this trace event
-	//is recorded
+	/**
+	 * A positive id representing the stack of depth when this trace event occurs.
+	 * */
 	private int stackDepth = -1;
 	
+	/**
+	 * Constructor. Initialize all fields properly.
+	 * */
 	public TraceEvent(int id, String className, String methodName, String methodDesc, Object thiz,
 			Object[] params) {
 		PalusUtil.checkNull(className);
@@ -140,64 +187,92 @@ public abstract class TraceEvent implements Serializable {
 		checkRep(methodDesc, params);
 	}
 	
+	/**
+	 * Gets the instrumentation id of the traced method.
+	 * <em>Note: </em> it is useless here.
+	 * */
 	public int getId() {
 		return this.id;
 	}
 	
+	/**
+     * Gets the unique trace pair id.
+     * */
 	public int getUniqueTracePairID() {
 		return this.unique_trace_pair_id;
 	}
 	
+	/**
+     * Sets the unique trace pair id. The field {@link #unique_trace_pair_id}
+     * could only be set once!
+     * */
 	public void setUniqueTracePairID(int uniqueId) {
 		//this is actually designed for final
 		PalusUtil.checkTrue(this.unique_trace_pair_id == -1);
 		this.unique_trace_pair_id = uniqueId;
 	}
-	
+	/**
+     * Gets the timestamp-based trace event sequence id.
+     * */
 	public int getTraceEventSequenceID() {
 	  return this.traceEventSequenceId;
 	}
-	
+	/**
+     * Sets the unique trace event sequence id. The field {@link #traceEventSequenceId}
+     * could only be set once!
+     * */
 	public void setTraceEventSequenceID(int sequenceId) {
 	  //actually designed for final
 	  PalusUtil.checkTrue(this.traceEventSequenceId == -1);
 	  this.traceEventSequenceId = sequenceId;
 	}
-	
+	/**
+     * Gets the stack depth of this method.
+     * */
 	public int getStackDepth() {
 	  return this.stackDepth;
 	}
-	
+	/**
+     * Sets the stack depth of this trace event. The field {@link #stackDepth}
+     * could only be set once!
+     * */
 	public void setStackDepth(int stackDepth) {
 	  PalusUtil.checkTrue(this.stackDepth == -1);
 	  this.stackDepth = stackDepth;
 	}
-	
+	/**
+     * Gets the declared class name.
+     * */
 	public String getClassName() {
 		return this.className;
 	}
-	
+	/**
+     * Gets the traced method name.
+     * */
 	public String getMethodName() {
 		return this.methodName;
 	}
-	
+	/**
+     * Gets the traced method descriptor.
+     * */
 	public String getMethodDesc() {
 		return this.methodDesc;
 	}
-	
+	/**
+     * Sets the corresponding pair of this event. The field {@link #pair}
+     * could only be set once!
+     * */
 	public void setPair(TraceEvent event) {
 		PalusUtil.checkNull(event);
 		PalusUtil.checkTrue(this.pair == null);
 		this.pair = event;
 	}
-	
+	/**
+     * Gets the corresponding pair event.
+     * */
 	public TraceEvent getPairEvent() {
 		return this.pair;
 	}
-	
-//	public Object getReceiver() {
-//		return thiz;
-//	}
 	
 	public AbstractState getThisProfile() {
 	  return this.thizProfile;
@@ -215,14 +290,6 @@ public abstract class TraceEvent implements Serializable {
 	  return this.thizID;
 	}
 	
-//	public int getParamsNum() {
-//		return params.length;
-//	}
-	
-//	public Object[] getParams() {
-//		return this.params;
-//	}
-	
 	public String[] getSerializableParams() {
 	  return this.serializableParams;
 	}
@@ -234,11 +301,6 @@ public abstract class TraceEvent implements Serializable {
 	public int[] getParamObjectIDs() {
 	  return this.paramIDs;
 	}
-	
-//	public Object getParam(int i) {
-//		PalusUtil.checkTrue(i >= 0 && i < this.params.length);
-//		return this.params[i];
-//	}
 	
 	public int getParamObjectID(int i) {
 	  PalusUtil.checkTrue(i >= 0 && i < this.serializableParams.length);

@@ -1,3 +1,4 @@
+// Copyright 2010 Google Inc. All Rights Reserved.
 package palus.trace;
 
 import java.lang.reflect.Method;
@@ -5,6 +6,11 @@ import java.lang.reflect.Modifier;
 
 import org.objectweb.asm.Type;
 
+/**
+ * Represents the entry event of a normal method
+ * 
+ * @author saizhang@google.com (Sai Zhang)
+ */
 public class MethodEntryEvent extends TraceEvent {
 
 	public MethodEntryEvent(int id, String className, String methodName,
@@ -32,6 +38,7 @@ public class MethodEntryEvent extends TraceEvent {
 		} catch (ClassNotFoundException e) {
 			throw new RuntimeException(e);
 		}
+		//find the method from class declaration
 		Method[] methods = clazz.getDeclaredMethods();
 		for(Method method : methods) {
 			if(method.getName().equals(super.getMethodName())

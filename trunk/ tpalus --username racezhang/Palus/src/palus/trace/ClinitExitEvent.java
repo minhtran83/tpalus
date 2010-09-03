@@ -1,5 +1,11 @@
+// Copyright 2010 Google Inc. All Rights Reserved.
 package palus.trace;
 
+/**
+ * Represents the exit event of a static init block
+ * 
+ * @author saizhang@google.com (Sai Zhang)
+ */
 public class ClinitExitEvent extends TraceEvent {
 
 	public ClinitExitEvent(int id, String className, String methodName, String methodDesc,

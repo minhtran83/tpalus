@@ -1,5 +1,11 @@
+// Copyright 2010 Google Inc. All Rights Reserved.
 package palus.trace;
 
+/**
+ * Represents the exit event of a constructor
+ * 
+ * @author saizhang@google.com (Sai Zhang)
+ */
 public class InitExitEvent extends TraceEvent {
 
 	public InitExitEvent(int id, String className, String methodName, String methodDesc,

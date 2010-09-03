@@ -1,5 +1,11 @@
+// Copyright 2010 Google Inc. All Rights Reserved.
 package palus.trace;
 
+/**
+ * Represents the entry event of a static init block
+ * 
+ * @author saizhang@google.com (Sai Zhang)
+ */
 public class ClinitEntryEvent extends TraceEvent {
 
 	public ClinitEntryEvent(int id, String className, String methodName, String methodDesc,
