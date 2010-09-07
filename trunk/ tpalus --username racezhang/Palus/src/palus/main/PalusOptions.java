@@ -44,25 +44,25 @@ public class PalusOptions {
   public static boolean use_palulu_model = false;
   
   @Option("Build the call sequence model from saved trace")
-  public static boolean build_model_from_trace = true;
+  public static boolean dont_build_model_from_trace = false;
   
   @Option("Process all traces or just process a limited instance traces")
-  public static boolean process_all_trace = true;
+  public static boolean dont_process_all_trace = false;
   
   @Option("How many instances to process if there not processing the whole trace file")
   public static int instance_per_model = 20;
   
   @Option("Only process user provided classes to build model")
-  public static boolean only_process_tested_class = true;
+  public static boolean process_and_model_all_class = false;
   
   @Option("Automatically fall back to random testing, if the coverage does not increase")
-  public static boolean auto_switch_to_random = true;
+  public static boolean auto_switch_to_random = false;
   
   @Option("The time interval to wait before switching to random testing, after the coverage does not increase")
   public static int switch_time_to_random = 6000;
   
   @Option("Diversify the generated sequence with static analysis")
-  public static boolean diversify_sequence = true;
+  public static boolean dont_diversify_sequence = false;
   
   @Option("Percentage of random testing phase, should be 0 - 1")
   public static float percentage_of_random_gen = 0.5f;
@@ -71,19 +71,19 @@ public class PalusOptions {
   public static boolean random_test_before_model = false;
   
   @Option("Performing random test generation after using model, that is the Palus approach")
-  public static boolean random_test_after_model = true;
+  public static boolean dont_random_test_after_model = false;
   
   @Option("Only randomize generation tests for model uncovered statements")
   public static boolean only_random_uncovered_methods = false;
   
   @Option("Use abstract state as constrains for argument selection")
-  public static boolean use_abstract_state_as_selector = true;
+  public static boolean dont_use_abstract_state_as_selector = false;
   
   @Option("Merge equivalent decorations in the model")
-  public static boolean merge_equivalent_decorations = true;
+  public static boolean dont_merge_equivalent_decorations = false;
   
   @Option("Remove extended sequence from the model, that will make the sequence pool less repetitive")
-  public static boolean remove_extended_seq = true;
+  public static boolean dont_remove_extended_seq = false;
   
   @Option("Print model coverage information to the standard output after generation")
   public static boolean print_model_coverage = false;
@@ -92,7 +92,7 @@ public class PalusOptions {
   public static boolean exhaustive_diversify_seq = false;
   
   @Option("Add return type related method for diversifying generated sequence")
-  public static boolean add_return_type_related_methods = true;
+  public static boolean add_return_type_related_methods = false;
   
   @Option("Use tf-idf algorithm for static analysis to find related method")
   public static boolean use_tf_idf = false;
@@ -102,6 +102,17 @@ public class PalusOptions {
   
   @Option("Checking user-written theory for output correctness")
   public static boolean use_theory_check = false;
+  
+  //options not used in this class
+  
+  @Option("The random seed for test generation")
+  public static int random_seed = 0;
+  
+  @Option("Launch Palus in a new Process")
+  public static boolean use_palus_wrapper = false;
+  
+  @Option("Dump the built model as text")
+  public static boolean dump_model_as_text = false;
   
   /**
    * Parse the argument options and assign the value to the right place
@@ -137,6 +148,8 @@ public class PalusOptions {
    * That is assign the configuration options to the right place!
    * */
   private void configurePalus() {
+    //Randomness.SEED = PalusOptions.random_seed;
+    
     TestGenMain.timelimit = PalusOptions.time_limit;
     TestGenMain.classFilePath = PalusOptions.class_file;
     TestGenMain.checkTheory = PalusOptions.use_theory_check;
@@ -145,32 +158,32 @@ public class PalusOptions {
     //how about trace file
     OfflineMain.TRACE_OBJECT_FILE = PalusOptions.trace_file;
     
-    TestGenMain.diversifySequence = PalusOptions.diversify_sequence;
+    TestGenMain.diversifySequence = !PalusOptions.dont_diversify_sequence;
     TestGenMain.printModelCoverage = PalusOptions.print_model_coverage;
 
     
-    OfflineMain.buildFromTrace = PalusOptions.build_model_from_trace;
+    OfflineMain.buildFromTrace = !PalusOptions.dont_build_model_from_trace;
     OfflineMain.palulu = PalusOptions.use_palulu_model;
     
-    ModelConstructor.processing_all_traces = PalusOptions.process_all_trace;
+    ModelConstructor.processing_all_traces = !PalusOptions.dont_process_all_trace;
     ModelConstructor.MAX_INSTANCE_PER_MODEL = PalusOptions.instance_per_model;
     
-    ClassesToModel.only_model_user_provided = PalusOptions.only_process_tested_class;
+    ClassesToModel.only_model_user_provided = !PalusOptions.process_and_model_all_class;
     
     ModelBasedGenerator.auto_switch_to_random_test = PalusOptions.auto_switch_to_random;
     ModelBasedGenerator.percentage_of_random_gen = PalusOptions.percentage_of_random_gen;
     ModelBasedGenerator.random_test_before_model = PalusOptions.random_test_before_model;
-    ModelBasedGenerator.random_test_after_model = PalusOptions.random_test_after_model;
+    ModelBasedGenerator.random_test_after_model = !PalusOptions.dont_random_test_after_model;
     ModelBasedGenerator.only_random_uncovered_statements = PalusOptions.only_random_uncovered_methods;
-    ModelBasedGenerator.use_abstract_state_as_selector = PalusOptions.use_abstract_state_as_selector;
-    ModelBasedGenerator.merge_equivalent_decoration = PalusOptions.merge_equivalent_decorations;
+    ModelBasedGenerator.use_abstract_state_as_selector = !PalusOptions.dont_use_abstract_state_as_selector;
+    ModelBasedGenerator.merge_equivalent_decoration = !PalusOptions.dont_merge_equivalent_decorations;
     
     ModelSequencesStats.time_interval_to_stop = PalusOptions.switch_time_to_random;
     
     SequenceDiversifier.exhaustiveDiversifyModel = PalusOptions.exhaustive_diversify_seq;
     SequenceDiversifier.addReturnTypeRelatedStatement = PalusOptions.add_return_type_related_methods;
     
-    ModelSequences.removeExtendedSequence = PalusOptions.remove_extended_seq;
+    ModelSequences.removeExtendedSequence = !PalusOptions.dont_remove_extended_seq;
     
     MethodRecommender.use_tf_idf = PalusOptions.use_tf_idf;
     
@@ -232,11 +245,11 @@ public class PalusOptions {
    * A simple driver for testing options
    * */
   public static void main(String[] args) {
-    args = new String[] {"--time_limit", "100", "--class_file", "./hello", "--trace_file", "./world", "--process_all_trace", "false"};
+    args = new String[] {"--time_limit", "100", "--class_file", "./hello", "--trace_file", "./world", "--dont_process_all_trace", "false"};
     Options options = new Options("Palus usage options", PalusOptions.class);
     String[] file_args = options.parse_or_usage(args);
     
-    System.out.println(PalusOptions.process_all_trace);
+    System.out.println(PalusOptions.dont_process_all_trace);
     
     System.out.println(file_args.length);
     

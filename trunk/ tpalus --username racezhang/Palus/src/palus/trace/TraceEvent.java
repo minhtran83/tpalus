@@ -112,7 +112,7 @@ public abstract class TraceEvent implements Serializable {
 	private int stackDepth = -1;
 	
 	/**
-	 * Constructor. Initialize all fields properly.
+	 * Constructor. Initializes all fields properly.
 	 * */
 	public TraceEvent(int id, String className, String methodName, String methodDesc, Object thiz,
 			Object[] params) {
@@ -274,44 +274,78 @@ public abstract class TraceEvent implements Serializable {
 		return this.pair;
 	}
 	
+	/**
+     * Gets the corresponding {@link AbstractState} object of this receiver object.
+     * */
 	public AbstractState getThisProfile() {
 	  return this.thizProfile;
 	}
 	
+	/**
+     * Gets the corresponding {@link AbstractState} object arrays of the parameter
+     * objects of the wrapped method.
+     * */
 	public AbstractState[] getParamProfiles() {
 	  return this.paramProfiles;
 	}
 	
+	/**
+	 * Gets the serializable value of the receiver object. It returns null
+	 * for non-primitive and non-string objects.
+	 * */
 	public String getSerializableThisValue() {
 	  return this.serializableThis;
 	}
 	
+	/**
+	 * Gets the receiver object id for the wrapped method.
+	 * */
 	public int getReceiverObjectID() {
 	  return this.thizID;
 	}
 	
+	/**
+     * Gets the serializable parameter array of the wrapped method. It returns null
+     * for non-primitive and non-string parameter value.
+     * */
 	public String[] getSerializableParams() {
 	  return this.serializableParams;
 	}
     
+	/**
+     * Gets the serializable parameter array for the wrapped method.
+     * For non-primitive/string one-dimension array, it returns null.
+     * */
     public Object[] getSerializableArray() {
       return this.serializableArrays;
     }
 	
+    /**
+     * Gets the parameter object id array for the wrapped method.
+     * */
 	public int[] getParamObjectIDs() {
 	  return this.paramIDs;
 	}
 	
+	/**
+     * Gets the object id of the {@code i}-th parameter.
+     * */
 	public int getParamObjectID(int i) {
 	  PalusUtil.checkTrue(i >= 0 && i < this.serializableParams.length);
 	  return this.paramIDs[i];
 	}
 	
+	/**
+	 * Gets the type name of the {@code i}-th parameter.
+	 * */
 	public String getParamTypeName(int i) {
 	  assert i >= 0 && i < this.serializableParams.length;
 	  return Type.getArgumentTypes(this.methodDesc)[i].getClassName();
 	}
 	
+	/**
+	 * Gets the receiver type of the wrapped method.
+	 * */
 	public Class<?> getReceiverType()  {
 	  if(this.cachedThisType == null) {
 	    try {
@@ -323,6 +357,9 @@ public abstract class TraceEvent implements Serializable {
 	  return this.cachedThisType;// Class.forName(this.className);
 	}
 	
+	/**
+	 * Gets the {@code i}-th parameter type.
+	 * */
 	public Class<?> getParamType(int i) {
 		assert i >= 0 && i < serializableParams.length;
 		if(this.cachedParamTypes[i] == null) {
@@ -347,6 +384,9 @@ public abstract class TraceEvent implements Serializable {
 		return this.cachedParamTypes[i];
 	}
 	
+	/**
+	 * Gets the return type of the method wrapped in this {@code TraceEvent} object.
+	 * */
 	public Class<?> getReturnType() throws ClassNotFoundException {
 		String retClassName = Type.getReturnType(this.methodDesc).getClassName();
 		if(this.isArrayType(retClassName)) {
@@ -361,6 +401,9 @@ public abstract class TraceEvent implements Serializable {
 		}
 	}
 	
+	/**
+	 * Checks if the current trace event contains a non-public method.
+	 * */
 	public boolean isNonPublicMethod() {
 	  Class<?> clazz;
       try {
@@ -378,7 +421,10 @@ public abstract class TraceEvent implements Serializable {
       
       throw new RuntimeException("Method: " + toString() + " does not exist!");
 	}
-	    
+	
+	/**
+	 * Converts the current object into readable string.
+	 * */
     public String toParsableString() {
       PalusUtil.checkTrue(this.stackDepth != -1);
       StringBuilder sb = new StringBuilder();
@@ -405,13 +451,16 @@ public abstract class TraceEvent implements Serializable {
     }
     
     /**
-     * Serialize this object
+     * Serializes the current object.
      * @throws IOException
      * */
     public void serialize(ObjectOutputStream oos) throws IOException {
       oos.writeObject(this);
     }
     
+    /**
+     * Reads a {@code TraceEvent} object from an object input stream.
+     * */
     public static TraceEvent deserialize(ObjectInputStream ois) throws IOException, ClassNotFoundException {
       Object obj = ois.readObject();
       if(!(obj instanceof TraceEvent)) {
@@ -425,10 +474,20 @@ public abstract class TraceEvent implements Serializable {
       return event;
     }
 	
+    /**
+     * Abstract method for overriding. Checks if the current event contains a
+     * static method.
+     * */
 	public abstract boolean isStaticMethod();
 	
+	/**
+	 * Abstract method for overriding. Checks if the current event is an entry event.
+	 * */
 	public abstract boolean isEntryEvent();
 	
+	/**
+	 * Dumps all parameter values as string for debugging
+	 * */
 	protected String getParamsAsString() {
 	  PalusUtil.checkTrue(this.paramIDs.length == this.serializableParams.length);
 	  StringBuilder sb = new StringBuilder();
@@ -451,10 +510,16 @@ public abstract class TraceEvent implements Serializable {
 	  return sb.toString();
 	}
 	
+	/**
+	 * A simple way to decide whether the given type name is an array type
+	 * */
 	protected boolean isArrayType(String typeName) {
 	  return typeName.contains("[]");
 	}
 	
+	/**
+	 * Converts an array type in string form into class.
+	 * */
 	protected Class<?> getClassForArrayType(String typeName) throws ClassNotFoundException {
 	  int dimension = 0;
 	  //type name looks like the classname[][][][] 
@@ -485,6 +550,9 @@ public abstract class TraceEvent implements Serializable {
 	  }
 	}
 	
+	/**
+	 * Checks the invariants for this class
+	 * */
 	private static void checkRep(String methodDesc, Object[] params) {
 		if(Type.getArgumentTypes(methodDesc).length != params.length) {
 			throw new RuntimeException("Method desc: " + methodDesc + " should have "

@@ -37,7 +37,7 @@ public class ParamValueProcessor {
       Field[] fields = clazz.getDeclaredFields();
       for(Field field : fields) {
         
-        System.out.println(field.toGenericString() + "    " + field.getAnnotations().length);
+        //System.out.println(field.toGenericString() + "    " + field.getAnnotations().length);
         
         ParamValue value = field.getAnnotation(ParamValue.class);
         if(value != null) {

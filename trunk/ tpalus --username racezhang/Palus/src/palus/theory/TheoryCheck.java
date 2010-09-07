@@ -21,10 +21,14 @@ import randoop.Variable;
  */
 public class TheoryCheck implements Check {
   
-  //The contract for checking the property
+  /**
+   * The contract for checking the property
+   * */
   public final TheoryContract contract;
   
-  //variables involving into the theory checking
+  /**
+   * Variables involving into the theory checking
+   * */
   public final Variable[] vars;
 
   /**

@@ -43,6 +43,7 @@ public class Agent {
     }
     
     Tracer.verboseOff();
+    System.out.println("Palus runs in background for monitoring...");
     
     final ObjectStateMonitor monitor = new ObjectStateMonitor();
     inst.addTransformer(monitor);

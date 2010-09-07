@@ -142,6 +142,10 @@ public class TraceDependenceRepository {
     PalusUtil.checkNull(objectPosition);
     PalusUtil.checkNull(trace);
     
+    //return null for null object
+    if(objectId == 0) {
+      return null;
+    }
     //check if it is the class in the model
     if(!ClassesToModel.modelThisClass(objectType)) {
       return null;
@@ -223,7 +227,7 @@ public class TraceDependenceRepository {
       List<Transition> dependentTransitions =
         TraceTransitionManager.findTransitionsByTraceEventAndPosition(keyTAP.event, keyTAP.position);
       //skip if there is no corresponding transitions here
-      if(dependentTransitions == null) {
+      if(dependentTransitions == null || dependentTransitions.isEmpty()) {
         continue;
       }
       // XXX Note that, it is a trick here entry.getKey() is the init/method entry event
@@ -240,6 +244,12 @@ public class TraceDependenceRepository {
       Log.log(Globals.lineSep + Globals.lineSep);
       Log.log(" size of dependent transitions: " + dependentTransitions.size());
       Log.log(" size of dependent on transitions: " + dependentOnTransitions.size());
+      
+      //XXXFIXME for the jsap project
+      if(dependentTransitions.isEmpty() || dependentOnTransitions.isEmpty()) {
+        continue;
+      }
+      
       //there should be only 1 corresponding transition for the give trace & position
       PalusUtil.checkTrue(dependentTransitions.size() == 1);
       PalusUtil.checkTrue(dependentOnTransitions.size() == 1);
@@ -301,7 +311,7 @@ public class TraceDependenceRepository {
       //get the transition by both trace event and position, like above
       List<Transition> dependentOnTransitions = 
         TraceTransitionManager.findTransitionsByTraceEventAndPosition(valuePairTraceEvent, valuePosition);
-      if(dependentOnTransitions == null) {
+      if(dependentOnTransitions == null || dependentOnTransitions.isEmpty()) {
         continue;
       }
       

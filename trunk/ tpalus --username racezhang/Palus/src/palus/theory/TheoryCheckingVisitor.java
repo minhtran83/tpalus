@@ -178,7 +178,7 @@ public class TheoryCheckingVisitor implements ExecutionVisitor {
   }
   
   /**
-   * Check contract for all objects created before the index-th (inclusive) statement
+   * Checks contract for all objects created before the index-th (inclusive) statement
    * */
   private void checkContractExhaustively(TheoryContract contract, ExecutableSequence sequence,
       int index, Class<?>[] requiredTypes) {
@@ -266,7 +266,7 @@ public class TheoryCheckingVisitor implements ExecutionVisitor {
   
   
   /**
-   * Find and classify all runtime objects before the index-th statement in the
+   * Finds and classifies all runtime objects before the index-th statement in the
    * executable sequence
    * */
   private Map<Class<?>, List<Pair<Variable, Object>>> findRuntimeObjectsByClass(ExecutableSequence sequence,
@@ -341,7 +341,7 @@ public class TheoryCheckingVisitor implements ExecutionVisitor {
   }
 
   /**
-   * Check the compatibility of classes
+   * Checks the compatibility of classes
    * */
   private String checkTypesCompatibility(Class<?>[] requiredTypes, List<Class<?>> provideTypes) {
     assert requiredTypes != null;
@@ -365,7 +365,7 @@ public class TheoryCheckingVisitor implements ExecutionVisitor {
   }
   
   /**
-   * Calculate all cross product
+   * Calculates all cross product
    * */
   private List<List<Pair<Variable, Object>>> computeCrossProductOfInput(Map<Class<?>, List<Pair<Variable, Object>>> inputMap,
       Class<?>[] requiredTypes) {

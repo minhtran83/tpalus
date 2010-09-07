@@ -74,25 +74,25 @@ public class OfflineMain {
   private static void experiment_configure_options() {
     
     //fall_back_to_randoop = true;
-    
-    //TraceAnalyzer.PROJECT_NAME = "html_parser_";//"tinysql_";//"toy_db";// "sat4j_";//
-    TestGenMain.timelimit = 150;
-    TestGenMain.checkTheory = false;
+    TestGenMain.timelimit = 100;
+    //TestGenMain.checkTheory = false;
     //palulu = true;
     OfflineMain.buildFromTrace = true;
-    String class_txt_file = //"./bcelexperiment/bcelclass.txt";
+    String class_txt_file =
+      //"./bcelexperiment/bcelclass.txt";
       //"./toyexperiment/toydatabase.txt";
       "./apachecollectionexperiment/apacheclass.txt";
       //"./rhinoexperiment/rhinoclass.txt"; 
       //"./jdtcoreperiment/jdtcoreclass.txt";
       //"./apachecollectionexperiment/apacheclass.txt";
       ////"./shtmlparserexperiment/htmlparserclass.txt";
-    //"./sat4jexperiment/sat4jclass.txt";"./jsap2.1experiment/jsapclass.txt";
+      //"./sat4jexperiment/sat4jclass.txt";
+      //"./jsap2.1experiment/jsapclass.txt";
       //"./tinysqlexperiment/tinysqlclass.txt";
     
     ModelConstructor.processing_all_traces = false;
-    ModelConstructor.MAX_INSTANCE_PER_MODEL = 4;
-    ClassesToModel.only_model_user_provided = true;
+    ModelConstructor.MAX_INSTANCE_PER_MODEL = 10;
+    //ClassesToModel.only_model_user_provided = true;
     
     //test
    ModelBasedGenerator.auto_switch_to_random_test = true;
@@ -100,11 +100,11 @@ public class OfflineMain {
     
     if(palulu) {
       TestGenMain.diversifySequence = false;
-      ModelBasedGenerator.percentage_of_random_gen = 0.5f;
+      ModelBasedGenerator.percentage_of_random_gen = 0.4f;
       ModelBasedGenerator.random_test_before_model = true;
       ModelBasedGenerator.random_test_after_model = false;
       ModelBasedGenerator.only_random_uncovered_statements = false;
-      ModelBasedGenerator.use_abstract_state_as_selector = true; //not use abstract profile
+      ModelBasedGenerator.use_abstract_state_as_selector = false; //not use abstract profile
       ModelBasedGenerator.merge_equivalent_decoration = true; //merge equivalent decoration?
       TestGenMain.printModelCoverage = false; //print the model coverage
       TestGenMain.classFilePath = class_txt_file;
@@ -122,9 +122,9 @@ public class OfflineMain {
         ModelBasedGenerator.merge_equivalent_decoration = true; //merge equivalent decoration?
         TestGenMain.printModelCoverage = true; //print the model coverage
         TestGenMain.classFilePath = class_txt_file;
-        SequenceDiversifier.exhaustiveDiversifyModel = true; //diversify with every stmt
+        SequenceDiversifier.exhaustiveDiversifyModel = false; //diversify with every stmt
         ModelSequences.removeExtendedSequence = true;
-        SequenceDiversifier.addReturnTypeRelatedStatement = true;
+        SequenceDiversifier.addReturnTypeRelatedStatement = false;
         MethodRecommender.use_tf_idf = false;
     }
   }
@@ -133,11 +133,6 @@ public class OfflineMain {
    * Read the trace file, build the model, and start test generation
    * */
   public void nonStaticMain(String[] args) throws IOException, ClassNotFoundException {
-    
-    System.out.println("Reading trace file: " + TRACE_OBJECT_FILE + " ...... ");
-    
-    List<TraceEvent> events = TraceSerializer.deserializeObjectsFromTrace(new File(TRACE_OBJECT_FILE));
-    TraceAnalyzer analyzer = new TraceAnalyzer(events);
     Map<Class<?>, ClassModel> models = null;
     
     //check the validity of the input args
@@ -156,6 +151,9 @@ public class OfflineMain {
     //build model from saved trace
     if(!fall_back_to_randoop) {
       if(buildFromTrace) {
+        System.out.println("Reading trace file: " + TRACE_OBJECT_FILE + " ...... ");
+        List<TraceEvent> events = TraceSerializer.deserializeObjectsFromTrace(new File(TRACE_OBJECT_FILE));
+        TraceAnalyzer analyzer = new TraceAnalyzer(events);
         models = analyzer.createModels();
 
         System.out.println(Globals.lineSep + "Serialize built models ...");
@@ -165,12 +163,13 @@ public class OfflineMain {
       
         System.out.println("Finish serialization ..." + Globals.lineSep + Globals.lineSep);
       } else {
+        System.out.println("Reading saved model from file: " + new File(MODEL_OBJECT_FILE).getAbsolutePath());
         models = ModelSerializer.deserializeObjectsFromFile(new File(MODEL_OBJECT_FILE));
       }
     }
     
     //for testing purpose
-    if(DUMP_MODEL_AS_TXT != null && !fall_back_to_randoop) {
+    if(DUMP_MODEL_AS_TXT != null && !fall_back_to_randoop && PalusOptions.dump_model_as_text) {
         dumpModels(models, DUMP_MODEL_AS_TXT);
     }
     
