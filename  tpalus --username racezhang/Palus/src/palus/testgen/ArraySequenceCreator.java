@@ -35,6 +35,37 @@ import randoop.util.SimpleList;
  */
 public class ArraySequenceCreator {
   
+  /**
+   * The max length of created array
+   * */
+  public static int max_array_length = 5;
+  
+  /**
+   * Ratio of creating an array containing null
+   * */
+  public static float ratio_of_null_array = 0.2f;
+  
+  /**
+   * Ratio of creating an empty array
+   * */
+  public static float ratio_of_empty_array = 0.2f;
+  
+  /**
+   * Creates arrays non-deterministically with various shapes
+   * */
+  public static SimpleList<Sequence> createNextArray(Class<?> type, SequenceCollection components,
+      List<Sequence> sequences) {
+    int expectedLength = Randomness.nextRandomInt(max_array_length);
+    int randomVar = Randomness.nextRandomInt(10);
+    if(randomVar < ratio_of_null_array * 10) {
+      return createNullElementArray(type);
+    } else if (randomVar < (ratio_of_null_array + ratio_of_empty_array) * 10) {
+      return createEmptyArray(type);
+    } else {
+      return createArray(type, components, sequences, expectedLength);
+    }
+  }
+  
   /***
    *The sequences is the already created sequence, when creating an array, we give the result
    *produced by previous sequences high priority

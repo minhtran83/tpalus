@@ -75,7 +75,7 @@ public final class TheoryContract implements ObjectContract {
   }
 
   /**
-   * Execute the theory method reflectively using the given {@code objects}.
+   * Executes the theory method reflectively using the given {@code objects}.
    * */
   @Override
   public boolean evaluate(Object... objects) throws Throwable {

@@ -156,6 +156,14 @@ public class ModelBasedGenerator extends ForwardGenerator {
    * */
   @Override
   public ExecutableSequence step() {
+//    if(this.stats.outSeqs.size() > 5000) {
+//      return super.step();
+//    }
+    //for pure testing purpose
+//    if(this.stats.outSeqs.size() > 200) {
+//      return null;
+//    }
+    
     //we first try to generate a few sequences randomly
     if(random_test_before_model && !randomGenerationStop()) {
       return super.step();

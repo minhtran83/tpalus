@@ -38,7 +38,7 @@ public class TheoryFinder {
   }
   
   /**
-   * Search the method declarations in the given class list, and extract the
+   * Searches the method declarations in the given class list, and extract the
    * declared theories from them.
    * */
   public List<ObjectContract> findAllTheories() {

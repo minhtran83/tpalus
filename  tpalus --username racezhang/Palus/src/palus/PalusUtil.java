@@ -61,6 +61,16 @@ public class PalusUtil implements Opcodes{
         return name.replace('/', '.');
     }
     
+    public static String concatStrings(String[] strs) {
+      PalusUtil.checkNull(strs);
+      StringBuilder sb = new StringBuilder();
+      for(String str : strs) {
+        sb.append(str);
+        sb.append(" ");
+      }
+      return sb.toString().trim();
+    }
+    
     public static int sum(Collection<Integer> ints) {
       int  total = 0;
       for(int x : ints) {

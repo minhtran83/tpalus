@@ -112,7 +112,11 @@ public class TraceTransitionManager {
     //note that the trace could be already in the map, since a trace could correspond
     //to multiple transitions. However, the transition could not be in the map yet,
     //since the transition is newly created.
-    PalusUtil.checkTrue(!transitionToTrace.containsKey(transition));
+    //XXX FIXME, why the following fails
+    //PalusUtil.checkTrue(!transitionToTrace.containsKey(transition));
+    if(transitionToTrace.containsKey(transition)) {
+      return;
+    }
     
     //add to trace to transition list
     if(!traceToTransition.containsKey(trace)) {

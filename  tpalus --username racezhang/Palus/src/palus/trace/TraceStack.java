@@ -1,11 +1,13 @@
 // Copyright 2010 Google Inc. All Rights Reserved.
 package palus.trace;
 
+import palus.PalusUtil;
+
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * A simple stack storing all the recorded traces
+ * A simple stack storing all the recorded traces.
  * 
  * @author saizhang@google.com (Sai Zhang)
  *
@@ -29,7 +31,7 @@ public class TraceStack {
 	 * @param entryOrExit the flag indicating whether it is an entry or exit event.
 	 *                    True represents entry event, false represents exit event.
 	 * */
-	public static void pushToStack(int id, Object retObj, String className, String methodName,
+	public static synchronized void pushToStack(int id, Object retObj, String className, String methodName,
 	    String methodDesc, Object thiz, Object[] params, boolean entryOrExit) { //true is entry, false is exit
 		TraceEvent pushItem = null;
 		if(methodName.equals("<init>")) {
@@ -52,6 +54,7 @@ public class TraceStack {
 						className, methodName, methodDesc, thiz, params);
 			}
 		}
+		PalusUtil.checkNull(pushItem);
 		traces.add(pushItem);
 	}
 }

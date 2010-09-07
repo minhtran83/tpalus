@@ -34,8 +34,11 @@ import randoop.Globals;
  */
 public class TraceAnalyzer {
   
-    public static String PROJECT_NAME =  "apache_";////"toy_db";////"bcel_";//"apache_";//"rhino_";
-    ////"jsap_";//"html_parser_";// "sat4j_";//"jdtcore_";"tinysql_repro_";//
+    public static String PROJECT_NAME = "apache_repro_";//"bcel_repro_";//"rhino_repro_";
+    //"jsap_repro_";//"jdtcore_";//
+      //"sat4j_repro_";//"tinysql_repro_";//"apache_";
+    ////"toy_db";////
+    ////"html_parser_";// 
   
 	//the raw traces from program execution
 	private final List<TraceEvent> traces;
@@ -62,6 +65,10 @@ public class TraceAnalyzer {
 	 * @param traces the (raw) traces obtained from program execution
 	 * */
 	public TraceAnalyzer(List<TraceEvent> traces) {
+	    PalusUtil.checkNull(traces);
+	    for(TraceEvent trace : traces) {
+	      PalusUtil.checkNull(trace);
+	    }
 		this.traces = traces;
 		TRACE_FILE = PROJECT_NAME + "_trace.txt";
 	    //dump the trace event as object stream for reuse

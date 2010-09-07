@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 import palus.Log;
 import palus.PalusUtil;
 import palus.analysis.MethodRecommender;
+import palus.main.PalusOptions;
 import palus.model.ClassModel;
 import palus.model.Transition;
 import palus.theory.TheoryCheckingVisitor;
@@ -125,7 +126,13 @@ public class TestGenMain {
       }
       
       //set the random generation seeds
+      randomseed = PalusOptions.random_seed;
       Randomness.reset(randomseed);
+      
+      if(randomseed != Randomness.SEED) {
+        System.out.println("Change to a new seed: " + randomseed);
+      }
+      
       Set<Class<?>> allClasses = this.findAllClassesInModels(models);
       //get class from file
       allClasses.addAll(readClassFromFile());
@@ -515,7 +522,7 @@ public class TestGenMain {
       List<Class<?>> classToTest = new LinkedList<Class<?>>();
       
       if(TestGenMain.classFilePath != null) {
-        System.out.println("Read class from file: " + TestGenMain.classFilePath);
+        System.out.println("Read tested class from file: " + TestGenMain.classFilePath);
         try {
           BufferedReader br = new BufferedReader(new FileReader(new File(TestGenMain.classFilePath)));
           String line = br.readLine();
@@ -523,7 +530,7 @@ public class TestGenMain {
             String className = line.trim();
             if(!className.equals("")) { 
                //System.out.println(className);
-               System.out.println("   Tested Class: " + className);
+               //System.out.println("   Tested Class: " + className);
                Class<?> clazz = Class.forName(className);
                classToTest.add(clazz);
             }
