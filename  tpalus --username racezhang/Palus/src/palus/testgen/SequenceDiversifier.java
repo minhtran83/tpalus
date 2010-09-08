@@ -29,26 +29,24 @@ import randoop.util.SimpleList;
  * Diversifies a generated legal sequence with recommended related method by
  * static analysis.
  * 
+ * There are several modes in diversifying a generated sequence:
+ * 1. only append the most related method by static analysis
+ * 2. append all methods in one class. That is, if there are 10 methods in a class.
+ *    One generated sequence will become 10, after diversifiying.
+ *    
+ * The current implementation will reuse the outcome value of the generated sequence
+ * for arguments as much as possible. This strategy could be replaced by others in
+ * future.
+ * 
  * @author saizhang@google.com (Sai Zhang)
+ * 
+ * Several possible directions for future improvement:
+ * 1. using value replacement to find suspicious transition
+ * 2. use dynamic tainting to find out irrelevant
+ * 3. use adapative testing to wisely choose parameter
+ * 4. record constrains during execution to guide parameter choosing
  */
 
-//TODO
-//how to diversify the existing sequence
-//1. append the most related method
-//2. append all method in this class
-//3. append multiple method?
-//4. about argument choosing. using the object profile?
-
-//limitations:
-//1. the statistcs is problematic
-//2. there might be redundant
-//3. there are no dependence information on parameter constrains
-//4. associate parameter values from execution to specific method
-
-//using value replacement to find suspicious transition
-//use dynamic tainting to find out irrelevant
-//use adapative testing to wisely choose parameter
-//record constrains during execution to guide parameter choosing
 
 public class SequenceDiversifier {
   
@@ -57,24 +55,39 @@ public class SequenceDiversifier {
    * That is "replicating every generated sequence"
    * */
   public static boolean exhaustiveDiversifyModel = true;
+  
+  /**
+   * Whether to add related methods in the return type class.
+   * */
   public static boolean addReturnTypeRelatedStatement = false;
   
   
   /**
-   * Internal states
+   * The test generator that uses this diversifier.
    * */
   private final ModelBasedGenerator generator;
-  /**this collection will never be mutated*/
+  
+  /**
+   * The sequence pool of existing sequences. This collection will never
+   * be mutated in this class.
+   * */
   private final SequenceCollection components;
+  
+  /**
+   * A method recommend in returning related methods for a given one.
+   * */
   private final MethodRecommender recommender;
   
-  //all generated sequence from diversify
+  /**
+   * All generated sequence from diversify
+   * */
   protected final Set<Sequence> diversifiedSequences
       = new LinkedHashSet<Sequence>();
-//all generated sequence from diversify
+  /**
+   * All correctly executed generated sequence after diversifying.
+   * */
   protected final Set<ExecutableSequence> diversifiedValidSequence
       = new LinkedHashSet<ExecutableSequence>();
-
   
   /**
    * Constructor. Use a method recommender to diversify the current sequence with other
@@ -88,7 +101,7 @@ public class SequenceDiversifier {
   }
   
   /**
-   * it diversify the existence sequence, which just calls statement
+   * It diversifies the existence sequence, which just calls statement
    * @param statement is the method call it just extends
    * */
   public void diversifySequence(Sequence sequence, StatementKind statement) {
@@ -209,18 +222,32 @@ public class SequenceDiversifier {
     }
   }
   
+  /**
+   * Returns all executable sequences.
+   * Note, this method is not used.
+   * */
   public Set<ExecutableSequence> allDiversifedExecutableSequences() {
     return this.diversifiedValidSequence;
   }
   
+  /**
+   * All diversified sequences.
+   * Note, this method is not used in the tool.
+   * */
   public Set<Sequence> allDiversifiedSequences() {
     return this.diversifiedSequences;
   }
   
+  /**
+   * Has the given sequence been generated before.
+   * */
   private boolean generatedBeforeDiversifying(Sequence s) {
     return generator.allSequences.contains(s);
   }
   
+  /**
+   * The index of a compatible type in the last statement of a given sequence.
+   * */
   private int indexOfCompatibleType(Sequence sequence, Class<?> type) {
     int index = -1;
     

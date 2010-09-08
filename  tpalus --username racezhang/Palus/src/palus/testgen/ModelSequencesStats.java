@@ -21,22 +21,41 @@ import java.util.Map.Entry;
  *
  */
 public class ModelSequencesStats {
-  
+  /**
+   * A feedback flag indicating whether the model-based generation should stop
+   * or not. The criteria is based on the coverage of provided models.
+   * */
   static boolean stop_model_based_generation = false;
   
+  /**
+   * The time interval beyond which the mode-based test generation should stop,
+   * if the model coverage does not increase any more.
+   * */
   public static long time_interval_to_stop = 6000;
   
+  /**
+   * A set of provided class models.
+   * */
   private final Map<Class<?>, ClassModel> models;
   
-  //keep track of the number of model node / model transition
-  //being covered by the generated sequence
+  /**
+   * The frequency of model node coverage for each class.
+   * */
   private final Map<Class<?>, Map<ModelNode, Integer>> nodeCoverage =
     new LinkedHashMap<Class<?>, Map<ModelNode, Integer>>();
   
+  /**
+   * The frequency of model transition coverage for each class.
+   * */
   private final Map<Class<?>, Map<Transition, Integer>> transitionCoverage =
     new LinkedHashMap<Class<?>, Map<Transition, Integer>>();
   
-  //the transitions that have been executed
+  /**
+   * The frequency of model transition been successfully executed by generated sequences.
+   * It is different from {@link #transitionCoverage}. {@link #transitionCoverage}
+   * represents the frequency of a transition been selected as a sequence extension
+   * candidate. That could be fail when executing the constructed sequence.
+   * */
   private final Map<Class<?>, Map<Transition, Integer>> executedTransitionCoverage =
     new LinkedHashMap<Class<?>, Map<Transition, Integer>>();
   
@@ -47,31 +66,58 @@ public class ModelSequencesStats {
   private int root_count = 0;
   
   /**
-   * The number extension
+   * The number of extending an existing sequence
    * */
   private int ext_count = 0;
   
+  /**
+   * Should the tool automatically switch to random testing?
+   * */
   private final boolean auto_switch;
 
+  /**
+   * The total num of selected model node for test generation.
+   * */
   private int selected_model_node = 0;
+  /**
+   * The total num of selected model edge for test generation
+   * */
   private int selected_model_edge = 0;
+  /**
+   * The total num of correctly executed model edge for test generation
+   * */
   private int executed_model_edge = 0;
+  /**
+   * The latest time stamp which the model coverage changes
+   * */
   private long last_update_time = 0;
   
+  /**
+   * A package visible constructor.
+   * */
   ModelSequencesStats(Map<Class<?>, ClassModel> models) {
     this.models = models;
     //the auto switch
     auto_switch = ModelBasedGenerator.auto_switch_to_random_test;
   }
   
+  /**
+   * Increases the frequency of root node selection.
+   * */
   void incrRootCount() {
     this.root_count++;
   }
   
+  /**
+   * Increases the frequency of model node extension.
+   * */
   void incrExtCount() {
     this.ext_count++;
   }
   
+  /**
+   * Increases the selection frequency of a given model node.
+   * */
   void incrModelNodeCoverage(Class<?> clazz, ModelNode node) {
     if(!nodeCoverage.containsKey(clazz)) {
       nodeCoverage.put(clazz, new LinkedHashMap<ModelNode, Integer>());
@@ -87,6 +133,9 @@ public class ModelSequencesStats {
     this.checkModelCoverage();
   }
   
+  /**
+   * Increases the selection frequency of a given transition.
+   * */
   void incrTransitionCoverage(Class<?> clazz, Transition transition) {
     this.updateTransitionMap(transitionCoverage, clazz, transition);
     
@@ -94,6 +143,9 @@ public class ModelSequencesStats {
     this.checkModelCoverage();
   }
   
+  /**
+   * Increases the execution frequency of a given model transition.
+   * */
   void incrExecutedTransitionCoverage(Class<?> clazz, Transition transition) {
     this.updateTransitionMap(executedTransitionCoverage, clazz, transition);
     
@@ -101,6 +153,9 @@ public class ModelSequencesStats {
     this.checkModelCoverage();
   }
   
+  /**
+   * Internal method for updating the coverage map.
+   * */
   private void updateTransitionMap(Map<Class<?>, Map<Transition, Integer>> transitionMap,
       Class<?> clazz, Transition transition) {
     if(!transitionMap.containsKey(clazz)) {
@@ -114,7 +169,10 @@ public class ModelSequencesStats {
     transMap.put(transition, 1 + transMap.get(transition));
   }
   
-  public String snapShotOnChosenTransition() {
+  /**
+   * Prints a snapshot report on the chosen transitions.
+   * */
+  String snapShotOnChosenTransition() {
     StringBuilder sb = new StringBuilder();
     
     sb.append("---------------start of chosen transition snapshot---------------" + Globals.lineSep);
@@ -135,7 +193,10 @@ public class ModelSequencesStats {
     return sb.toString();
   }
   
-  public String reportOnCoverage() {
+  /**
+   * Prints the final model coveage report.
+   * */
+  String reportOnCoverage() {
     StringBuilder sb = new StringBuilder();
     
     sb.append("There are totally " + this.models.size() + " class models");
@@ -174,6 +235,9 @@ public class ModelSequencesStats {
     return sb.toString();
   }
   
+  /**
+   * Checks and updats the model coverage, if something changes.
+   * */
   void checkModelCoverage() {
     //System.out.println("check coverage");
     if(!auto_switch) {
@@ -219,6 +283,10 @@ public class ModelSequencesStats {
     }
   }
   
+  /**
+   * Computes min, max, and average values in an int collection, and converts
+   * then to a string list.
+   * */
   private String computeMinMaxAndAverage(Collection<Integer> statistic) {
     Integer max = Collections.max(statistic);
     Integer min = Collections.min(statistic);

@@ -19,7 +19,6 @@ import palus.model.Transition.DecorationValue;
 import plume.Pair;
 import randoop.ArrayDeclaration;
 import randoop.BugInRandoopException;
-import randoop.HelperSequenceCreator;
 import randoop.InputsAndSuccessFlag;
 import randoop.PrimitiveOrStringOrNullDecl;
 import randoop.RConstructor;
@@ -43,10 +42,19 @@ import randoop.util.SimpleList;
  */
 public class MethodInputSelector {
   
+  /**
+   * A collection of user-provided values via the {@link ParamValue} annotation
+   * */
   private final ParamValueCollections collections;
   
+  /**
+   * A flag indicating whether to use user-provided values or not
+   * */
   private final boolean useMethodSpecificInput;
   
+  /**
+   * Constructor that initializes fields in this class
+   * */
   public MethodInputSelector(ParamValueCollections collections) {
     PalusUtil.checkNull(collections);
     this.collections = collections;
@@ -54,7 +62,7 @@ public class MethodInputSelector {
   }
   
   /**
-   * Select inputs for create a new sequence from the model root.
+   * Selects inputs for create a new sequence from the model root.
    * @param statement is the method inside the transition parameter
    * @param transition the selected transition from the model
    * @param components the sequence collection, from which to select inputs
@@ -222,10 +230,11 @@ public class MethodInputSelector {
         if (GenInputsAbstract.always_use_ints_as_objects && t.equals(Object.class)) {
           l = components.getSequencesForType(int.class, false);
         } else if (t.isArray()) {
+          l = ArraySequenceCreator.createNextArray(t, components, sequences);
           //l = HelperSequenceCreator.createSequence(t, components);
           //l = ArraySequenceCreator.createEmptyArray(t);
           //l = ArraySequenceCreator.createNullElementArray(t);
-          l = ArraySequenceCreator.createArray(t, components, sequences, Randomness.nextRandomInt(5)); //FIXME, hardcode
+          //l = ArraySequenceCreator.createArray(t, components, sequences, Randomness.nextRandomInt(5)); //FIXME, hardcode
         } else {
           l = components.getSequencesForType(t, false);
         }
@@ -293,7 +302,7 @@ public class MethodInputSelector {
   }
   
   /**
-   * Select inputs for extending a transition in the model
+   * Selects inputs for extending a transition in the model
    * */
   public InputsAndSuccessFlag selectInputsForExtend(Sequence baseSequence, 
       StatementKind statement, Transition transition, SequenceCollection components,
@@ -474,10 +483,10 @@ public class MethodInputSelector {
         if (GenInputsAbstract.always_use_ints_as_objects && t.equals(Object.class)) {
           l = components.getSequencesForType(int.class, false);
         } else if (t.isArray()) { //array type
-          l = HelperSequenceCreator.createSequence(t, components);
+          //l = HelperSequenceCreator.createSequence(t, components);
           //l = ArraySequenceCreator.createArray(t, components, sequences, 2);
           //l = ArraySequenceCreator.createEmptyArray(t);
-          
+          l = ArraySequenceCreator.createNextArray(t, components, sequences);
         } else {
           l = components.getSequencesForType(t, false);
         }
@@ -578,7 +587,7 @@ public class MethodInputSelector {
   }
   
   /**
-   * Get the class name
+   * Gets the class name
    * */
   private String getClassName(StatementKind statement) {
     if(statement instanceof RConstructor) {
@@ -590,7 +599,7 @@ public class MethodInputSelector {
   }
   
   /**
-   * Get the method name
+   * Gets the method name
    * */
   private String getMethodName(StatementKind statement) {
     if(statement instanceof RConstructor) {
@@ -602,7 +611,7 @@ public class MethodInputSelector {
   }
   
   /**
-   * Construct a sequence for constructing a primitive or string type array
+   * Constructs a sequence for constructing a primitive or string type array
    * */
   private SimpleList<Sequence> constructPrimitiveOrStringArray(Object array, Class<?> componentType) {
     PalusUtil.checkNull(array);
@@ -628,7 +637,7 @@ public class MethodInputSelector {
     }
     s = s.extend(decl, vars);
     
-    //teh sequence list to return
+    //the sequence list to return
     ArrayListSimpleList<Sequence> arrayList = new ArrayListSimpleList<Sequence>();
     arrayList.add(s);
     

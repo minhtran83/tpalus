@@ -47,6 +47,11 @@ public class ModelConstructor {
      * */
     public static int MAX_TRY_UNTIL_FIXED_POINT = 5;
     
+    /**
+     * A verbose flag controlling whether to dump constructed class model
+     * */
+    public static boolean verbose = true;
+    
 	/**
 	 * The raw input trace event data.
 	 * */
@@ -131,10 +136,12 @@ public class ModelConstructor {
             try {
                 System.out.print(" - " + traceList.size());
                 model = this.buildClassModelFromTrace(clazz, traceList);
-                Log.log("--------------- The new build model before  -------------");
-                Log.log("Class model for :" + clazz.getName());
-                Log.log(model.getModelInfo() + Globals.lineSep);
-                Log.log("---------------------------------------------------------");
+                if(verbose) {
+                    Log.log("--------------- The new build model before  -------------");
+                    Log.log("Class model for :" + clazz.getName());
+                    Log.log(model.getModelInfo() + Globals.lineSep);
+                    Log.log("---------------------------------------------------------");
+                }
                 //check the invariant here
                 //System.out.println("check rep...");
                 model.checkRep();
@@ -149,10 +156,12 @@ public class ModelConstructor {
                 }
                 System.out.print("+");
                 //for debugging purpose
-                Log.log("############### Intermediate merging result #############");
-                Log.log("Class model for :" + clazz.getName());
-                Log.log(classModel.getModelInfo() + Globals.lineSep);
-                Log.log("#########################################################");
+                if(verbose) {
+                    Log.log("############### Intermediate merging result #############");
+                    Log.log("Class model for :" + clazz.getName());
+                    Log.log(classModel.getModelInfo() + Globals.lineSep);
+                    Log.log("#########################################################");
+                }
             } catch (ModelNodeNotFoundException e) {
                  throw new RuntimeException(e);
             } catch (MethodNotExistInTransitionException e) {
@@ -198,10 +207,12 @@ public class ModelConstructor {
             throw new RuntimeException(e);
         }
 		System.out.println();
-		Log.log(" ---------------- class model after merging and removing nonpublic transitions ------------");
-		Log.log("Class model for: " + clazz.getName());
-		Log.log(classModel.getModelInfo() + Globals.lineSep);
-		Log.log(" ------------------------------------------------------");
+		if(verbose) {
+		    Log.log(" ---------------- class model after merging and removing nonpublic transitions ------------");
+		    Log.log("Class model for: " + clazz.getName());
+		    Log.log(classModel.getModelInfo() + Globals.lineSep);
+		    Log.log(" ------------------------------------------------------");
+		}
 		
 		//remove the empty model, if a model's size is 2, it only contains root, exit nodes.
 		if(classModel.getAllNodes().size() == 2
@@ -231,10 +242,6 @@ public class ModelConstructor {
 		
 		//building models
 		this.buildClassModelRecurisvely(model, root, exit, traceList);
-		
-		//System.out.println("Finish building model!");
-		
-		//Log.log(model.getModelInfo());
 		
 		//check the invariant
 		PalusUtil.checkTrue(root.isRootNode());
@@ -359,7 +366,7 @@ public class ModelConstructor {
 	    
 	    PalusUtil.checkTrue(currentHasMatched);
 	    
-//		return (Integer[])indexList.toArray(new Integer[0]);
+        //return (Integer[])indexList.toArray(new Integer[0]);
 		//convert list to an array, the above statement will issue a warning
 		Integer[] retInts = new Integer[indexList.size()];
 		for(int i = 0; i < indexList.size(); i++) {
