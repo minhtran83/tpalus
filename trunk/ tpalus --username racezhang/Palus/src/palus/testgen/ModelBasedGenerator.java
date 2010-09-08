@@ -263,7 +263,9 @@ public class ModelBasedGenerator extends ForwardGenerator {
   }
   
   /**
-   * Get all diversified tests
+   * Get all diversified tests.
+   * It is not a good practice to get all diversified sequences along, since there
+   * could be dependence between generated sequences and diversified ones.
    * */
   public Set<ExecutableSequence> getAllDiversifiedSequences() {
     if(!TestGenMain.diversifySequence) {
@@ -298,17 +300,14 @@ public class ModelBasedGenerator extends ForwardGenerator {
     } else {
       this.ext_count++;
     }
-    
-    Log.log("Choose from root? " + createNewSequence);
     Log.log("Root chosen count: " + root_count + ", extension count: " + ext_count);
-    Log.log(this.modelSequences.getSequenceStats().snapShotOnChosenTransition());
     
     //choose the create a new sequence or extend the existing one
     return createNewSequence ? this.createSequenceFromModelRoot() : this.extendAnExistingSequence();
   }
   
   /**
-   * Generate sequence from root
+   * Generates a sequence from root
    * */
   private Pair<ExecutableSequence, Transition> createSequenceFromModelRoot() {
     //first randomly pick up a transition from root

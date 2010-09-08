@@ -116,7 +116,7 @@ public class PalusSpawner {
    * Constructor. Initializes the timelimit and timer.
    * */
   public PalusSpawner(long timelimit) {
-    this.timelimit = timelimit;
+    this.timelimit = timelimit * 1000; //convert to ms
     timer = new Timer();
   }
   
@@ -149,6 +149,7 @@ public class PalusSpawner {
         out = new ByteArrayOutputStream();
         exitFlag = this.createPalusProcess(command, new PrintStream(out), prompt, gobbleChars);
       }
+      System.out.println("Exit flag: " + exitFlag);
       if(exitFlag != 0) {
         if(verbose && !stop()) {
             System.out.println("Palus crashes, it will restart soon!");
@@ -208,6 +209,7 @@ public class PalusSpawner {
    * Could test generation stop now?
    * */
   private boolean stop() {
-    return timer.getTimeElapsedMillis() > timelimit;
+    boolean stops = timer.getTimeElapsedMillis() > this.timelimit;
+    return stops;
   }
 }

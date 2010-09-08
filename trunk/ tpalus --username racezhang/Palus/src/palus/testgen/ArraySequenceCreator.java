@@ -128,6 +128,12 @@ public class ArraySequenceCreator {
       arrayElements.add(arrayElement);
       toStatement += arrayElement.size();
       variableIndices.add(toStatement);
+      
+      //add some replicated array element
+      if(i < expectedLength - 1 && Randomness.nextRandomBool()) {
+        variableIndices.add(toStatement);
+        i++;
+      }
     }
     
     //get all element

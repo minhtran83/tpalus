@@ -13,8 +13,12 @@ import java.util.List;
  */
 public class PalusWrapperMain {
   
+  @SuppressWarnings("cast")
   public static void main(String[] args) {
-    args = new String[]{
+    boolean experiment = true;
+    //an example
+    if(experiment) {
+      args = new String[]{
         "--java_command",
         "/usr/local/buildtools/java/jdk6-google-v2/bin/java",
         "--palus_class_path",
@@ -22,9 +26,7 @@ public class PalusWrapperMain {
         "--spawner_timelimit",
         "100",
         "--time_limit",
-        "100",
-//        "--random_seed",
-//        "33",
+        "30",
         "--class_file",
         "/home/saizhang/workspace/Palus-SVN/apachecollectionexperiment/apacheclass.txt",
         "--trace_file",
@@ -34,12 +36,16 @@ public class PalusWrapperMain {
         "--dump_model_as_text",
         "--instance_per_model",
         "10"
-    };
+      };
+    }
     
     if(args.length != 0) {
         String[] parsedArgs = PalusSpawner.parseArgsAndConfigureSpawner(args);
         //exclude args from spawner
         String[] argsForPalus = PalusSpawner.filterArgsOfSpawner(parsedArgs);
+        
+        //create a spawner instance
+        System.out.println("Spawner time limit: " + PalusSpawner.spawner_timelimit);
         PalusSpawner palusSpawner = new PalusSpawner(PalusSpawner.spawner_timelimit);
         
         //construct the command
@@ -54,14 +60,12 @@ public class PalusWrapperMain {
         }
         
         //invoke the spawner
-        String[] commands = new String[commandList.size()];
-        for(int i = 0; i < commands.length; i++) {
-          commands[i] = commandList.get(i);
-        }
+        String[] commands = (String[])commandList.toArray(new String[0]);
         String prompt = ">";
         boolean verbose = true;
         String nonVerboseMessage = "Starting Palus process.";
         boolean gobbleChars = false;
+        
         //spawn the palus process
         palusSpawner.spawnPalus(commands, prompt, verbose, nonVerboseMessage, gobbleChars);
         
@@ -76,7 +80,7 @@ public class PalusWrapperMain {
    * */
   public static void example_main(String[] args) {
     //several sample configuration command
-    long timelimit = 200000; //20 seconds
+    long timelimit = 200; //200 seconds
     PalusSpawner palusSpawner = new PalusSpawner(timelimit);
     String[] commands = new String[] {
         "/usr/local/buildtools/java/jdk6-google-v2/bin/java",

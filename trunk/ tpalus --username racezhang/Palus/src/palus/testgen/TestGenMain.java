@@ -106,6 +106,30 @@ public class TestGenMain {
     private MethodRecommender recommender = null;
     
     /**
+     * The handle of test generator used in this tool
+     * */
+    private static AbstractGenerator testgenhandler = null;
+    
+    /**
+     * Constructor, register a JVM shutdown hook here
+     * */
+    public TestGenMain() {
+      Runtime.getRuntime().addShutdownHook(new Thread() {
+        @Override
+        public void run() {
+            if(testgenhandler == null) {
+              //Palus exits normally
+              return;
+            } else {
+              System.out.println("Output already generated tests even when Palus crashes: ");
+              testName = testName + "_Crash_" + System.currentTimeMillis() + "_";
+              TestGenMain.outputGeneratedTests(testgenhandler);
+            }
+        }
+      });
+    }
+    
+    /**
      * Entry for generating tests
      * */
     public void generateTests(String[] args, Map<Class<?>, ClassModel> models) {
@@ -220,6 +244,9 @@ public class TestGenMain {
             components);
       }
       
+      //assign the explorer to the handle
+      TestGenMain.testgenhandler = explorer;
+      
       //add some visitors, that is execute the method sequence as soon as it is constructed
       //also add the theory contract here
       List<ExecutionVisitor> visitors = this.getExecutionVisitors();
@@ -249,13 +276,13 @@ public class TestGenMain {
       
       //after generation
       System.out.println("Finish generating tests.");
-      this.outputGeneratedTests(explorer);
+      TestGenMain.outputGeneratedTests(explorer);
       
       
       if(diversifySequence && explorer instanceof ModelBasedGenerator) {
         Set<ExecutableSequence> diversifiedSequence = ((ModelBasedGenerator)explorer).getAllDiversifiedSequences();
         if(diversifiedSequence.size() != 0) {
-            this.write_junit_tests (outputDir, "tests", "Diversified", testsPerFile,
+            TestGenMain.write_junit_tests (outputDir, "tests", "Diversified", testsPerFile,
                 new LinkedList<ExecutableSequence>(diversifiedSequence));
         }
       }
@@ -264,6 +291,9 @@ public class TestGenMain {
         System.out.println("-------------  overall model coverage ---------------");
         System.out.println(((ModelBasedGenerator)explorer).reportOnModelCoverage());
       }
+      
+      //clear the handle as soon as it outputs generated tests
+      TestGenMain.testgenhandler = null;
     }
     
     
@@ -420,7 +450,7 @@ public class TestGenMain {
     /**
      * Postprocess all the generated sequence from explorer
      * */
-    private void outputGeneratedTests(AbstractGenerator explorer) {
+    private static void outputGeneratedTests(AbstractGenerator explorer) {
       System.out.println("Outputing generated tests ... total num: " + explorer.stats.outSeqs.size());
       //fetch all generated sequence
       List<ExecutableSequence> sequences = new ArrayList<ExecutableSequence>();
@@ -468,13 +498,13 @@ public class TestGenMain {
       if(removeIsNotNullChecker) {
         SequenceCheckFilters.removeIsNotNullChecks(sequences);
       }
-      this.write_junit_tests (outputDir, packageName, testName, testsPerFile, sequences);
+      write_junit_tests (outputDir, packageName, testName, testsPerFile, sequences);
     }
     
     /**
      * Borrowed from Randoop, outputs all generated tests
      * */
-    private void write_junit_tests (String output_dir, String junit_package_name, String junit_classname,
+    private static void write_junit_tests (String output_dir, String junit_package_name, String junit_classname,
         int testsperfile, List<ExecutableSequence> seq) {
         System.out.printf ("Writing %d junit tests%n", seq.size());
         JunitFileWriter jfw = new JunitFileWriter(output_dir, junit_package_name,

@@ -19,7 +19,7 @@ import java.util.List;
 public class SequenceCheckFilters {
 
   /**
-   * Remove all IsNotNull checks for the executable sequences
+   * Removes all IsNotNull checks for the executable sequences
    * */
   public static void removeIsNotNullChecks(List<ExecutableSequence> sequences) {
     for(ExecutableSequence eSeq : sequences) {
