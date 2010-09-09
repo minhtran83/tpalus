@@ -53,56 +53,97 @@ import randoop.util.Randomness;
 import randoop.util.Reflection;
 
 /**
+ * The entry class which outlines the test generation flow.
+ * 
  * @author saizhang@google.com (Sai Zhang)
  *
  */
 public class TestGenMain {
+    /*All the following public static fields could be customized.*/
     /**
-     * All the following public static fields could be customized.
-     **/
-    //the random seed
+     * the random seed
+     * */
     public static int randomseed = (int) Randomness.SEED;
-    //the default output dir
+    /**
+     * the default output dir
+     * */
     public static String outputDir = "./tests";
-    //the default package name
+    /**
+     * the default package name
+     * */
     public static String packageName = "tests";
-    //the default junit test file name
+    /**
+     * the default junit test file name
+     * */
     public static String testName = "GeneratedTest";
-    //the number of tests per file
+    /**
+     * the number of tests per file
+     * */
     public static int testsPerFile = 500;
-    //print the model coverage report
+    /**
+     * print the model coverage report or not
+     * */
     public static boolean printModelCoverage = false;
-    //model-based testing or pure random testing
+    /**
+     * model-based testing or pure random testing
+     * */
     public static boolean useModel = false;
-    //add the modelled class automatically or not
+    /**
+     * add the modelled class automatically or not
+     * */
     public static boolean addModelClass = true;
-    //the default time limit
+    /**
+     * the default time limit
+     * */
     public static int timelimit = 20;
-    //the output size (max output junit sequence num)
+    /**
+     * the output size (max output junit sequence num)
+     * */
     public static int inputlimit = 100000000;
-    //add relevant classes
+    /**
+     * add relevant classes or not
+     * */
     public static boolean addRelevantClass = true;
-    //check the theory oracle or not
+    /**
+     * check the theory oracle or not
+     * */
     public static boolean checkTheory = true;
-    //exhaustively enumerate all possible objects
+    /**
+     * exhaustively enumerate all possible objects
+     * */
     public static boolean exhaustiveTheoryChecking = false;
-    //use param value specified for each method
+    /**
+     * use param value specified for each method
+     * */
     public static boolean useMethodSpecificValue = true;
-    //remove all IsNull checkers
+    /**
+     * remove all IsNull checkers
+     * */
     public static boolean removeIsNotNullChecker = true;
-    //append related method? the gencc approach
+    /**
+     * append related method use the result of static analysis
+     * */
     public static boolean diversifySequence = true;
-    //all class to be tested, ignore other classes
+    /**
+     * the file containing all classes to be tested. Other classes will be
+     * ignored.
+     * */
     public static String classFilePath = null;
     
     /**
      * Some private internal states
      * */
-    //a collection to store all programmer-specified values
+    /**
+     * a collection to store all programmer-specified values
+     * */
     private ParamValueCollections paramValueCollection = null;
-    //the sequence collection storing all temp created sequences
+    /**
+     * the sequence collection storing all temp created sequences
+     * */
     private static SequenceCollection components;
-    //the method recommender for get related methods
+    /**
+     * the method recommender for get related methods
+     * */
     private MethodRecommender recommender = null;
     
     /**
@@ -334,7 +375,7 @@ public class TestGenMain {
     }
     
     /**
-     * Add Object.<init>() to the testing method candidates
+     * Adds Object.<init>() to the testing method candidates
      * */
     private void addObjectConstructor(List<StatementKind> model) {
       RConstructor objectConstructor;
@@ -350,7 +391,7 @@ public class TestGenMain {
     }
     
     /**
-     * Add testable abstract class public static method
+     * Adds testable abstract class public static method
      * */
     private void addPublicStaticMethodFromAbstracts(List<StatementKind> model, Set<Class<?>> allClasses) {
       for(Class<?> clazz : allClasses) {
@@ -372,7 +413,7 @@ public class TestGenMain {
     }
     
     /**
-     * Remove the theory checking statements
+     * Removes the theory checking statements
      * */
     private void removeTheoryCheckingStatement(List<StatementKind> model) {
       List<StatementKind> toBeRemoved = new LinkedList<StatementKind>();
@@ -398,7 +439,7 @@ public class TestGenMain {
     }
     
     /**
-     * Remove the ignorable statements
+     * Removes the ignorable statements
      * */
     private void removeIgnorableStatements(List<StatementKind> model) {
       List<StatementKind> toBeRemoved = new LinkedList<StatementKind>();
@@ -416,7 +457,7 @@ public class TestGenMain {
     }
     
     /**
-     * Get all execution visitors to serve as oracle checking
+     * Gets all execution visitors to serve as oracle checking
      * */
     private List<ExecutionVisitor> getExecutionVisitors() {
       List<ExecutionVisitor> visitors = new ArrayList<ExecutionVisitor>();
@@ -455,7 +496,7 @@ public class TestGenMain {
       //fetch all generated sequence
       List<ExecutableSequence> sequences = new ArrayList<ExecutableSequence>();
       List<ExecutableSequence> generated_sequences = explorer.stats.outSeqs;
-      List<ExecutableSequence> unique_generated_sequences = RedundantSequenceFilters.filterRepetitiveSequences(generated_sequences);
+      List<ExecutableSequence> unique_generated_sequences = SequenceFilters.filterRepetitiveSequences(generated_sequences);
       for (ExecutableSequence p : unique_generated_sequences) {
         sequences.add(p);
       }
@@ -506,6 +547,10 @@ public class TestGenMain {
      * */
     private static void write_junit_tests (String output_dir, String junit_package_name, String junit_classname,
         int testsperfile, List<ExecutableSequence> seq) {
+        if(PalusOptions.only_output_failed_tests) {
+          System.out.println("Only output failed tests!");
+          seq = SequenceFilters.filterNonFailedSequences(seq);
+        }
         System.out.printf ("Writing %d junit tests%n", seq.size());
         JunitFileWriter jfw = new JunitFileWriter(output_dir, junit_package_name,
             junit_classname, testsperfile);
@@ -516,6 +561,9 @@ public class TestGenMain {
        }
     }
     
+    /**
+     * Returns a set of model covered classes
+     * */
     private Set<Class<?>> getModelOwnerClasses(Map<Class<?>, ClassModel> models) {
       Set<Class<?>> set = new LinkedHashSet<Class<?>>();
       

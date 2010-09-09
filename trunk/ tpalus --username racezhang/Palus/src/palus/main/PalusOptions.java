@@ -114,6 +114,20 @@ public class PalusOptions {
   @Option("Dump the built model as text")
   public static boolean dump_model_as_text = false;
   
+  @Unpublicized
+  @Option("Number of tests generated before going to random. This is avoid executing nonterminating "
+      + " sequences.")
+  public static int max_seq_num_model_tests = 0;
+  
+  @Option("Fall back to Randoop")
+  public static boolean fall_back_to_randoop = false;
+  
+  @Option("Only output failed tests")
+  public static boolean only_output_failed_tests = false;
+  
+  @Option("Serialize recorded trace to disk as text")
+  public static boolean save_trace_as_txt = false;
+  
   /**
    * Parse the argument options and assign the value to the right place
    * */
@@ -215,11 +229,13 @@ public class PalusOptions {
       }
     }
     
-    if(PalusOptions.trace_file == null) {
-      errorMsg.add("Missing trace files, please provide a binary file (*_trace.model) containing all recorded trace information, using --trace_file option");
-    } else {
-      if(!(new java.io.File(trace_file)).exists()) {
-        errorMsg.add("The provided trace file: " + trace_file + " does not exist");
+    if(!PalusOptions.fall_back_to_randoop) {
+      if(PalusOptions.trace_file == null) {
+        errorMsg.add("Missing trace files, please provide a binary file (*_trace.model) containing all recorded trace information, using --trace_file option");
+      } else {
+        if(!(new java.io.File(trace_file)).exists()) {
+          errorMsg.add("The provided trace file: " + trace_file + " does not exist");
+        }
       }
     }
     

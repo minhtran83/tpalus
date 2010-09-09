@@ -20,7 +20,7 @@ public class Agent {
     
     //set the project name which change the trace file name storage location
     if(agentArgs != null) {
-      String[] args = agentArgs.split("&");
+      String[] args = agentArgs.split("=");
       System.out.println("Project name: " + args[0]);
       TraceAnalyzer.PROJECT_NAME = args[0];
       Tracer.verboseOff(); //do not print out

@@ -140,7 +140,7 @@ public class ModelSequences {
   }
   
   /**
-   * Pick up a transition to extend from the already generated model sequence 
+   * Picks up a transition to extend from the already generated model sequence 
    * */
   public Pair<Sequence, Transition> nextRandomSequenceToExtend() {
     if(this.hasNoSequenceToExtend()) {
