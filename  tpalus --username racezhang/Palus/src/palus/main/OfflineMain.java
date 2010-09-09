@@ -47,7 +47,7 @@ public class OfflineMain {
   static boolean palulu = false;
   
   //experimental option
-  static boolean fall_back_to_randoop = false;
+  //static boolean fall_back_to_randoop = false;
   
   /**
    * Start test generation.
@@ -149,7 +149,7 @@ public class OfflineMain {
     }
     
     //build model from saved trace
-    if(!fall_back_to_randoop) {
+    if(!PalusOptions.fall_back_to_randoop) {
       if(buildFromTrace) {
         System.out.println("Reading trace file: " + TRACE_OBJECT_FILE + " ...... ");
         List<TraceEvent> events = TraceSerializer.deserializeObjectsFromTrace(new File(TRACE_OBJECT_FILE));
@@ -169,7 +169,7 @@ public class OfflineMain {
     }
     
     //for testing purpose
-    if(DUMP_MODEL_AS_TXT != null && !fall_back_to_randoop && PalusOptions.dump_model_as_text) {
+    if(DUMP_MODEL_AS_TXT != null && !PalusOptions.fall_back_to_randoop && PalusOptions.dump_model_as_text) {
         dumpModels(models, DUMP_MODEL_AS_TXT);
     }
     
@@ -185,7 +185,8 @@ public class OfflineMain {
    * @throws IOException any exception occurs during model dump
    * */
   private static void dumpModels(Map<Class<?>, ClassModel> models, String fileName) throws IOException {
-    BufferedWriter bw = new BufferedWriter(new FileWriter(fileName));
+    File file = new File(fileName);
+    BufferedWriter bw = new BufferedWriter(new FileWriter(file));
     for(Entry<Class<?>, ClassModel> entry : models.entrySet()) {
       bw.write("Model for class: " + entry.getKey().toString() + Globals.lineSep);
       bw.write(entry.getValue().getModelInfo() + Globals.lineSep);
@@ -193,5 +194,6 @@ public class OfflineMain {
     }
     bw.flush();
     bw.close();
+    System.out.println(Globals.lineSep + "Dump model to: " + file.getAbsolutePath() + Globals.lineSep);
   }
 }

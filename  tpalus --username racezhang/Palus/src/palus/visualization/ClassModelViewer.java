@@ -127,8 +127,8 @@ public class ClassModelViewer {
    * A small testing driver
    * */
   public static void main(String[] args) {
-    ClassModelViewer viewer = new ClassModelViewer(new ClassModel(japa.parser.ASTHelper.class));
-    viewer.viewModel();
+//    ClassModelViewer viewer = new ClassModelViewer(new ClassModel(japa.parser.ASTHelper.class));
+//    viewer.viewModel();
   }
   
 }

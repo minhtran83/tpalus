@@ -12,6 +12,7 @@ import java.util.Stack;
 
 import palus.Log;
 import palus.PalusUtil;
+import palus.main.PalusOptions;
 import palus.model.serialize.TraceSerializer;
 import palus.trace.ClinitEntryEvent;
 import palus.trace.ClinitExitEvent;
@@ -105,17 +106,19 @@ public class TraceAnalyzer {
       
       //start to serialize the raw traces to the file
       //first dump a copy as human-readable text file
-      System.out.println("Serializing trace to file: " + TRACE_FILE + " as text ...");
-      TraceSerializer serializer;
-      try {
-        serializer = new TraceSerializer(this.traces, TRACE_FILE);
-        serializer.serializeTracesAsText();
-      } catch (IOException e1) {
-        e1.printStackTrace();
-        throw new RuntimeException(e1);
+      if(PalusOptions.save_trace_as_txt) {
+        System.out.println("Serializing trace to file: " + TRACE_FILE + " as text ...");
+        TraceSerializer serializer;
+        try {
+          serializer = new TraceSerializer(this.traces, TRACE_FILE);
+          serializer.serializeTracesAsText();
+        } catch (IOException e1) {
+          e1.printStackTrace();
+          throw new RuntimeException(e1);
+        }
+        System.out.println("Serialization successes!");
+        System.out.println(Globals.lineSep);
       }
-      System.out.println("Serialization successes!");
-      System.out.println(Globals.lineSep);
       //second, dump a copy as object stream for offline analysis
       System.out.println("Serializing trace to file: " + TRACE_OBJECT_FILE + " as object ...");
       TraceSerializer objectSerializer;

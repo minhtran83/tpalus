@@ -29,6 +29,11 @@ class ClassesToInstrument {
   private static Set<String> needToInstrumentClasses = null;
   
   /**
+   * A list of simple wildcards filter criteria
+   * */
+  private static Set<String> needToInstrumentPrefixes = null;
+  
+  /**
    * Init the list of instrumented classes
    * @param file a text file containing all need-to-instrument classes
    * */
@@ -39,11 +44,17 @@ class ClassesToInstrument {
     
     //init the set and add the classes one by one
     needToInstrumentClasses = new HashSet<String>();
+    needToInstrumentPrefixes = new HashSet<String>();
     try {
       BufferedReader br = new BufferedReader(new FileReader(file));
       String line = br.readLine();
       while(line != null) {
-        needToInstrumentClasses.add(line.trim());
+        if(line.trim().endsWith("*")) {
+          //a wildcards
+          needToInstrumentPrefixes.add(line.trim().replace('*', ' ').trim());
+        } else {
+          needToInstrumentClasses.add(line.trim());
+        }
         line = br.readLine();
       }
     } catch (FileNotFoundException e) {
@@ -55,7 +66,7 @@ class ClassesToInstrument {
   }
   
   /**
-   * Should this class been instrumented
+   * Should this class be instrumented.
    * */
   public static boolean instrumentClass(String name) {
     PalusUtil.checkNull(name);
@@ -65,7 +76,16 @@ class ClassesToInstrument {
       return true;
     }
     name = PalusUtil.transClassNameSlashToDot(name);
-    return needToInstrumentClasses.contains(name);
+    if(needToInstrumentClasses.contains(name)) {
+      return true;
+    }
+    
+    for(String prefix : needToInstrumentPrefixes) {
+      if(name.startsWith(prefix)) {
+        return true;
+      }
+    }
+    return false;
   }
   
   /**

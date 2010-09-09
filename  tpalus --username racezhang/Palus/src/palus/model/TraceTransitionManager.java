@@ -128,7 +128,7 @@ public class TraceTransitionManager {
     } else {
       //copy the decoration
       //XXX why it will be the case here???, but it has no harm
-      System.err.println("is it a case here?");
+      //System.err.println("is it a case here?");
       Transition existed = traceToTransition.get(trace).get(index);
       existed.addDecorations(transition.makeClones(existed));
     }
@@ -150,11 +150,11 @@ public class TraceTransitionManager {
     //FIXME relax it {@link ClassModel#mergeNode, ClassModel#unifyAllExitNodes}
     //there are newly created transition (afterReplacing), which is not in the map now!
     if(!transitionToTrace.containsKey(tobeReplaced)) {
-      System.err.println("unfixed bugs?");
+      //System.err.println("unfixed bugs?");
       return;
     }
     if(transitionToTrace.containsKey(afterReplacing)) {
-      System.err.println("why contains afterReplacing, a brand new transition");
+      //System.err.println("why contains afterReplacing, a brand new transition");
     }
 
     //start the replacement, update the transitionToTrace map
@@ -184,12 +184,12 @@ public class TraceTransitionManager {
     PalusUtil.checkTrue(!host.equals(tobeMerged));
     //FIXME relax it
     if(!transitionToTrace.containsKey(host))  {
-      System.err.println("why does not contain the host transition? id: " + host.getTransitionID());
+      //System.err.println("why does not contain the host transition? id: " + host.getTransitionID());
       return;
     }
     
     if(!transitionToTrace.containsKey(tobeMerged)) {
-      System.err.println("why does not contain the tobemerged transition? id: " + tobeMerged.getTransitionID());
+      //System.err.println("why does not contain the tobemerged transition? id: " + tobeMerged.getTransitionID());
       return;
     }
     
@@ -245,13 +245,13 @@ public class TraceTransitionManager {
     //remove transition for each trace event
     for(TraceEvent event : events) {
       if(!traceToTransition.containsKey(event)) {
-        System.err.println("no event in the map");
+        //System.err.println("no event in the map");
         continue;
       }
       List<Transition> transitions = traceToTransition.get(event);
       boolean removed = transitions.remove(transition);
       if(!removed) {
-        System.err.println("no transition in the trace event map");
+        //System.err.println("no transition in the trace event map");
       }
     }
     

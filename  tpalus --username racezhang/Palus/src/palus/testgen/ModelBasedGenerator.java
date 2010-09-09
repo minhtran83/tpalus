@@ -5,6 +5,7 @@ package palus.testgen;
 import palus.Log;
 import palus.PalusUtil;
 import palus.analysis.MethodRecommender;
+import palus.main.PalusOptions;
 import palus.model.BugInPalusException;
 import palus.model.ClassModel;
 import palus.model.ModelNode;
@@ -35,61 +36,102 @@ import randoop.util.Reflection;
 import randoop.util.Timer;
 
 /**
- * A generator which uses model to guide the creation of sequences.
+ * A generator which uses built model to guide the creation of sequences.
  * 
  * @author saizhang@google.com (Sai Zhang)
  *
  */
 public class ModelBasedGenerator extends ForwardGenerator {
-
-  /*customizable properties*/
-  //the percentage of time in filling the component with random generated tests
+  /*all customizable properties*/
+  /**
+   * the percentage of time in filling the component with random generated tests
+   * */
   public static float percentage_of_random_gen = 0.0f;//1.0f;
-  //the percentage of create of a new object from root
+  /**
+   * the percentage of create of a new object from root
+   * */
   public static float ratio_start_from_root = 0.3f;
-  //the max times in trying to generate a new root sequence
+  /**
+   * the max times in trying to generate a new root sequence
+   * */
   public static int max_tries_for_new_sequence = 3;
-  //the max times in trying to extend an existing sequence
+  /**
+   * the max times in trying to extend an existing sequence
+   * */
   public static int max_tries_for_extend_sequence = 5;
-  //delete the extended trace ?
+  /**
+   * delete the extended sequences in the model?
+   * */
   public static boolean delete_extended_seq_in_model = true;
-  //do random testing before  systematic testing?
+  /**
+   * Do random testing before model-based testing? (the palulu way)
+   * */
   public static boolean random_test_before_model = false;
-  //do random testing after systematic testing
+  /**
+   * Do random testing after model-based testing
+   * */
   public static boolean random_test_after_model = false;
-  //only randomize the model uncovered statements?
+  /**
+   * Only randomizes the model uncovered statements?
+   * */
   public static boolean only_random_uncovered_statements = true;
-  //use abstract object profile
+  /**
+   * Should the tool use abstract object profile for argument selection
+   * */
   public static boolean use_abstract_state_as_selector = false;
-  //merge redundant decoration
+  /**
+   * Should the tool merge redundant decorations
+   * */
   public static boolean merge_equivalent_decoration = false;
-  //automatic switch to random testing if the model coverage does not change for 10s
+  /**
+   * Should the tool automaticcally switch to random testing if the model coverage
+   * does not change for 10s
+   * */
   public static boolean auto_switch_to_random_test = false;
 
   
-  //a time to record the time for random test generation
+  /**
+   * Two timers to record the time for random test generation
+   * */
   private final Timer random_gen_timer_before = new Timer();
   private final Timer random_gen_timer_after = new Timer();
-  //the model for guiding test generation
+  /**
+   * the model for guiding test generation
+   * */
   public final Map<Class<?>, ClassModel> models;
-  //keep track of all model uncovered statement, which should be tested afterwards
+  /**
+   * Keeps track of all model uncovered statement, which should be tested afterwards
+   * */
   public final List<StatementKind> modelUncovered;
-  
-  //Keep the relations between generated sequence with model node
+  /**
+   * Keeps the relations between generated sequence with model node
+   * */
   protected final ModelSequences modelSequences;
-  //map the result of sequences to abstract states
+  /**
+   * A map keeping the result of sequences to abstract states
+   * */
   protected final StatesOfSequences sequenceStates;
-  //Values collected from method annotation
+  /**
+   * Values collected from method annotation
+   * */
   protected final ParamValueCollections valueCollections;
-  //Helper class for selecting method inputs
+  /**
+   * Helper class for selecting method inputs
+   * */
   protected final MethodInputSelector inputSelector;
-  //The sequence diversifier which diversifies the sequence by adding additional
-  //related sequence
+  /**
+   * The sequence diversifier which diversifies the sequence by adding additional
+   * related sequence
+   * */
   protected final SequenceDiversifier diversifier;
-  //a method recommender which recommends related method
+  /**
+   * A method recommender which recommends related method
+   * */
   protected final MethodRecommender recommender;
   
-  //tmp vars
+  /**
+   * Temp vars to keep the frequency of model node selection.
+   * */
   private int root_count = 0;
   private int ext_count = 0;
   
@@ -156,13 +198,11 @@ public class ModelBasedGenerator extends ForwardGenerator {
    * */
   @Override
   public ExecutableSequence step() {
-//    if(this.stats.outSeqs.size() > 5000) {
-//      return super.step();
-//    }
-    //for pure testing purpose
-//    if(this.stats.outSeqs.size() > 200) {
-//      return null;
-//    }
+    if(PalusOptions.max_seq_num_model_tests > 0) {
+      if(this.stats.outSeqs.size() > PalusOptions.max_seq_num_model_tests) {
+        return super.step();
+      }
+    }
     
     //we first try to generate a few sequences randomly
     if(random_test_before_model && !randomGenerationStop()) {
@@ -395,7 +435,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
   
   
   /**
-   * Randomly pick up a transition from root
+   * Randomly picks up a transition from root
    * */
   private Transition nextRandomTransitionFromRoot() {
     Log.log("Generating sequence from root");
@@ -431,7 +471,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
   }
   
   /**
-   * Generate sequence from extending the existing one
+   * Generates sequence from extending the existing one
    * */
   private Pair<ExecutableSequence, Transition> extendAnExistingSequence() {
     Log.log("Extending an existing sequence");    
@@ -532,6 +572,9 @@ public class ModelBasedGenerator extends ForwardGenerator {
     }
   }
   
+  /**
+   * Should the generator starts random generation.
+   * */
   private boolean randomGenerationStart() {
     if((!this.random_gen_timer_after.isRunning())) {
       return false;
@@ -546,6 +589,9 @@ public class ModelBasedGenerator extends ForwardGenerator {
     }
   }
   
+  /**
+   * Prints out model coverage information.
+   * */
   public String reportOnModelCoverage() {
     return this.modelSequences.getSequenceStats().reportOnCoverage();
   }
@@ -610,13 +656,9 @@ public class ModelBasedGenerator extends ForwardGenerator {
     if(components.size() % GenInputsAbstract.clear == 0) {
       components.clear();
     }
-    
-    //List<StatementKind>
-    
     ExecutableSequence eSeq = randomCreateSeqStatements(statements/*this.modelUncovered*/);
     
     //create here FIXME
-    
     if(eSeq == null) {
       return null;
     }
@@ -648,7 +690,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
   
   
   /**
-   * Create executable sequence for uncovered statements
+   * Creates executable sequence for uncovered statements
    * XXX the following code is highly redundant!
    * */
   private ExecutableSequence randomCreateSeqStatements(List<StatementKind> statementCandidates) {
@@ -719,9 +761,9 @@ public class ModelBasedGenerator extends ForwardGenerator {
   }
   
   /**
-   * Get sequences from the map for particular ModelNode
+   * Gets sequences from the map for particular ModelNode
    * 
-   * used by MethodInputSelector
+   * This method is used by {@link MethodInputSelector}
    * */
   List<Sequence> getSequenceFromModelSequence(ModelNode node) {
     Map<ModelNode, List<Sequence>> nodeSequences = this.modelSequences.getSequenceMap(node.getModelledClass());
