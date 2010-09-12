@@ -3,9 +3,12 @@
 package palus.testgen;
 
 import palus.PalusUtil;
+import randoop.Check;
 import randoop.ExecutableSequence;
+import randoop.StatementKind;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -46,6 +49,47 @@ public class SequenceFilters {
       }
     }
     return failedSequences;
+  }
+  
+  /**
+   * Filters out sequences that have the same failed method/contracts
+   * */
+  public static List<ExecutableSequence> filterMightBeRepeatedFailingSequences(List<ExecutableSequence> sequences) {
+    PalusUtil.checkNull(sequences);
+    
+    List<ExecutableSequence> uniqueFailureSequence = new LinkedList<ExecutableSequence>();
+    //keep the signature of a failure
+    Set<String> faiureSignatures = new HashSet<String>();
+    
+    for(ExecutableSequence es : sequences) {
+      if(!es.hasFailure()) {
+        //no failure add to directly
+        uniqueFailureSequence.add(es);
+        continue;
+      }
+      int failureIndex = es.getFailureIndex();
+      List<Check> checks = es.getFailures(failureIndex);
+      PalusUtil.checkTrue(checks != null && !checks.isEmpty());
+      
+      StatementKind statement = es.sequence.getStatementKind(failureIndex);
+      PalusUtil.checkNull(statement);
+      
+      boolean isRedudant = true;
+      for(Check check : checks) {
+        String checkValue = check.get_value();
+        String failure_signature = statement.toParseableString() + "_" + checkValue;
+        if(!faiureSignatures.contains(failure_signature)) {
+          isRedudant = false;
+          faiureSignatures.add(failure_signature);
+        }
+      }
+      
+      if(!isRedudant) {
+        uniqueFailureSequence.add(es);
+      }
+    }
+    
+    return uniqueFailureSequence;
   }
   
 }

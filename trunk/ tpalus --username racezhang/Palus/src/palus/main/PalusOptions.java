@@ -16,6 +16,7 @@ import palus.testgen.TestGenMain;
 import plume.Option;
 import plume.Options;
 import plume.Unpublicized;
+import randoop.main.GenInputsAbstract;
 
 /**
  * Class keeping all Palus options from command
@@ -103,6 +104,9 @@ public class PalusOptions {
   @Option("Checking user-written theory for output correctness")
   public static boolean use_theory_check = false;
   
+  @Option("Check npe or not")
+  public static boolean check_npe = true;
+  
   //options not used in this class
   
   @Option("The random seed for test generation")
@@ -127,6 +131,11 @@ public class PalusOptions {
   
   @Option("Serialize recorded trace to disk as text")
   public static boolean save_trace_as_txt = false;
+  
+  @Option("Remove redundant failrues by heuristic, that is the same method "
+      + "violates the same contract is treated as redundant.")
+  public static boolean filter_redundant_failures = false;
+  
   
   /**
    * Parse the argument options and assign the value to the right place
@@ -168,6 +177,8 @@ public class PalusOptions {
     TestGenMain.classFilePath = PalusOptions.class_file;
     TestGenMain.checkTheory = PalusOptions.use_theory_check;
     
+    //check npe or not
+    GenInputsAbstract.check_npe = PalusOptions.check_npe;
     
     //how about trace file
     OfflineMain.TRACE_OBJECT_FILE = PalusOptions.trace_file;

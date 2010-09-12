@@ -551,6 +551,12 @@ public class TestGenMain {
           System.out.println("Only output failed tests!");
           seq = SequenceFilters.filterNonFailedSequences(seq);
         }
+        if(PalusOptions.filter_redundant_failures) {
+          int num = seq.size();
+          System.out.println("Remove redundant failrues by heuristic!");
+          seq = SequenceFilters.filterMightBeRepeatedFailingSequences(seq);
+          System.out.println("Total number removed: " + (num - seq.size()));
+        }
         System.out.printf ("Writing %d junit tests%n", seq.size());
         JunitFileWriter jfw = new JunitFileWriter(output_dir, junit_package_name,
             junit_classname, testsperfile);

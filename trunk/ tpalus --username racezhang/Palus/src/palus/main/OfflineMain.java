@@ -33,17 +33,26 @@ import randoop.Globals;
  *
  */
 public class OfflineMain {
-
- 
-  //the file
+  
+  /**
+   * The serialized trace object file.
+   * */
   static String TRACE_OBJECT_FILE = TraceAnalyzer.TRACE_OBJECT_FILE;
-  
+  /**
+   * The serialized model object file.
+   * */
   static String MODEL_OBJECT_FILE = TraceAnalyzer.MODEL_OBJECT_FILE;//"./model_serialize_bin.model";
-  
+  /**
+   * The file which save the text form of built model
+   * */
   static String DUMP_MODEL_AS_TXT = "./models_dump.txt";
-  
+  /**
+   * Build model from traces or directly reuse existing built model
+   * */
   static boolean buildFromTrace = true;
-  
+  /**
+   * An experimental option. Use palulu mode.
+   * */
   static boolean palulu = false;
   
   //experimental option
@@ -74,24 +83,24 @@ public class OfflineMain {
   private static void experiment_configure_options() {
     
     //fall_back_to_randoop = true;
-    TestGenMain.timelimit = 100;
+    TestGenMain.timelimit = 150;
     //TestGenMain.checkTheory = false;
     //palulu = true;
     OfflineMain.buildFromTrace = true;
     String class_txt_file =
       //"./bcelexperiment/bcelclass.txt";
       //"./toyexperiment/toydatabase.txt";
-      "./apachecollectionexperiment/apacheclass.txt";
+      //"./apachecollectionexperiment/apacheclass.txt";
       //"./rhinoexperiment/rhinoclass.txt"; 
       //"./jdtcoreperiment/jdtcoreclass.txt";
       //"./apachecollectionexperiment/apacheclass.txt";
       ////"./shtmlparserexperiment/htmlparserclass.txt";
       //"./sat4jexperiment/sat4jclass.txt";
-      //"./jsap2.1experiment/jsapclass.txt";
+      "./jsap2.1experiment/jsapclass.txt";
       //"./tinysqlexperiment/tinysqlclass.txt";
     
-    ModelConstructor.processing_all_traces = false;
-    ModelConstructor.MAX_INSTANCE_PER_MODEL = 10;
+//    ModelConstructor.processing_all_traces = false;
+//    ModelConstructor.MAX_INSTANCE_PER_MODEL = 10;
     //ClassesToModel.only_model_user_provided = true;
     
     //test
@@ -130,7 +139,7 @@ public class OfflineMain {
   }
   
   /**
-   * Read the trace file, build the model, and start test generation
+   * Reads the trace file, build the model, and start test generation
    * */
   public void nonStaticMain(String[] args) throws IOException, ClassNotFoundException {
     Map<Class<?>, ClassModel> models = null;

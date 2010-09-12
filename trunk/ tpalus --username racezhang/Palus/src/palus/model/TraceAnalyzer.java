@@ -1,6 +1,7 @@
 // Copyright 2010 Google Inc. All Rights Reserved.
 package palus.model;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -35,8 +36,8 @@ import randoop.Globals;
  */
 public class TraceAnalyzer {
   
-    public static String PROJECT_NAME = "apache_repro_";//"bcel_repro_";//"rhino_repro_";
-    //"jsap_repro_";//"jdtcore_";//
+    public static String PROJECT_NAME = "jsap_repro_";//"apache_repro_";//"bcel_repro_";//"rhino_repro_";
+    //"jdtcore_";//
       //"sat4j_repro_";//"tinysql_repro_";//"apache_";
     ////"toy_db";////
     ////"html_parser_";// 
@@ -107,7 +108,8 @@ public class TraceAnalyzer {
       //start to serialize the raw traces to the file
       //first dump a copy as human-readable text file
       if(PalusOptions.save_trace_as_txt) {
-        System.out.println("Serializing trace to file: " + TRACE_FILE + " as text ...");
+        System.out.println("Serializing trace to file: " + new File(TRACE_FILE).getAbsolutePath()
+            + " as text ...");
         TraceSerializer serializer;
         try {
           serializer = new TraceSerializer(this.traces, TRACE_FILE);
@@ -120,7 +122,8 @@ public class TraceAnalyzer {
         System.out.println(Globals.lineSep);
       }
       //second, dump a copy as object stream for offline analysis
-      System.out.println("Serializing trace to file: " + TRACE_OBJECT_FILE + " as object ...");
+      System.out.println("Serializing trace to file: " + new File(TRACE_OBJECT_FILE).getAbsolutePath()
+          + " as object ...");
       TraceSerializer objectSerializer;
       try {
         objectSerializer = new TraceSerializer(this.traces, TRACE_OBJECT_FILE);
@@ -140,7 +143,8 @@ public class TraceAnalyzer {
 	public Map<Class<?>, ClassModel>  createModels() {
 		//classify traces based on instance, here an instance represents
 	    //the same object during execution (distinguished by object id)
-		System.out.println("Start classifying traces by class ...");
+		System.out.println("Start classifying traces by class (trace size: "
+		    + this.traces.size() + " ) " + " ...");
 		Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> traceMap = null;
 		try {
 			traceMap = extractTraceEventByClass(this.traces);
