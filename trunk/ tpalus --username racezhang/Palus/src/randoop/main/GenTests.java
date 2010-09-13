@@ -58,6 +58,7 @@ import randoop.util.Randomness;
 import randoop.util.Reflection;
 import randoop.util.ReflectionExecutor;
 import randoop.util.RunCmd;
+import randoop.util.SequenceFilters;
 import randoop.util.SerializationHelper;
 import cov.Branch;
 import cov.Coverage;
@@ -480,6 +481,22 @@ public class GenTests extends GenInputsAbstract {
       System.out.printf ("%d subsumed tests removed%n", 
                          sequences.size() - unique_seqs.size());
       sequences = unique_seqs;
+    }
+    
+    //Add by S Zhang, only output error sequences
+    if(GenInputsAbstract.only_output_failing_test) {
+      int num_before_remove = sequences.size();
+      sequences = SequenceFilters.filterNonFailedSequences(sequences);
+      System.out.println("Remove: " + (num_before_remove - sequences.size())
+          + " non failing sequences.");
+    }
+    
+    //Add by S Zhang, remove error sequences which might reveal the same error
+    if(GenInputsAbstract.remove_redundant_errors) {
+      int num_before_remove = sequences.size();
+      sequences = SequenceFilters.filterMightBeRepeatedFailingSequences(sequences);
+      System.out.println("Removed: " + (num_before_remove - sequences.size())
+          + " redundant error-revealing sequences.");
     }
 
     // Generate checks from the exact sequences to be run in the
