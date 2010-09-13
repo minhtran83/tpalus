@@ -70,8 +70,14 @@ public abstract class GenInputsAbstract extends CommandHandler {
       + "available.")
   public static boolean forbid_null = true;
   
-  @Option("Check NPE or not")
+  @Option("Check NPE or not, added by S Zhang")
   public static boolean check_npe = true;
+  
+  @Option("Remove redundant error sequences, added by S Zhang")
+  public static boolean remove_redundant_errors = false;
+  
+  @Option("Only output failing tests at the end, added by S Zhang")
+  public static boolean only_output_failing_test = false;
 
   @Option("Use null with the given frequency. [TODO explain]")
   public static Double null_ratio = null;
