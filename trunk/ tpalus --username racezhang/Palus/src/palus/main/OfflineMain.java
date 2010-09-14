@@ -63,7 +63,10 @@ public class OfflineMain {
    * TODO the args should be compatible with randoop's
    * */
   public static void main(String[] args) throws IOException, ClassNotFoundException {
-    Log.logConfig("./log_test_gen.txt");
+    String logFilePath = "./log_test_gen.txt";
+    Log.logConfig(logFilePath);
+    System.out.println("Log file place: " + new File(logFilePath).getAbsolutePath());
+    
     Log.log("Start logging....");
     
     if(args.length == 0) {
@@ -88,7 +91,7 @@ public class OfflineMain {
     //palulu = true;
     OfflineMain.buildFromTrace = true;
     String class_txt_file =
-      //"./bcelexperiment/bcelclass.txt";
+      "./bcelexperiment/bcelclass.txt";
       //"./toyexperiment/toydatabase.txt";
       //"./apachecollectionexperiment/apacheclass.txt";
       //"./rhinoexperiment/rhinoclass.txt"; 
@@ -96,11 +99,11 @@ public class OfflineMain {
       //"./apachecollectionexperiment/apacheclass.txt";
       ////"./shtmlparserexperiment/htmlparserclass.txt";
       //"./sat4jexperiment/sat4jclass.txt";
-      "./jsap2.1experiment/jsapclass.txt";
+      //"./jsap2.1experiment/jsapclass.txt";
       //"./tinysqlexperiment/tinysqlclass.txt";
     
-//    ModelConstructor.processing_all_traces = false;
-//    ModelConstructor.MAX_INSTANCE_PER_MODEL = 10;
+    ModelConstructor.processing_all_traces = false;
+    ModelConstructor.MAX_INSTANCE_PER_MODEL = 10;
     //ClassesToModel.only_model_user_provided = true;
     
     //test
@@ -108,6 +111,10 @@ public class OfflineMain {
    ModelSequencesStats.time_interval_to_stop = 6000;
     
     if(palulu) {
+      PalusOptions.check_npe = false;
+      PalusOptions.only_output_failed_tests = true;
+      PalusOptions.filter_redundant_failures = true;
+      
       TestGenMain.diversifySequence = false;
       ModelBasedGenerator.percentage_of_random_gen = 0.4f;
       ModelBasedGenerator.random_test_before_model = true;
@@ -149,11 +156,18 @@ public class OfflineMain {
       throw new RuntimeException("You must provide a file containing all classes to test.");
     }
     
-    if(ClassesToModel.only_model_user_provided && TestGenMain.classFilePath != null) {
-      ClassesToModel.initializeClassesToModel(TestGenMain.readClassFromFile());
+    //set the model classes
+    if(PalusOptions.model_class_file == null) {
+      TestGenMain.modelClassPath = TestGenMain.classFilePath;
+    } else {
+      TestGenMain.modelClassPath = PalusOptions.model_class_file;
     }
     
-    if(ClassesToModel.only_model_user_provided && TestGenMain.classFilePath == null) {
+    if(ClassesToModel.only_model_user_provided && TestGenMain.modelClassPath != null) {
+      ClassesToModel.initializeClassesToModel(TestGenMain.readClassFromFile(TestGenMain.modelClassPath));
+    }
+    
+    if(ClassesToModel.only_model_user_provided && TestGenMain.modelClassPath == null) {
       throw new RuntimeException("Please set up the class file path, before using the option of only model user provided.");
     }
     

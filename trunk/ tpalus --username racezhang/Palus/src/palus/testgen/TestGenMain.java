@@ -131,6 +131,12 @@ public class TestGenMain {
     public static String classFilePath = null;
     
     /**
+     * the file containing all classes for modelling. If the value is not provided,
+     * the tool will use {@code classFilePath} as default.
+     * */
+    public static String modelClassPath = null;
+    
+    /**
      * Some private internal states
      * */
     /**
@@ -200,7 +206,7 @@ public class TestGenMain {
       
       Set<Class<?>> allClasses = this.findAllClassesInModels(models);
       //get class from file
-      allClasses.addAll(readClassFromFile());
+      allClasses.addAll(readClassFromFile(TestGenMain.classFilePath));
       if(addRelevantClass) {
           allClasses.addAll(this.getModelOwnerClasses(models));
       }
@@ -588,27 +594,20 @@ public class TestGenMain {
       return set;
     }
     
-    
-    
-    /**
-     * A simple cached class list for tested classes
-     * */
-    private static List<Class<?>> cached_list = null;
-    
     /**
      * Read from the provided class file 
      * */
-    public static List<Class<?>> readClassFromFile() {
-      if(cached_list != null) {
-        return cached_list;
-      }
+    public static List<Class<?>> readClassFromFile(String filePath) {
+//      if(cached_list != null) {
+//        return cached_list;
+//      }
       
       List<Class<?>> classToTest = new LinkedList<Class<?>>();
       
-      if(TestGenMain.classFilePath != null) {
-        System.out.println("Read tested class from file: " + TestGenMain.classFilePath);
+      if(filePath != null) {
+        System.out.println("Read tested class from file: " + filePath);
         try {
-          BufferedReader br = new BufferedReader(new FileReader(new File(TestGenMain.classFilePath)));
+          BufferedReader br = new BufferedReader(new FileReader(new File(filePath)));
           String line = br.readLine();
           while(line != null) {
             String className = line.trim();
@@ -628,7 +627,7 @@ public class TestGenMain {
           e.printStackTrace();
         }
       }
-      cached_list = classToTest;
+      //cached_list = classToTest;
       
       return classToTest;
     }

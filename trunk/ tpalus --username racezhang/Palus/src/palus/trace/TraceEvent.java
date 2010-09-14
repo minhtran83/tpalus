@@ -13,6 +13,7 @@ import java.lang.reflect.Modifier;
 
 import palus.AbstractState;
 import palus.PalusUtil;
+import palus.main.PalusOptions;
 import randoop.Globals;
 
 /**

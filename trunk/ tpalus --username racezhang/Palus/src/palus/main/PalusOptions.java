@@ -36,6 +36,10 @@ public class PalusOptions {
   @Option("The input text file containing the names of classes under test")
   public static String class_file = null;
   
+  @Option("The file containing class names to model, if it is not provided "
+      + "Palus will use the value of class_file as default")
+  public static String model_class_file = null;
+  
   @Option("The input (binary) trace file containing the serialized trace information")
   public static String trace_file = null;
   
@@ -108,6 +112,12 @@ public class PalusOptions {
   public static boolean check_npe = true;
   
   //options not used in this class
+  
+  @Unpublicized
+  @Option("The code under test may use some dynamically generated class. "
+      + " Such classes are not useful for test generation. We avoid serializing "
+      + "them.")
+  public static boolean avoid_serialize_dynamic_class = true;
   
   @Option("The random seed for test generation")
   public static int random_seed = 0;
