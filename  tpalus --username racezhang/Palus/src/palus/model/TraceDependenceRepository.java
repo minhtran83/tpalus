@@ -4,6 +4,7 @@ package palus.model;
 
 import palus.Log;
 import palus.PalusUtil;
+import palus.main.PalusOptions;
 import palus.trace.InitEntryEvent;
 import palus.trace.InitExitEvent;
 import palus.trace.MethodEntryEvent;
@@ -163,7 +164,12 @@ public class TraceDependenceRepository {
     Instance desirable = new Instance(objectId, objectType);
     List<TraceEventAndPosition> tapList = instanceMap.get(desirable);
     if(tapList == null) {
-      throw new BugInPalusException("There is no event and position list for: " + desirable);
+      //XXX change that after handling dynamically generated class
+      if(PalusOptions.avoid_serialize_dynamic_class) {
+        return null;
+      } else {
+        throw new BugInPalusException("There is no event and position list for: " + desirable);
+      }
     }
     //select the closest event in the trace
     TraceEvent dependentEvent = null;

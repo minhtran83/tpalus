@@ -3,6 +3,7 @@
 package palus.model.serialize;
 
 import palus.PalusUtil;
+import palus.main.PalusOptions;
 import palus.model.TraceAnalyzer;
 import palus.trace.TraceEvent;
 import randoop.Globals;
@@ -78,7 +79,6 @@ public class TraceSerializer {
     oos.writeInt(events.size());
     //write the trace event
     for(TraceEvent event : events) {
-      //oos.writeObject(event);
       event.serialize(oos);
     }
     oos.flush();

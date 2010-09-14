@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 
+import palus.Log;
 import palus.model.TraceAnalyzer;
 import palus.trace.TraceStack;
 import palus.trace.Tracer;
@@ -20,6 +21,9 @@ public class Agent {
     
     //set the project name which change the trace file name storage location
     if(agentArgs != null) {
+      String logFileName = "./log.txt";
+      Log.logConfig("./log.txt");
+      System.out.println("Using log file: " + new File(logFileName).getAbsolutePath());
       String[] args = agentArgs.split("=");
       System.out.println("Project name: " + args[0]);
       TraceAnalyzer.PROJECT_NAME = args[0];

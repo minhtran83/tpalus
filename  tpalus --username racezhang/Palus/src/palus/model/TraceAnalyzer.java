@@ -36,7 +36,7 @@ import randoop.Globals;
  */
 public class TraceAnalyzer {
   
-    public static String PROJECT_NAME = "jsap_repro_";//"apache_repro_";//"bcel_repro_";//"rhino_repro_";
+    public static String PROJECT_NAME = "bcel_repro_";//"jsap_repro_";//"apache_repro_";//"rhino_repro_";
     //"jdtcore_";//
       //"sat4j_repro_";//"tinysql_repro_";//"apache_";
     ////"toy_db";////
