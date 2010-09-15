@@ -16,6 +16,7 @@ import palus.testgen.TestGenMain;
 import plume.Option;
 import plume.Options;
 import plume.Unpublicized;
+import randoop.ErrorIgnoredMethods;
 import randoop.main.GenInputsAbstract;
 
 /**
@@ -69,8 +70,9 @@ public class PalusOptions {
   @Option("Diversify the generated sequence with static analysis")
   public static boolean dont_diversify_sequence = false;
   
-  @Option("Percentage of random testing phase, should be 0 - 1")
-  public static float percentage_of_random_gen = 0.5f;
+  @Option("Percentage of random testing phase, should be 0 - 10")
+//  public static float percentage_of_random_gen = 0.4f;
+  public static int percentage_of_random_gen = 4;
   
   @Option("Performing random test generation before using model, that is the Palulu approach")
   public static boolean random_test_before_model = false;
@@ -146,6 +148,10 @@ public class PalusOptions {
       + "violates the same contract is treated as redundant.")
   public static boolean filter_redundant_failures = false;
   
+  @Option("A file containing error ignored methods. That is, any exception thrown "
+      + " by the methods below will be ignored.")
+  public static String error_ignored_methods = null;
+  
   
   /**
    * Parse the argument options and assign the value to the right place
@@ -189,6 +195,10 @@ public class PalusOptions {
     
     //check npe or not
     GenInputsAbstract.check_npe = PalusOptions.check_npe;
+    GenInputsAbstract.error_ignored_methods = PalusOptions.error_ignored_methods;
+    if(GenInputsAbstract.error_ignored_methods != null) {
+      ErrorIgnoredMethods.addMethodsFromFile(GenInputsAbstract.error_ignored_methods);
+    }
     
     //how about trace file
     OfflineMain.TRACE_OBJECT_FILE = PalusOptions.trace_file;
@@ -198,7 +208,6 @@ public class PalusOptions {
 
     
     OfflineMain.buildFromTrace = !PalusOptions.dont_build_model_from_trace;
-    OfflineMain.palulu = PalusOptions.use_palulu_model;
     
     ModelConstructor.processing_all_traces = !PalusOptions.dont_process_all_trace;
     ModelConstructor.MAX_INSTANCE_PER_MODEL = PalusOptions.instance_per_model;
@@ -206,7 +215,7 @@ public class PalusOptions {
     ClassesToModel.only_model_user_provided = !PalusOptions.process_and_model_all_class;
     
     ModelBasedGenerator.auto_switch_to_random_test = PalusOptions.auto_switch_to_random;
-    ModelBasedGenerator.percentage_of_random_gen = PalusOptions.percentage_of_random_gen;
+    ModelBasedGenerator.percentage_of_random_gen = ((float)PalusOptions.percentage_of_random_gen)/10;
     ModelBasedGenerator.random_test_before_model = PalusOptions.random_test_before_model;
     ModelBasedGenerator.random_test_after_model = !PalusOptions.dont_random_test_after_model;
     ModelBasedGenerator.only_random_uncovered_statements = PalusOptions.only_random_uncovered_methods;
@@ -227,6 +236,20 @@ public class PalusOptions {
       ModelConstructor.processing_all_traces = false;
       ModelConstructor.MAX_INSTANCE_PER_MODEL = 4;
       ClassesToModel.only_model_user_provided = true;
+    }
+    
+    if(PalusOptions.use_palulu_model) {
+      TestGenMain.diversifySequence = false;
+      //ModelBasedGenerator.percentage_of_random_gen = 0.4f;
+      ModelBasedGenerator.random_test_before_model = true;
+      ModelBasedGenerator.random_test_after_model = false;
+      ModelBasedGenerator.only_random_uncovered_statements = false;
+      ModelBasedGenerator.use_abstract_state_as_selector = false; //not use abstract profile
+      ModelBasedGenerator.merge_equivalent_decoration = true; //merge equivalent decoration?
+      SequenceDiversifier.exhaustiveDiversifyModel = false;
+      ModelSequences.removeExtendedSequence = true;
+      SequenceDiversifier.addReturnTypeRelatedStatement = false;
+      MethodRecommender.use_tf_idf = false;
     }
   }
   
