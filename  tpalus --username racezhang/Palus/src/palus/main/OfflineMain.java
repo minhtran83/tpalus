@@ -39,11 +39,15 @@ public class OfflineMain {
    * */
   static String TRACE_OBJECT_FILE = TraceAnalyzer.TRACE_OBJECT_FILE;
   /**
+   * The file which saves the text form of recorded traces
+   * */
+  static String DUMP_TRACE_AS_TXT = "./trace_dump.txt";
+  /**
    * The serialized model object file.
    * */
   static String MODEL_OBJECT_FILE = TraceAnalyzer.MODEL_OBJECT_FILE;//"./model_serialize_bin.model";
   /**
-   * The file which save the text form of built model
+   * The file which saves the text form of built model
    * */
   static String DUMP_MODEL_AS_TXT = "./models_dump.txt";
   /**
@@ -53,7 +57,7 @@ public class OfflineMain {
   /**
    * An experimental option. Use palulu mode.
    * */
-  static boolean palulu = false;
+  private static boolean palulu = false;
   
   //experimental option
   //static boolean fall_back_to_randoop = false;
@@ -178,12 +182,14 @@ public class OfflineMain {
         List<TraceEvent> events = TraceSerializer.deserializeObjectsFromTrace(new File(TRACE_OBJECT_FILE));
         TraceAnalyzer analyzer = new TraceAnalyzer(events);
         models = analyzer.createModels();
+        
+        if(PalusOptions.save_trace_as_txt) {
+          analyzer.saveTraceAsTxt(DUMP_TRACE_AS_TXT);
+        }
 
         System.out.println(Globals.lineSep + "Serialize built models ...");
-      
         ModelSerializer serializer = new ModelSerializer(models, new File(MODEL_OBJECT_FILE));
         serializer.serializeModelAsObject();
-      
         System.out.println("Finish serialization ..." + Globals.lineSep + Globals.lineSep);
       } else {
         System.out.println("Reading saved model from file: " + new File(MODEL_OBJECT_FILE).getAbsolutePath());

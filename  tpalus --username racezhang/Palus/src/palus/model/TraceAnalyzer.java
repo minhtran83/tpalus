@@ -48,7 +48,7 @@ public class TraceAnalyzer {
 	public static final String LOG_FILE = "log.txt";
 	
 	//dump the trace to human readable txt
-	public static String TRACE_FILE = PROJECT_NAME + "_trace.txt";
+	public static String TRACE_TX_FILE = PROJECT_NAME + "_trace.txt";
 	//dump the trace event as object stream for reuse
 	public static String TRACE_OBJECT_FILE = PROJECT_NAME + "_trace.model";
 	
@@ -72,7 +72,7 @@ public class TraceAnalyzer {
 	      PalusUtil.checkNull(trace);
 	    }
 		this.traces = traces;
-		TRACE_FILE = PROJECT_NAME + "_trace.txt";
+		TRACE_TX_FILE = PROJECT_NAME + "_trace.txt";
 	    //dump the trace event as object stream for reuse
 	    TRACE_OBJECT_FILE = PROJECT_NAME + "_trace.model";
 	    MODEL_FILE = PROJECT_NAME + "_model.txt";
@@ -108,18 +108,7 @@ public class TraceAnalyzer {
       //start to serialize the raw traces to the file
       //first dump a copy as human-readable text file
       if(PalusOptions.save_trace_as_txt) {
-        System.out.println("Serializing trace to file: " + new File(TRACE_FILE).getAbsolutePath()
-            + " as text ...");
-        TraceSerializer serializer;
-        try {
-          serializer = new TraceSerializer(this.traces, TRACE_FILE);
-          serializer.serializeTracesAsText();
-        } catch (IOException e1) {
-          e1.printStackTrace();
-          throw new RuntimeException(e1);
-        }
-        System.out.println("Serialization successes!");
-        System.out.println(Globals.lineSep);
+        this.saveTraceAsTxt(TRACE_TX_FILE);
       }
       //second, dump a copy as object stream for offline analysis
       System.out.println("Serializing trace to file: " + new File(TRACE_OBJECT_FILE).getAbsolutePath()
@@ -128,6 +117,24 @@ public class TraceAnalyzer {
       try {
         objectSerializer = new TraceSerializer(this.traces, TRACE_OBJECT_FILE);
         objectSerializer.serializeTracesAsObject();
+      } catch (IOException e1) {
+        e1.printStackTrace();
+        throw new RuntimeException(e1);
+      }
+      System.out.println("Serialization successes!");
+      System.out.println(Globals.lineSep);
+	}
+	
+	/**
+	 * Saves the trace in a text file for human inspection
+	 * */
+	public void saveTraceAsTxt(String fileName) {
+	  System.out.println("Serializing trace to file: " + new File(fileName).getAbsolutePath()
+          + " as text ...");
+      TraceSerializer serializer;
+      try {
+        serializer = new TraceSerializer(this.traces, fileName);
+        serializer.serializeTracesAsText();
       } catch (IOException e1) {
         e1.printStackTrace();
         throw new RuntimeException(e1);

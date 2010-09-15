@@ -213,9 +213,11 @@ public class TestGenMain {
       Set<Class<?>> classesToTest = this.filterUntestableClasses(allClasses);
       
       System.out.println("There are " + allClasses.size() + " classes as input");
-      System.out.println(allClasses);
+      Log.log("Classes as inputs: ");
+      Log.log(allClasses.toString());
       System.out.println("There are " + classesToTest.size() + " classes to test after filtering");
-      System.out.println(classesToTest);
+      Log.log("Classes as inputs after filtering: ");
+      Log.log(classesToTest.toString());
       
       //get statement under test for each class
       List<StatementKind> model = Reflection.getStatements(classesToTest, null);
@@ -545,6 +547,7 @@ public class TestGenMain {
       if(removeIsNotNullChecker) {
         SequenceCheckFilters.removeIsNotNullChecks(sequences);
       }
+      
       write_junit_tests (outputDir, packageName, testName, testsPerFile, sequences);
     }
     

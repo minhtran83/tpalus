@@ -53,8 +53,8 @@ public class ForwardGenerator extends AbstractGenerator {
 
     super(statements, coverageClasses, timeMillis, maxSequences, seeds);
 
-    System.out.printf ("list of statements for ForwardGenerator = %s%n",
-                       statements);
+    System.out.printf ("Num of statements for ForwardGenerator = %s%n",
+                       statements.size());
 
     if (seeds == null)
       this.components = new SequenceCollection(SeedSequences.defaultSeeds());

@@ -198,6 +198,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
    * */
   @Override
   public ExecutableSequence step() {
+    //only use model-base generator creates a certain amount of tests
     if(PalusOptions.max_seq_num_model_tests > 0) {
       if(this.stats.outSeqs.size() > PalusOptions.max_seq_num_model_tests) {
         return super.step();

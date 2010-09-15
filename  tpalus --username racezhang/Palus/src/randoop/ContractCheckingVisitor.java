@@ -72,9 +72,13 @@ public final class ContractCheckingVisitor implements ExecutionVisitor {
      if (s.getResult(idx) instanceof ExceptionalExecution) {
        if (GenInputsAbstract.forbid_null && GenInputsAbstract.check_npe) {
          ExceptionalExecution exec = (ExceptionalExecution)s.getResult(idx);
-         if (exec.getException().getClass().equals(NullPointerException.class)) {
-           ForbiddenExceptionChecker obs = new ForbiddenExceptionChecker(NullPointerException.class);
-          s.addCheck(idx, obs, false);
+         if (exec.getException().getClass().equals(NullPointerException.class)) {           
+           //check if this method is not interesting, so that ignore the thrown exception
+           StatementKind statement = s.sequence.getStatementKind(idx);
+           if(!ErrorIgnoredMethods.isErrorIgnorableMethod(statement, true)) {
+             ForbiddenExceptionChecker obs = new ForbiddenExceptionChecker(NullPointerException.class);
+             s.addCheck(idx, obs, false);
+           }
          }
        }
        return true;

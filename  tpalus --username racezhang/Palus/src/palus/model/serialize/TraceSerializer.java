@@ -3,7 +3,6 @@
 package palus.model.serialize;
 
 import palus.PalusUtil;
-import palus.main.PalusOptions;
 import palus.model.TraceAnalyzer;
 import palus.trace.TraceEvent;
 import randoop.Globals;
