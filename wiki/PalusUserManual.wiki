@@ -16,6 +16,8 @@ Execute the following command:
 
 java -cp ./palus-0.1.jar:./asm-all-3.1.jar:./plume.jar palus.main.OfflineMain --help
 
+*Note:* please download the latest version from Downloads tab
+
 ==Examples==
 
 === Example 1 (a toy example) ===
