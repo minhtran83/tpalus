@@ -24,12 +24,12 @@ View a complete list of Palus command? execute the following command:
 
 {{{java -cp ./palus-0.1.jar:./asm-all-3.1.jar:./plume.jar palus.main.OfflineMain --help}}}
 
-Basic options:
+*Basic options* for palus.main.OfflineMain:
 
 || *Option* || * Explanation* || *Default* || *Required?* ||
-|| --time_limit || time for test generation (in seconds) || N/A || Yes ||
-|| --class_file || a file containing all classes for test || N/A || Yes ||
-|| --trace_file || a file containing all recorded event traces || N/A || Yes ||
+|| --time_limit || time for test generation (in seconds) || N/A || *Yes* ||
+|| --class_file || a file containing all classes for test || N/A || *Yes* ||
+|| --trace_file || a file containing all recorded event traces || N/A || *Yes* ||
 || --process_and_model_all_class || build model for each observed class. || false || No ||
 || --model_class_file || a file containing the classes to be modelled || N/A || No ||
 || --donot_build_model_from_trace || a flag. use already built model or not || false || No ||
@@ -57,6 +57,15 @@ Basic options:
 || --fall_back_to_randoop || fall back to randoop (for experiment only) || false || No ||
 
 
+*Additional options * for palus.wrapper.PalusWrapperMain
+
+PalusWrapperMain wraps the Palus process. It creates, monitors the Palus process, and restarts a new Palus process with a different random seed if it crashes. This wrapper process makes Palus more robust,since Palus may call some non-terminating or system calls (e.g. System.exit(int)) during test generation and then crashes.
+
+
+|| *Option* || * Explanation* || *Default* || *Required?* ||
+|| --spawner_timelimit || time limit for the Palus wrapper || N/A || *Yes* ||
+|| --palus_class_path || a file containing all classes for test || System.getProperty("java.class.path", ".") || No ||
+|| --java_command || Use which JVM to launch Palus || "java" (the default JVM in classpath) || No ||
 
 
 ==Examples==
