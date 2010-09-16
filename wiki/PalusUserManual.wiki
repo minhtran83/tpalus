@@ -18,6 +18,23 @@ Execute the following command:
 
 java -cp ./palus-0.1.jar:./asm-all-3.1.jar:./plume.jar palus.main.OfflineMain --help
 
+==Command Options==
+
+View a complete list of Palus command? execute the following command: 
+
+{{{java -cp ./palus-0.1.jar:./asm-all-3.1.jar:./plume.jar palus.main.OfflineMain --help}}}
+
+Basic options:
+
+|| *Option* || * Explanation* || *Default* || *Required?* ||
+|| --time_limit || time for test generation (in seconds) || N/A || Yes ||
+|| --class_file || a file containing all classes for test || N/A || Yes ||
+|| --trace_file || a file containing all recorded event traces || N/A || Yes ||
+|| --model_class_file || a file containing the classes to be modelled || N/A || No ||
+|| --donot_build_model_from_trace || a flag. use already built model or not || false || No ||
+
+
+
 
 ==Examples==
 
