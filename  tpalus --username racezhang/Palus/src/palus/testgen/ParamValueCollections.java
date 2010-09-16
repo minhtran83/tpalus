@@ -32,19 +32,28 @@ public class ParamValueCollections {
   /**
    * A map from class name to map name and a list of objects
    */
-  public final Map<String, Map<String, Set<Object>>> methodValues =
+  private final Map<String, Map<String, Set<Object>>> methodValues =
     new HashMap<String, Map<String, Set<Object>>>();
+  
+  /**
+   * A set contains all primitive or string type objects
+   * */
+  private final Set<Object> allPrimitiveOrStrings = new HashSet<Object>();
   
   /**
    * All unclaimed values, maybe due to the incorrect specification
    * by users (mis-spell class name)
    */
-  public final Set<Object> unclaimed = new HashSet<Object>();
+  private final Set<Object> unclaimed = new HashSet<Object>();
   
   /**
    * Classifies and adds value and object to the map
    * */
-  public void addParamValue(ParamValue value, Object obj) {
+  void addParamValue(ParamValue value, Object obj) {
+    if(obj != null && PalusUtil.isPrimitiveOrStringType(obj.getClass())) {
+      this.allPrimitiveOrStrings.add(obj);
+    }
+    //add to the object to the map
     String className = value.className();
     String methodName = value.methodName();
     if(isValid(className, className)) {
@@ -90,8 +99,14 @@ public class ParamValueCollections {
     }
     
     //XXXX problem with primitive type, boxing and unboxing
-    
     return allObjects.get(Randomness.nextRandomInt(allObjects.size()));
+  }
+  
+  /**
+   * Gets all primitive objects
+   * */
+  public Collection<Object> allPrimitiveObjects() {
+    return this.allPrimitiveOrStrings;
   }
   
   /**
@@ -133,7 +148,7 @@ public class ParamValueCollections {
   /**
    * Prints out the content
    * */
-  public String showContent() {
+  String showContent() {
     StringBuilder sb = new StringBuilder();
     
     sb.append("Values for each method:");

@@ -23,6 +23,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -262,10 +263,15 @@ public class TestGenMain {
       
       //add method-specific inputs
       if(useMethodSpecificValue) {
-        ParamValueProcessor processor = new ParamValueProcessor(allClasses);
-        this.paramValueCollection = processor.processAnnotations();
+        ParamValueProcessor paramValueProcessor = new ParamValueProcessor(allClasses);
+        this.paramValueCollection = paramValueProcessor.processAnnotations();
         //add unclaimed primitive values
-        components.addAll(SeedSequences.objectsToSeeds(this.paramValueCollection.allNonPrimitiveUnclaimedObjects()));
+        components.addAll(SeedSequences.objectsToSeeds(this.paramValueCollection.allPrimitiveObjects()));
+        
+        //add user specified sequences
+        ObjectSequenceProcessor objSeqProcessor = new ObjectSequenceProcessor(allClasses);
+        Collection<Sequence> userProvidedSeqs = objSeqProcessor.processAnnotations();
+        components.addAll(userProvidedSeqs);
       }
       
       //init the test generation explorer

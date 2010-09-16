@@ -1,5 +1,7 @@
 package randoop;
 
+import randoop.util.Reflection;
+
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 
@@ -72,6 +74,10 @@ public class ExpectedExceptionChecker implements Check, Serializable {
     StringBuilder b = new StringBuilder();
     String exceptionClassName = exceptionClass.getCanonicalName();
     b.append("  fail(\"Expected exception of type " + exceptionClassName + "\");" + Globals.lineSep);
+    //add by S Zhang
+    if(!Reflection.isVisible(exceptionClass)) {
+      exceptionClassName = "java.lang.Exception";
+    }
     b.append("} catch (");
     b.append(exceptionClassName);
     b.append(" e) {" + Globals.lineSep);

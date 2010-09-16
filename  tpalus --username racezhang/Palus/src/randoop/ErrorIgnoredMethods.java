@@ -46,6 +46,7 @@ public class ErrorIgnoredMethods {
     } catch (IOException e) {
       throw new RuntimeException("Errors in reading file: " + file.getAbsolutePath());
     }
+    System.out.println("Add error-ignorable methods from: " + file.getAbsolutePath());
   }
   
   /**
