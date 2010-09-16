@@ -58,8 +58,13 @@ public class ParamValueProcessor {
                 + "for getting static field value");
           }
           
+          //only add primitive or string type
           //add the value to the repository
-          this.processParamValue(collections, value, obj);
+          if(obj != null && PalusUtil.isPrimitiveOrStringType(obj.getClass())) {
+            this.processParamValue(collections, value, obj);
+          } else {
+            System.out.println("Ignore annotated non-primitive, non-string value: " + obj);
+          }
         }
       }
     }

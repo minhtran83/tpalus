@@ -196,6 +196,8 @@ public class PalusOptions {
     //check npe or not
     GenInputsAbstract.check_npe = PalusOptions.check_npe;
     GenInputsAbstract.error_ignored_methods = PalusOptions.error_ignored_methods;
+    //if users provide a list of ignored methods, we add them to the the uninteresting
+    //method list. so that any exception thrown by this method will be ignored
     if(GenInputsAbstract.error_ignored_methods != null) {
       ErrorIgnoredMethods.addMethodsFromFile(GenInputsAbstract.error_ignored_methods);
     }

@@ -126,6 +126,14 @@ public class MethodInputSelector {
           Log.log("Decoration values: " + value + ", object: " + o + ", type: " + o.getClass());
           
           //fuzz it with user provided one FIXME not a good place
+          if(this.useMethodSpecificInput) {
+            String className = this.getClassName(statement);
+            String methodName = this.getMethodName(statement);
+            Object userProvided = this.collections.nextRandomObject(className, methodName, t);
+            if(userProvided != null && Randomness.nextRandomBool()) {
+              o = userProvided;
+            }
+          }
           
           //here we need to create new staffs
           ArrayListSimpleList<Sequence> arrayList = new ArrayListSimpleList<Sequence>();
