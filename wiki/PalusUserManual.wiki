@@ -33,7 +33,8 @@ Basic options:
 || --model_class_file || a file containing the classes to be modelled || N/A || No ||
 || --donot_build_model_from_trace || a flag. use already built model or not || false || No ||
 || --dont_process_all_trace || only process a part of recorded traces || false || No ||
-|| --instance_per_model || number of object instances to process for each class model (only valid when --dont_process_all_trace is set) || 20 || No ||
+|| --instance_per_model || number of object instances to process for each class model.\n
+(only valid when --dont_process_all_trace is set) || 20 || No ||
 
 
 
