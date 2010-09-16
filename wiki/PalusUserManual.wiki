@@ -30,14 +30,29 @@ Basic options:
 || --time_limit || time for test generation (in seconds) || N/A || Yes ||
 || --class_file || a file containing all classes for test || N/A || Yes ||
 || --trace_file || a file containing all recorded event traces || N/A || Yes ||
+|| --process_and_model_all_class || build model for each observed class. || false || No ||
 || --model_class_file || a file containing the classes to be modelled || N/A || No ||
 || --donot_build_model_from_trace || a flag. use already built model or not || false || No ||
 || --dont_process_all_trace || only process a part of recorded traces || false || No ||
-|| --instance_per_model || number of object instances to process for each class model.\n
-(only valid when --dont_process_all_trace is set) || 20 || No ||
-
-
-
+|| --instance_per_model || number of object instances to process for each class model. || 20 || No ||
+|| --auto_switch_to_random || automatically switch to random testing if the model coverage does not increase. || false || No ||
+|| --switch_time_to_random || how long to switch if the model coverage does not increase. || 6000 msc || No ||
+|| --percentage_of_random_gen || the percentage of random testing after exploring the model. || 4 || No ||
+|| --only_random_uncovered_method || only random testing model-covered methods. || true || No ||
+|| --dont_use_abstract_state_as_selector || use abstract object profile for argument selection || false || No ||
+|| --dont_merge_equivalent_decorations || merge equivalent argument values for the observed method. || false || No ||
+|| --print_model_coverage || print class model coverage at the end or not. || false || No ||
+|| --exhaustive_diversify_seq || diversify the created sequence with every method in the same class|| false || No ||
+|| --add_return_type_related_methods || add methods in the return type class as related ones. || false || No ||
+|| --process_large_trace || process a large trace. || false || No ||
+|| --use_theory_check || do oracle checking on a user-provided theory. || false || No ||
+|| --check_npe || check null pointer exception or not. || true || No ||
+|| --random_seed || change to a new random seed. || 0 || No ||
+|| --dump_model_as_text || dump the built class model as text for inspection. || false || No ||
+|| --save_trace_as_txt || save the observed traces as text for inspection. || false || No ||
+|| --only_output_failed_tests || only output failed tests. || false || No ||
+|| --filter_redundant_failures || remove redundant failed tests in the result. || false || No ||
+|| --error_ignored_methods || a list of uninteresting method. ignore any errors in these methods. || null || No ||
 || --use_palulu_model || fall back to palulu (for experiment only) || false || No ||
 || --fall_back_to_randoop || fall back to randoop (for experiment only) || false || No ||
 
