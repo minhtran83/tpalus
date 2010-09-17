@@ -13,12 +13,7 @@ import java.lang.reflect.Modifier;
 
 import palus.AbstractState;
 import palus.PalusUtil;
-<<<<<<< .mine
 import randoop.Globals;
-=======
-import palus.main.PalusOptions;
-import randoop.Globals;
->>>>>>> .r119
 
 /**
  * The base class of all kinds of trace events.
