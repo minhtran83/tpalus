@@ -119,7 +119,12 @@ public final class RMethod implements StatementKind, Serializable {
       // the value (e.g. "3") is inserted directly added as arguments to method calls.
       StatementKind statementCreatingVar = inputVars.get(i).getDeclaringStatement(); 
       if (!GenInputsAbstract.long_format &&  statementCreatingVar instanceof PrimitiveOrStringOrNullDecl) {
-        b.append(PrimitiveTypes.toCodeString(((PrimitiveOrStringOrNullDecl) statementCreatingVar).getValue()));
+        if(((PrimitiveOrStringOrNullDecl) statementCreatingVar).getType().isEnum() && GenInputsAbstract.use_enum_type) {
+          //print the enum value directly
+          b.append(((PrimitiveOrStringOrNullDecl) statementCreatingVar).getValue());
+        } else {
+          b.append(PrimitiveTypes.toCodeString(((PrimitiveOrStringOrNullDecl) statementCreatingVar).getValue()));
+        }
       } else {
         b.append(inputVars.get(i).getName());
       }
