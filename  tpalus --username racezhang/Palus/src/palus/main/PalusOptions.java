@@ -74,9 +74,11 @@ public class PalusOptions {
 //  public static float percentage_of_random_gen = 0.4f;
   public static int percentage_of_random_gen = 4;
   
+  @Unpublicized
   @Option("Performing random test generation before using model, that is the Palulu approach")
   public static boolean random_test_before_model = false;
   
+  @Unpublicized
   @Option("Performing random test generation after using model, that is the Palus approach")
   public static boolean dont_random_test_after_model = false;
   
@@ -89,6 +91,7 @@ public class PalusOptions {
   @Option("Merge equivalent decorations in the model")
   public static boolean dont_merge_equivalent_decorations = false;
   
+  @Unpublicized
   @Option("Remove extended sequence from the model, that will make the sequence pool less repetitive")
   public static boolean dont_remove_extended_seq = false;
   
@@ -101,6 +104,7 @@ public class PalusOptions {
   @Option("Add return type related method for diversifying generated sequence")
   public static boolean add_return_type_related_methods = false;
   
+  @Unpublicized
   @Option("Use tf-idf algorithm for static analysis to find related method")
   public static boolean use_tf_idf = false;
   
@@ -124,8 +128,8 @@ public class PalusOptions {
   @Option("The random seed for test generation")
   public static int random_seed = 0;
   
-  @Option("Launch Palus in a new Process")
-  public static boolean use_palus_wrapper = false;
+//  @Option("Launch Palus in a new Process")
+//  public static boolean use_palus_wrapper = false;
   
   @Option("Dump the built model as text")
   public static boolean dump_model_as_text = false;
