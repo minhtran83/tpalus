@@ -89,10 +89,14 @@ public class JarClassesExtractor {
    * */
   public static void main(String[] args) throws IOException {
     
-    String jarPath = //"/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/gws/gws_deploy.jar";
-    "/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/testing/tap/testbroker/server/TestBroker_deploy.jar";
-    String packageName = //"com.google.gws";
-    "com.google.testing.tap";
+    String jarPath = 
+    //"/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/gws/gws_deploy.jar";
+    //"/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/testing/tap/testbroker/server/TestBroker_deploy.jar";
+    "/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/ads/pebl/libpebl.jar";
+    String packageName =
+    //"com.google.gws";
+    //"com.google.testing.tap";
+      "com.google.ads.pebl";
     JarClassesExtractor.extracClassNamesForTests(jarPath, packageName);
   }
   

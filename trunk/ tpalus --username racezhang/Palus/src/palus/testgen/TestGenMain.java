@@ -615,9 +615,10 @@ public class TestGenMain {
       
       if(filePath != null) {
         System.out.println("Read tested class from file: " + filePath);
+        String line = null;
         try {
           BufferedReader br = new BufferedReader(new FileReader(new File(filePath)));
-          String line = br.readLine();
+          line = br.readLine();
           while(line != null) {
             String className = line.trim();
             if(!className.equals("")) { 
@@ -633,6 +634,9 @@ public class TestGenMain {
         } catch (IOException e) {
           e.printStackTrace();
         } catch (ClassNotFoundException e) {
+          e.printStackTrace();
+        } catch (Exception e) {
+          System.err.println("Errors in reading class: " + line);
           e.printStackTrace();
         }
       }
