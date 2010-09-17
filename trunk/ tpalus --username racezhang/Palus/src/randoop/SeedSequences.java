@@ -54,6 +54,15 @@ public final class SeedSequences {
     }
     return retval;
   }
+  
+  public static Set<Sequence> enumsToSeeds(Collection<PrimitiveOrStringOrNullDecl> enumDecls) {
+    Set<Sequence> enumSeqs = new LinkedHashSet<Sequence>();
+    for(PrimitiveOrStringOrNullDecl enumDecl : enumDecls) {
+      assert enumDecl != null;
+      enumSeqs.add(Sequence.create(enumDecl));
+    }
+    return enumSeqs;
+  }
 
   public static Set<Object> getSeeds(Class<?> c) {
     Set<Object> result = new LinkedHashSet<Object>();
