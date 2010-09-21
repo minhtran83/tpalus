@@ -100,7 +100,9 @@ public class Transition implements Serializable {
 		PalusUtil.checkNull(methodName);
 		PalusUtil.checkNull(methodDesc);
 		//make sure source/dest node are modelling the same class
-		PalusUtil.checkTrue(srcNode.getModelledClass() == destNode.getModelledClass());
+		PalusUtil.checkTrue(srcNode.getModelledClass() == destNode.getModelledClass(),
+		    "The modelled class of srcNode: " + srcNode.getModelledClass() + " should == "
+		    + " that of the destNode: " + destNode.getModelledClass());
 		
 		this.modelledClass = srcNode.getModelledClass();
 		this.srcNode = srcNode;
@@ -113,8 +115,10 @@ public class Transition implements Serializable {
 		//decide it is a method or constructor
 		Method m = this.tryToGetMethod();
 		Constructor<?> c = this.tryToGetConstructor();
-		PalusUtil.checkTrue( m != null || c != null);
-		PalusUtil.checkTrue(m == null || c == null);
+		PalusUtil.checkTrue( m != null || c != null,
+		    "Either method or constructor field should NOT be null.");
+		PalusUtil.checkTrue(m == null || c == null,
+		    "One of the method and constructor fields should  be null.");
 		this.isMethodOrConstructor = (m == null) ? false : true;
 		this.method = m;
 		this.constructor = c;
@@ -135,8 +139,10 @@ public class Transition implements Serializable {
 	//deciede it is a method or constructor
       Method m = this.tryToGetMethod();
       Constructor<?> c = this.tryToGetConstructor();
-      PalusUtil.checkTrue( m != null || c != null);
-      PalusUtil.checkTrue(m == null || c == null);
+      PalusUtil.checkTrue( m != null || c != null,
+          "Either method or constructor field should NOT be null.");
+      PalusUtil.checkTrue(m == null || c == null,
+          "One of the method and constructor field should be null.");
       this.isMethodOrConstructor = (m == null) ? false : true;
       this.method = m;
       this.constructor = c;
@@ -202,21 +208,22 @@ public class Transition implements Serializable {
 	}
 	
 	public Method getMethod() {
-	  PalusUtil.checkTrue(this.isMethodOrConstructor);
+	  PalusUtil.checkTrue(this.isMethodOrConstructor, "This transition should be a method transition!");
 	  PalusUtil.checkNull(this.method);
-	  PalusUtil.checkTrue(this.constructor == null);
+	  PalusUtil.checkTrue(this.constructor == null, "The constructor: " + constructor + " should be null!");
 	  return this.method;
 	}
 	
 	public Constructor<?> getConstructor() {
-	  PalusUtil.checkTrue(!this.isMethodOrConstructor);
+	  PalusUtil.checkTrue(!this.isMethodOrConstructor, "The transition should be a constructor transition!");
 	  PalusUtil.checkNull(this.constructor);
-	  PalusUtil.checkTrue(this.method == null);
+	  PalusUtil.checkTrue(this.method == null, "The method field should be null!");
 	  return this.constructor;
 	}
 	
 	public boolean isPublicTransition() {
-	  PalusUtil.checkTrue(this.method != null || this.constructor != null);
+	  PalusUtil.checkTrue(this.method != null || this.constructor != null,
+	      "Either method or constructor field should NOT be null.");
 	  if(this.method != null) {
 	    return Modifier.isPublic(this.method.getModifiers());
 	  } else {
@@ -225,7 +232,8 @@ public class Transition implements Serializable {
 	}
 	
 	public boolean isOwnerClassPublic() {
-	  PalusUtil.checkTrue(this.method != null || this.constructor != null);
+	  PalusUtil.checkTrue(this.method != null || this.constructor != null,
+	      "Either method or constructor field should NOT be null.");
 	  Class<?> ownerClass = null;
 	  if(this.method != null) {
 	    ownerClass = this.method.getDeclaringClass();
@@ -236,7 +244,8 @@ public class Transition implements Serializable {
 	}
 	
 	public Class<?> getOwnerClass() {
-	  PalusUtil.checkTrue(this.method != null || this.constructor != null);
+	  PalusUtil.checkTrue(this.method != null || this.constructor != null,
+	      "Either method or constructor field should NOT be null.");
       Class<?> ownerClass = null;
       if(this.method != null) {
         ownerClass = this.method.getDeclaringClass();
@@ -323,7 +332,8 @@ public class Transition implements Serializable {
     }
 	
 	public void addDecoration(Decoration decoration) {
-		PalusUtil.checkTrue(decoration.transition == this);
+		PalusUtil.checkTrue(decoration.transition == this, "The transition which decoration: "
+		    + decoration + " represents should == this: " + this);
 		PalusUtil.checkNull(decoration);
 		this.decorations.add(decoration);
 	}
@@ -393,8 +403,9 @@ public class Transition implements Serializable {
 	}
 	
 	public int getUniqueDecorationPosition() {
-	  PalusUtil.checkTrue(this.hasDecoration());
-	  PalusUtil.checkTrue(this.hasUniqueDecorationPosition());
+	  PalusUtil.checkTrue(this.hasDecoration(), "This transition should have decorations.");
+	  PalusUtil.checkTrue(this.hasUniqueDecorationPosition(),
+	      "This transition should have unique decoration position.");
 	  //return the position of any decoration
 	  return this.decorations.get(0).getPosition();
 	}
@@ -456,12 +467,16 @@ public class Transition implements Serializable {
 	 * */
 	public void checkRep() {
 	    //check the transition id
-	    PalusUtil.checkTrue(this.transitionId > 0);
+	    PalusUtil.checkTrue(this.transitionId > 0, "The transition id: " + this.transitionId
+	        + " should > 0.");
 	    //check the source and dest node
-	    PalusUtil.checkTrue(this.srcNode.getModelledClass() == this.destNode.getModelledClass());
+	    PalusUtil.checkTrue(this.srcNode.getModelledClass() == this.destNode.getModelledClass(),
+	        "The modelled class for source node: " + this.srcNode.getModelledClass() + " should == "
+	        + " that of the the dest node: " + this.destNode.getModelledClass());
 		//if it is loop transition
 		if(loopNum != 0) {
-		    PalusUtil.checkTrue(this.srcNode == this.destNode);
+		    PalusUtil.checkTrue(this.srcNode == this.destNode, "The src node should == dest node"
+		        + " for a loop node.");
 		}
 		if(this.isMethodOrConstructor) {
 		  PalusUtil.checkNull(this.method);
@@ -535,9 +550,15 @@ public class Transition implements Serializable {
 			PalusUtil.checkNull(thizState);
 			PalusUtil.checkNull(paramStates);
 			//System.out.println("position: " + position + ",  param length: " + params.length);
-			PalusUtil.checkTrue(seriazableParamValues.length == serializableArray.length);
-			PalusUtil.checkTrue(seriazableParamValues.length == paramStates.length);
-			PalusUtil.checkTrue(position >= -1 && position <= seriazableParamValues.length);
+			PalusUtil.checkTrue(seriazableParamValues.length == serializableArray.length,
+			    "The serializableParamValues' length: " + seriazableParamValues.length + " should == "
+			     + " serializableArray's length: " + serializableArray.length);
+			PalusUtil.checkTrue(seriazableParamValues.length == paramStates.length,
+			    "The serializableParamValues' length: " + seriazableParamValues.length + " should == "
+			    + " paramStates' length: " + paramStates.length);
+			PalusUtil.checkTrue(position >= -1 && position <= seriazableParamValues.length,
+			    "The decoration position: " + position + " should >= -1 and <= serializableParamValues'"
+			    + " length: " + seriazableParamValues.length);
 			//get the type
 			Class<?> thizType = transition.getModelledClass();
 			Class<?>[] paramTypes = transition.getParamClasses();

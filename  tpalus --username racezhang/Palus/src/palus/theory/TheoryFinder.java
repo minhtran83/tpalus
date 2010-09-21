@@ -31,7 +31,7 @@ public class TheoryFinder {
    * Constructor. Initializes the class list. 
    * */
   public TheoryFinder(Collection<Class<?>> classList) {
-    PalusUtil.checkNull(classList);
+    PalusUtil.checkNull(classList, "The class collection could not be null.");
     //this.classList = classList;
     //for testing
     this.classList = classList;

@@ -22,7 +22,7 @@ public class ParamValueProcessor {
   private final List<Class<?>> classes = new LinkedList<Class<?>>();
   
   public ParamValueProcessor(Collection<Class<?>> classes) {
-    PalusUtil.checkNull(classes);
+    PalusUtil.checkNull(classes, "The class collection could not be null.");
     this.classes.addAll(classes);
   }
   

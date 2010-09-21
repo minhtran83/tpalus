@@ -42,7 +42,7 @@ public class ClassModelViewer {
    * Default constructor
    * */
   public ClassModelViewer(ClassModel model) {
-    PalusUtil.checkNull(model);
+    PalusUtil.checkNull(model, "The class model to view could not be null!");
     this.model = model;
   }
   
@@ -107,8 +107,8 @@ public class ClassModelViewer {
         for(Transition transition : transitions) {
           Object graphSourceNode = nodeMap.get(transition.getSourceNode());
           Object graphDestNode = nodeMap.get(transition.getDestNode());
-          PalusUtil.checkNull(graphSourceNode);
-          PalusUtil.checkNull(graphDestNode);
+          PalusUtil.checkNull(graphSourceNode, "The source node could not be null.");
+          PalusUtil.checkNull(graphDestNode, "The dest node could not be null.");
           Object edge = graph.insertEdge(parent, null, transition.toSignature(), graphSourceNode, graphDestNode);
         }
         

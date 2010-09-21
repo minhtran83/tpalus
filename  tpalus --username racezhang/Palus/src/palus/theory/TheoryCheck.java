@@ -35,10 +35,13 @@ public class TheoryCheck implements Check {
    * Constructor. Initialize all final fields
    * */
   public TheoryCheck(ObjectContract contract, Variable... vars) {
-    PalusUtil.checkNull(contract);
-    PalusUtil.checkNull(vars);
-    PalusUtil.checkTrue(contract instanceof TheoryContract);
-    PalusUtil.checkTrue(contract.getArity() == vars.length);
+    PalusUtil.checkNull(contract, "The object contract to set could not be null.");
+    PalusUtil.checkNull(vars, "The variable array could not be null.");
+    PalusUtil.checkTrue(contract instanceof TheoryContract, "The contract should be "
+        + "TheoryContract type, not: " + contract.getClass());
+    PalusUtil.checkTrue(contract.getArity() == vars.length, "The given variable "
+        + "length: " + vars.length + " does not equal to the required length in "
+        + "the object contract: " + contract.getArity());
     
     this.contract = (TheoryContract)contract;
     this.vars = new Variable[vars.length];

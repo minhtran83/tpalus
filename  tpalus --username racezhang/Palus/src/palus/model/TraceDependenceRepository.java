@@ -106,7 +106,8 @@ public class TraceDependenceRepository {
       String[] serilizableParamValues = trace.getSerializableParams();
       int[] paramIDs = trace.getParamObjectIDs();
       //the length of parameter name and parameter id should be the same
-      PalusUtil.checkTrue(serilizableParamValues.length == paramIDs.length);
+      PalusUtil.checkTrue(serilizableParamValues.length == paramIDs.length, "The serializable param value "
+          + "length: " + serilizableParamValues.length + " should == param id length: " + paramIDs.length);
       //find dependence for each parameter
       for(int i = 0; i < serilizableParamValues.length; i++) {
         //get the parameter type, bject id, and correspoding position
@@ -192,7 +193,8 @@ public class TraceDependenceRepository {
           dependentPosition = position;
           //check, if it depends on the return type. It should be a method exit event
           if(position.isRetPosition()) {
-            PalusUtil.checkTrue(event instanceof MethodExitEvent);
+            PalusUtil.checkTrue(event instanceof MethodExitEvent, "The event: " + event
+                + " should be a MethodExitEvent type!");
           }
         }
       }
@@ -257,8 +259,10 @@ public class TraceDependenceRepository {
       }
       
       //there should be only 1 corresponding transition for the give trace & position
-      PalusUtil.checkTrue(dependentTransitions.size() == 1);
-      PalusUtil.checkTrue(dependentOnTransitions.size() == 1);
+      PalusUtil.checkTrue(dependentTransitions.size() == 1, "The dependentTransitions' size: "
+          + dependentTransitions.size() + " should == 1.");
+      PalusUtil.checkTrue(dependentOnTransitions.size() == 1, "The dependentOnTransitions' size: "
+          + dependentOnTransitions.size() + " should == 1.");
       //get the transition
       Transition dependentTransition = dependentTransitions.get(0);
       Transition dependentOnTransition = dependentOnTransitions.get(0);
@@ -321,7 +325,8 @@ public class TraceDependenceRepository {
         continue;
       }
       
-      PalusUtil.checkTrue(dependentOnTransitions.size() == 1);
+      PalusUtil.checkTrue(dependentOnTransitions.size() == 1, "The dependentOnTransitions' size: "
+           + dependentOnTransitions.size() + " should == 1.");
       Transition dependentOnTransition = dependentOnTransitions.get(0);
       
       //check the validity
@@ -380,7 +385,8 @@ public class TraceDependenceRepository {
   private static void checkTraceSeqNumberValidity(List<TraceEvent> traces) {
       int id = 0;
       for(TraceEvent trace : traces) {
-         PalusUtil.checkTrue(trace.getTraceEventSequenceID() == id);
+         PalusUtil.checkTrue(trace.getTraceEventSequenceID() == id, "The trace event sequence id: "
+             + trace.getTraceEventSequenceID() + " should equal to id: " + id);
          id++;
       }
   }

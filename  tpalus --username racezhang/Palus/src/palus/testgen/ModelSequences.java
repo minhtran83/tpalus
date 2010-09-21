@@ -62,7 +62,7 @@ public class ModelSequences {
    * The default constructor
    * */
   public ModelSequences(Map<Class<?>, ClassModel> models) {
-    PalusUtil.checkNull(models);
+    PalusUtil.checkNull(models, "The class models could not be null.");
     this.models = models;
     this.modelSequences = new LinkedHashMap<Class<?>, Map<ModelNode, List<Sequence>>>();
     this.stats = new ModelSequencesStats(models);
@@ -94,7 +94,7 @@ public class ModelSequences {
   }
   
   public Map<ModelNode, List<Sequence>> getSequenceMap(Class<?> clazz) {
-    PalusUtil.checkNull(clazz);
+    PalusUtil.checkNull(clazz, "The clazz argument could not be null.");
     return this.modelSequences.get(clazz);
   }
   
@@ -118,8 +118,8 @@ public class ModelSequences {
     ClassModel classModel = this.models.get(clazz);
     
     //double check the consistence of selected model
-    PalusUtil.checkNull(classModel);
-    PalusUtil.checkNull(classModel.getRoot());
+    PalusUtil.checkNull(classModel, "The class model to create sequence could not be null.");
+    PalusUtil.checkNull(classModel.getRoot(), "The root in class model could not be null.");
     
     //get the root, and randomly pick up a root transition
     ModelNode root = classModel.getRoot();
@@ -157,7 +157,7 @@ public class ModelSequences {
     Map<ModelNode, List<Sequence>> nodeSequencesMap = this.modelSequences.get(modelClass);
     
     //double check
-    PalusUtil.checkNull(nodeSequencesMap);
+    PalusUtil.checkNull(nodeSequencesMap, "The node sequence map could not be null.");
     
     //randomly pick up a start node
     int numOfModelNode = nodeSequencesMap.keySet().size();
@@ -165,10 +165,10 @@ public class ModelSequences {
     ModelNode startNode = allNodes.get(Randomness.nextRandomInt(numOfModelNode));
     
     //double check
-    PalusUtil.checkNull(startNode);
+    PalusUtil.checkNull(startNode, "The starting model node could not be null.");
     //get the sequence list which produce the model node
     List<Sequence> seqList = nodeSequencesMap.get(startNode);
-    PalusUtil.checkNull(seqList);
+    PalusUtil.checkNull(seqList, "The sequence list could not be null.");
 //    PalusUtil.checkTrue(!seqList.isEmpty());
     if(seqList.isEmpty()) {
       Log.log(" the sequence is empty. bug?");
@@ -205,8 +205,8 @@ public class ModelSequences {
    * */
   public void updateModelSequences(Sequence sequence, Transition transition) {
     //check the nullness
-    PalusUtil.checkNull(sequence);
-    PalusUtil.checkNull(transition);
+    PalusUtil.checkNull(sequence, "The constructed sequence could not be null.");
+    PalusUtil.checkNull(transition, "The extended transition could not be null.");
     
     //get the source and dest nodes of the transition
     ModelNode sourceNode = transition.getSourceNode();
@@ -217,8 +217,8 @@ public class ModelSequences {
     this.stats.incrExecutedTransitionCoverage(clz, transition);
     
     //check nullness here
-    PalusUtil.checkNull(sourceNode);
-    PalusUtil.checkNull(destNode);
+    PalusUtil.checkNull(sourceNode, "The source code could not be null.");
+    PalusUtil.checkNull(destNode, "The dest node could not be null.");
    
     //update the model sequence map according to whether it is an extended
     //transition or a newly created transition from root
@@ -230,7 +230,7 @@ public class ModelSequences {
       }
       //get the sequence map
       Map<ModelNode, List<Sequence>> nodeSequencesMap = this.modelSequences.get(clz);
-      PalusUtil.checkNull(nodeSequencesMap);
+      PalusUtil.checkNull(nodeSequencesMap, "The node sequence map could not be null.");
       if(!nodeSequencesMap.containsKey(sourceNode)) {
         Log.log("A likely bug! There is no source node: " + sourceNode.getNodeId()
             + " in the sequence map.");

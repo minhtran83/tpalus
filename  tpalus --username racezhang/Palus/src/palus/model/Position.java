@@ -46,7 +46,7 @@ public final class Position implements Serializable {
      * Returns the position for the parameter object at the i-th position.
      * */
 	public static Position getParaPosition(int i) {
-		PalusUtil.checkTrue(i > 0);
+		PalusUtil.checkTrue(i > 0, "The given position int i: " + i + " should > 0");
 		return new Position(i);
 	}
 	
@@ -85,7 +85,8 @@ public final class Position implements Serializable {
      * Else, thrown an exception indicating illegal argument.
      * */
 	public int getParamPosition() {
-		PalusUtil.checkTrue(this.isParamPosition());
+		PalusUtil.checkTrue(this.isParamPosition(), "The current position: " + i
+		    + " is not a param position!");
 		return this.i;
 	}
 	
@@ -93,7 +94,7 @@ public final class Position implements Serializable {
 	 * Returns the integer value representing the position
 	 * */
 	public int toIntValue() {
-	  PalusUtil.checkTrue(i != Integer.MAX_VALUE);
+	  PalusUtil.checkTrue(i != Integer.MAX_VALUE, "The position int i should be set!");
 	  return this.i;
 	}
 	

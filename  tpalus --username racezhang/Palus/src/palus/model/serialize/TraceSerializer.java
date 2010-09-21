@@ -46,8 +46,8 @@ public class TraceSerializer {
    * Constructor. Initialize the traces and the serialized file.
    * */
   public TraceSerializer(List<TraceEvent> events, File file) throws IOException {
-    PalusUtil.checkNull(events);
-    PalusUtil.checkNull(file);
+    PalusUtil.checkNull(events, "The trace event list to serialize could not be null.");
+    PalusUtil.checkNull(file, "The file for serialization could not be null.");
     this.events = events;
     this.file = file;
     //create the file in case of the nonexistence

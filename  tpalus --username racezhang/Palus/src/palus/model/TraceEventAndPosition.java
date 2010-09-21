@@ -24,8 +24,8 @@ public class TraceEventAndPosition {
      * Default constructor. Just assigning values to the wrapped objects.
      * */
 	public TraceEventAndPosition(TraceEvent event, Position position) {
-	    PalusUtil.checkNull(event);
-	    PalusUtil.checkNull(position);
+	    PalusUtil.checkNull(event, "The trace event could not be null.");
+	    PalusUtil.checkNull(position, "The position could not be null.");
 		this.event = event;
 		this.position = position;
 	}

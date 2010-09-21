@@ -27,7 +27,7 @@ public class SequenceFilters {
    * when it is generated. Thus, we filter them here
    * */
   public static List<ExecutableSequence> filterRepetitiveSequences(List<ExecutableSequence> sequences) {
-    PalusUtil.checkNull(sequences);
+    PalusUtil.checkNull(sequences, "The list of sequences for filtering could not be null.");
     //use a set to filter it
     Set<ExecutableSequence> unique_sequences = new LinkedHashSet<ExecutableSequence>();
     for(ExecutableSequence sequence : sequences) {
@@ -41,7 +41,7 @@ public class SequenceFilters {
    * Filters out sequences that have non failures
    * */
   public static List<ExecutableSequence> filterNonFailedSequences(List<ExecutableSequence> sequences) {
-    PalusUtil.checkNull(sequences);
+    PalusUtil.checkNull(sequences, "The list of sequences for filtering could not be null.");
     List<ExecutableSequence> failedSequences = new LinkedList<ExecutableSequence>();
     for(ExecutableSequence es : sequences) {
       if(es.hasFailure()) {
@@ -55,7 +55,7 @@ public class SequenceFilters {
    * Filters out sequences that have the same failed method/contracts
    * */
   public static List<ExecutableSequence> filterMightBeRepeatedFailingSequences(List<ExecutableSequence> sequences) {
-    PalusUtil.checkNull(sequences);
+    PalusUtil.checkNull(sequences, "The sequence list for filtering could not be null!");
     
     List<ExecutableSequence> uniqueFailureSequence = new LinkedList<ExecutableSequence>();
     //keep the signature of a failure
@@ -69,10 +69,11 @@ public class SequenceFilters {
       }
       int failureIndex = es.getFailureIndex();
       List<Check> checks = es.getFailures(failureIndex);
-      PalusUtil.checkTrue(checks != null && !checks.isEmpty());
+      PalusUtil.checkTrue(checks != null && !checks.isEmpty(), "The failure checks should not"
+          + "be null or empty!");
       
       StatementKind statement = es.sequence.getStatementKind(failureIndex);
-      PalusUtil.checkNull(statement);
+      PalusUtil.checkNull(statement, "The statement where a failure occurs could not be null.");
       
       boolean isRedudant = true;
       for(Check check : checks) {

@@ -161,7 +161,8 @@ public class TheoryCheckingVisitor implements ExecutionVisitor {
       } else {
         //Log.log("in theory checking visitor, contract evaluation: " + contract.toCodeString()
         //    + " throws an exception");
-        PalusUtil.checkTrue(exprOutcome instanceof ExceptionalExecution);
+        PalusUtil.checkTrue(exprOutcome instanceof ExceptionalExecution, "The expression outcome "
+            + "is: " + exprOutcome.getClass() + ", which is not ExceptionalExecution type.");
         ExceptionalExecution exceptionExecution = (ExceptionalExecution)exprOutcome;
         //Log.log("exception name: " + exceptionExecution.getException());
         if(!contract.evalExceptionMeansFailure()) {
@@ -250,7 +251,8 @@ public class TheoryCheckingVisitor implements ExecutionVisitor {
       } else {
         Log.log("in theory checking visitor, contract evaluation: " + contract.toCodeString()
             + " throws an exception in exhaustive mode");
-        PalusUtil.checkTrue(exprOutcome instanceof ExceptionalExecution);
+        PalusUtil.checkTrue(exprOutcome instanceof ExceptionalExecution, "The expression outcome is: "
+            + exprOutcome.getClass() + ", which is not ExceptionalExecution.");
         ExceptionalExecution exceptionExecution = (ExceptionalExecution)exprOutcome;
         Log.log("exception name: " + exceptionExecution.getException());
         if(!contract.evalExceptionMeansFailure()) {
@@ -271,7 +273,8 @@ public class TheoryCheckingVisitor implements ExecutionVisitor {
    * */
   private Map<Class<?>, List<Pair<Variable, Object>>> findRuntimeObjectsByClass(ExecutableSequence sequence,
       int index) {
-    PalusUtil.checkTrue(index < sequence.sequence.size());
+    PalusUtil.checkTrue(index < sequence.sequence.size(), "The index: " + index +
+        " should be less than sequence size: " + sequence.sequence.size());
     Map<Class<?>, List<Pair<Variable, Object>>> retMap = new LinkedHashMap<Class<?>, List<Pair<Variable, Object>>>();
     ExecutionOutcome[] allOutcomes = sequence.getAllResults();
     for(int i = 0; i <= index /*we only care about */; i++) {
@@ -307,22 +310,28 @@ public class TheoryCheckingVisitor implements ExecutionVisitor {
   private boolean findRuntimeObjectForSequence(ExecutableSequence sequence, int index,
       Object[] inputObjects, Variable[] variables) {
     StatementKind statement = sequence.sequence.getStatementKind(index);
-    PalusUtil.checkTrue(statement.getInputTypes().size() == inputObjects.length);
+    PalusUtil.checkTrue(statement.getInputTypes().size() == inputObjects.length, "The input "
+        + " type size: " + statement.getInputTypes().size() + " !=  input object length: "
+        + inputObjects.length);
     
     ExecutionOutcome[] allOutcomes = sequence.getAllResults();
-    PalusUtil.checkTrue(allOutcomes.length == sequence.sequence.size());
+    PalusUtil.checkTrue(allOutcomes.length == sequence.sequence.size(), "The outcome length: "
+        + allOutcomes.length + " != sequence size: " + sequence.sequence.size());
     //note that sequence is the whole executable sequence list. The index is the index-th
     //statement in the whole sequence, inputObject[] is the object to get    
-    PalusUtil.checkTrue(variables.length== inputObjects.length);
+    PalusUtil.checkTrue(variables.length== inputObjects.length, "The variables length: "
+        + variables.length + " != input objects length: " + inputObjects.length);
     
     //fetch the runtime object for each variable
     for(int i = 0; i < variables.length; i++) {
       Variable var = variables[i];
       int creatingIndex = var.getDeclIndex();
       //the statement which creates the variable should be before the current one
-      PalusUtil.checkTrue(creatingIndex < index);
+      PalusUtil.checkTrue(creatingIndex < index, "The creating index of a var: "
+          + creatingIndex  + " should < the current index: " + index);
       ExecutionOutcome outcome = allOutcomes[creatingIndex];
-      PalusUtil.checkTrue(outcome instanceof NormalExecution);
+      PalusUtil.checkTrue(outcome instanceof NormalExecution, "The outcome: "
+          + outcome + " should be a NormalExecution!");
       //the execution result should be normal execution
       NormalExecution ne = (NormalExecution)outcome;
       inputObjects[i] = ne.getRuntimeValue();
@@ -369,8 +378,8 @@ public class TheoryCheckingVisitor implements ExecutionVisitor {
    * */
   private List<List<Pair<Variable, Object>>> computeCrossProductOfInput(Map<Class<?>, List<Pair<Variable, Object>>> inputMap,
       Class<?>[] requiredTypes) {
-    PalusUtil.checkTrue(requiredTypes.length > 0);
-    PalusUtil.checkTrue(inputMap.size() > 0);
+    PalusUtil.checkTrue(requiredTypes.length > 0, "The length of required types should > 0.");
+    PalusUtil.checkTrue(inputMap.size() > 0, "The input map size should > 0.");
     
     //get a list of input values, each element is a list of inputs (variable, object pair)
     List<List<Pair<Variable, Object>>> crossProducts = new LinkedList<List<Pair<Variable, Object>>>();
@@ -391,7 +400,8 @@ public class TheoryCheckingVisitor implements ExecutionVisitor {
     //the size of each list should be the same
     for(List<Pair<Variable, Object>> list : crossProducts) {
       //System.out.println("list.size: " + list.size() + ",  require type length: " + requiredTypes.length);
-      PalusUtil.checkTrue(list.size() == requiredTypes.length);
+      PalusUtil.checkTrue(list.size() == requiredTypes.length, "The list length: " + list.size()
+          + " does not equal to the length of required types: " + requiredTypes.length);
     }
     
     return crossProducts;

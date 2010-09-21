@@ -62,7 +62,7 @@ public final class TheoryContract implements ObjectContract {
    * The constructor to initialize the checked theory and its object instance
    * */
   public TheoryContract(Method theory) {
-    PalusUtil.checkNull(theory);
+    PalusUtil.checkNull(theory, "The method argument could not be null.");
     this.checkTheoryValidity(theory);
     this.theory = theory;
     this.obj = this.createNewInstance(theory);
@@ -89,7 +89,7 @@ public final class TheoryContract implements ObjectContract {
          throw new RuntimeException("Class: " + clz + " is not a super class for: " + obj.getClass()); 
         }
       } else {
-        PalusUtil.checkTrue(!clz.isPrimitive());
+        PalusUtil.checkTrue(!clz.isPrimitive(), "The class: " + clz.getName() + " could not be primitive!");
       }
     }
     //invoke it
@@ -209,12 +209,12 @@ public final class TheoryContract implements ObjectContract {
       if(theory.getParameterTypes().length == 0) {
         throw new IllegalArgumentException("Theory: " + theory.toGenericString() + " should have non empty parameter ");
       }
-      PalusUtil.checkNull(theoryAnno);
+      PalusUtil.checkNull(theoryAnno, "The theory annotation should not be null.");
       //check its ownerclass
       Class<?> owner = theory.getDeclaringClass();
       RunWith runAnno = owner.getAnnotation(RunWith.class);
       Class<?> runClass = runAnno.value();
-      PalusUtil.checkNull(runClass);
+      PalusUtil.checkNull(runClass, "The class name in annotation should not be null.");
       if(runClass != Theories.class) {
         throw new IllegalArgumentException("It lacks RunWith(Theories.class) annotation "
             + "for class: " + runClass);

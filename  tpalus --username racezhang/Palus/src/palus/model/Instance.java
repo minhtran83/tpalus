@@ -23,7 +23,7 @@ public final class Instance {
 	 * Constructor. Initialize an instance.
 	 * */
 	public Instance(int objectId, Class<?> type) {
-	  PalusUtil.checkNull(type);
+	  PalusUtil.checkNull(type, "The class type could not be null.");
 	  this.type = type;
 	  this.objId = objectId;
 	}

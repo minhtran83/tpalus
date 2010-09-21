@@ -25,7 +25,7 @@ public class TraceProcessingUtils {
   public static void removeUnmatchedTracesPerInstance(Map<Class<?>, Map<Instance,
       List<TraceEventAndPosition>>> instanceClassMap) {
     //a valid map
-    PalusUtil.checkNull(instanceClassMap);
+    PalusUtil.checkNull(instanceClassMap, "The given instanceClassMap could not be null.");
     //process each instance
     for(Class<?> clz : instanceClassMap.keySet()) {
       Map<Instance, List<TraceEventAndPosition>> instanceMap = instanceClassMap.get(clz);

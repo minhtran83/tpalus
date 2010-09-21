@@ -59,7 +59,8 @@ public class StatesOfSequences {
       return null;
     }
     Set<Class<?>> compatibleSet = this.types.getMatches(clazz);
-    PalusUtil.checkTrue(compatibleSet != null && !compatibleSet.isEmpty());
+    PalusUtil.checkTrue(compatibleSet != null && !compatibleSet.isEmpty(),
+        "The compatible set should not be null or empty for type: " + clazz);
     Class<?> chosenClass = Randomness.randomSetMember(compatibleSet);
     Map<AbstractState, Set<Sequence>> stateSequences = this.sequenceStates.get(chosenClass);
     AbstractState s = Randomness.randomSetMember(stateSequences.keySet());
@@ -75,8 +76,8 @@ public class StatesOfSequences {
    * If there is no such abstract state, it returns null.
    * */
   public Sequence randomChooseSequenceForState(Class<?> clazz, AbstractState state) {
-    PalusUtil.checkNull(clazz);
-    PalusUtil.checkNull(state);
+    PalusUtil.checkNull(clazz, "The class for selecting state sequence could not be null!");
+    PalusUtil.checkNull(state, "The abstract state for selecting sequences could not be null!");
     if(!this.sequenceStates.containsKey(clazz)) {
       return null;
     }
@@ -103,7 +104,7 @@ public class StatesOfSequences {
       }
       
       for(Set<Sequence> sequences : stateSequences.values()) {
-        PalusUtil.checkTrue(!sequences.isEmpty());
+        PalusUtil.checkTrue(!sequences.isEmpty(), "The sequences set should not be empty!");
         retSeqs.add(Randomness.randomSetMember(sequences));
       }
     }
@@ -122,7 +123,7 @@ public class StatesOfSequences {
    * Get the outcome and compute the abstract state
    * */
   public void add(Sequence sequence, ExecutionOutcome[] outcomes) {
-    PalusUtil.checkTrue(sequence.hasActiveFlags());
+    PalusUtil.checkTrue(sequence.hasActiveFlags(), "The sequence should have active flags.");
     
     //List<Class<?>> lastStmtVarTypes = sequence.getLastStatementTypes();
     List<Variable> lastStmtVars = sequence.getLastStatementVariables();
@@ -142,7 +143,8 @@ public class StatesOfSequences {
             continue;
           }
           
-          PalusUtil.checkTrue(declaredType.isAssignableFrom(runtimeType));
+          PalusUtil.checkTrue(declaredType.isAssignableFrom(runtimeType), "The declared type: "
+              + declaredType.getName() + " should be an assisgnable form of: " + runtimeType.getName());
           
           AbstractState abState = new AbstractState(runtimeObject, runtimeType);
           //update the map
