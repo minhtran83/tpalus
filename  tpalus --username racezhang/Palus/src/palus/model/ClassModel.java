@@ -912,8 +912,8 @@ public class ClassModel implements Serializable {
 	  
 	  if(exitNodes.size() == 0) {
 	    System.out.println("exit: " + this.exit.getNodeId() + "");
-	    System.out.println("------------------");
-	    System.out.println(this.getModelInfo());
+//	    System.out.println("------------------");
+//	    System.out.println(this.getModelInfo());
 	  }
 	  
 	  PalusUtil.checkTrue(exitNodes.size() > 0, "The existNodes's size: " + exitNodes.size()

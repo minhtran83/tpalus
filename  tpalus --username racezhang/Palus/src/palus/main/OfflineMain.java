@@ -175,6 +175,10 @@ public class OfflineMain {
       throw new RuntimeException("Please set up the class file path, before using the option of only model user provided.");
     }
     
+    if(PalusOptions.instance_process_file != null) {
+      ClassesToModel.initializeInstanceToProcess(PalusOptions.instance_process_file);
+    }
+    
     //build model from saved trace
     if(!PalusOptions.fall_back_to_randoop) {
       if(buildFromTrace) {
