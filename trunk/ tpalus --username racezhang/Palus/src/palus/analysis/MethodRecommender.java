@@ -26,7 +26,8 @@ public class MethodRecommender {
   private final MethodRelations relations;
   
   public MethodRecommender(Collection<Class<?>> classes) {
-    PalusUtil.checkNull(classes);
+    PalusUtil.checkNull(classes, "The class collection given to the method recommender "
+        + "could not be null!");
     relations = new MethodRelations(classes);
     //this.buildDependence();
   }

@@ -24,8 +24,8 @@ public class DependenceEdge implements Serializable {
 	 * The only constructor
 	 * */
 	public DependenceEdge(Transition transition, ModelNode node) {
-		PalusUtil.checkNull(transition);
-		PalusUtil.checkNull(node);
+		PalusUtil.checkNull(transition, "The transition could not be null.");
+		PalusUtil.checkNull(node, "The model node could not be null.");
 		
 		this.transition = transition;
 		this.dependentNode = node;

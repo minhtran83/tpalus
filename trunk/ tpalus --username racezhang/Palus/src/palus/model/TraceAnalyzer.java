@@ -387,7 +387,8 @@ public class TraceAnalyzer {
 				//XXX be aware using pair event
 				TraceEvent pairEvent = event.getPairEvent();
 				PalusUtil.checkNull(pairEvent);
-				PalusUtil.checkTrue(pairEvent instanceof MethodExitEvent);
+				PalusUtil.checkTrue(pairEvent instanceof MethodExitEvent, "The pair event: " + pairEvent
+				    + " should be MethodExitEvent type!");
 				int retObjId = ((MethodExitEvent)pairEvent).getRetObjectID();
 				if(retObjId == 0) {
 					continue;

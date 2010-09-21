@@ -46,8 +46,8 @@ public class ModelSerializer {
    * file.
    * */
   public ModelSerializer(Map<Class<?>, ClassModel> models, File file) {
-    PalusUtil.checkNull(models);
-    PalusUtil.checkNull(file);
+    PalusUtil.checkNull(models, "The given models to serialize could not be null.");
+    PalusUtil.checkNull(file, "The file for serialization could not be null.");
     this.models = models;
     this.file = file;
   }

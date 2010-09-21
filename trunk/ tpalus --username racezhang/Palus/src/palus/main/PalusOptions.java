@@ -117,6 +117,9 @@ public class PalusOptions {
   @Option("Check npe or not")
   public static boolean check_npe = true;
   
+  @Option("Use enum type")
+  public static boolean use_enum_type = false;
+  
   //options not used in this class
   
   @Unpublicized
@@ -200,6 +203,8 @@ public class PalusOptions {
     //check npe or not
     GenInputsAbstract.check_npe = PalusOptions.check_npe;
     GenInputsAbstract.error_ignored_methods = PalusOptions.error_ignored_methods;
+    GenInputsAbstract.use_enum_type = PalusOptions.use_enum_type;
+    
     //if users provide a list of ignored methods, we add them to the the uninteresting
     //method list. so that any exception thrown by this method will be ignored
     if(GenInputsAbstract.error_ignored_methods != null) {

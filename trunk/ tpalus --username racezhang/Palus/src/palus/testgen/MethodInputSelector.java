@@ -56,7 +56,7 @@ public class MethodInputSelector {
    * Constructor that initializes fields in this class
    * */
   public MethodInputSelector(ParamValueCollections collections) {
-    PalusUtil.checkNull(collections);
+    PalusUtil.checkNull(collections, "The parameter value collection could not be null.");
     this.collections = collections;
     this.useMethodSpecificInput = TestGenMain.useMethodSpecificValue;
   }
@@ -190,7 +190,7 @@ public class MethodInputSelector {
         //XXX look for a proper sequence
         if(edge != null) {
           ModelNode dependentNode = edge.getDependentNode();
-          PalusUtil.checkNull(dependentNode);
+          PalusUtil.checkNull(dependentNode, "The dependent node could not be null.");
           //System.out.println("The dependence edge is not null");
           //looking for sequence from that model node
           List<Sequence> lists = generator.getSequenceFromModelSequence(dependentNode);
@@ -208,7 +208,7 @@ public class MethodInputSelector {
       if(l == null && value != null && ModelBasedGenerator.use_abstract_state_as_selector
           && Randomness.nextRandomBool() /*flip a coin here*/) {
         AbstractState state = value.getAbstractState();
-        PalusUtil.checkNull(state);
+        PalusUtil.checkNull(state, "The abstract state could not be null.");
         Sequence s = generator.sequenceStates.randomChooseSequenceForState(t, state);
         if(s != null) {
           //XXX never executed?
@@ -315,7 +315,8 @@ public class MethodInputSelector {
   public InputsAndSuccessFlag selectInputsForExtend(Sequence baseSequence, 
       StatementKind statement, Transition transition, SequenceCollection components,
       ModelBasedGenerator generator) {
-    PalusUtil.checkTrue(transition.hasUniqueDecorationPosition());
+    PalusUtil.checkTrue(transition.hasUniqueDecorationPosition(), "Transition: "
+        + transition + " does not have a unique decoration position.");
     //the position in the transition to be extended
     int position = transition.getUniqueDecorationPosition();
     
@@ -326,7 +327,7 @@ public class MethodInputSelector {
       selectedDecoration = decorations.get(Randomness.nextRandomInt(decorations.size()));
     }
     
-    PalusUtil.checkNull(selectedDecoration);
+    PalusUtil.checkNull(selectedDecoration, "The selected decoration could not be null.");
     
     //the type we need
     List<Class<?>> inputClasses = statement.getInputTypes();
@@ -446,7 +447,7 @@ public class MethodInputSelector {
         //flip a coin here
         if(edge != null) {
           ModelNode dependentNode = edge.getDependentNode();
-          PalusUtil.checkNull(dependentNode);
+          PalusUtil.checkNull(dependentNode, "The dependent node could not be null.");
           //looking for sequence from that model node
           List<Sequence> lists = generator.getSequenceFromModelSequence(dependentNode);
           if(lists != null && !lists.isEmpty()) {
@@ -463,7 +464,7 @@ public class MethodInputSelector {
       if(l == null && value != null && ModelBasedGenerator.use_abstract_state_as_selector
           && Randomness.nextRandomBool() /*flip a coin here*/) {
         AbstractState state = value.getAbstractState();
-        PalusUtil.checkNull(state);
+        PalusUtil.checkNull(state, "The abstract state could not be null.");
         Sequence s = generator.sequenceStates.randomChooseSequenceForState(t, state);
         if(s != null) {
             Log.log("Choose abstract state of decoration values for extension, for type: " + t
@@ -622,9 +623,10 @@ public class MethodInputSelector {
    * Constructs a sequence for constructing a primitive or string type array
    * */
   private SimpleList<Sequence> constructPrimitiveOrStringArray(Object array, Class<?> componentType) {
-    PalusUtil.checkNull(array);
-    PalusUtil.checkNull(componentType);
-    PalusUtil.checkTrue(PalusUtil.isPrimitiveOrStringOneDimensionArrayType(array.getClass()));
+    PalusUtil.checkNull(array, "The array object could not be null.");
+    PalusUtil.checkNull(componentType, "The component type could not be null.");
+    PalusUtil.checkTrue(PalusUtil.isPrimitiveOrStringOneDimensionArrayType(array.getClass()),
+        "The array type: " + array.getClass() + " is not primitive or string.");
     
     //get the length
     int length = Array.getLength(array);

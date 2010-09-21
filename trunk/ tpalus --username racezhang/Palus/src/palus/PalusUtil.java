@@ -36,17 +36,29 @@ public class PalusUtil implements Opcodes{
       .asList(new String[] { "java/", /* "com/sun/", */"javax/", "sun/",
           "test/", "org/objectweb/asm/",
           "org/xmlpull/" });
-  
-	public static void checkTrue(boolean condition) {
-		if(!condition) {
-			throw new AssertionError("Assertion error!");
-		}
+//  
+//	public static void checkTrue(boolean condition) {
+//		if(!condition) {
+//			throw new AssertionError("Assertion error!");
+//		}
+//	}
+	
+	public static void checkTrue(boolean condition, String errorMsg) {
+	  if(!condition) {
+	    throw new AssertionError(errorMsg);
+	  }
 	}
 	
 	public static void checkNull(Object o) {
 		if(o == null) {
 			throw new IllegalArgumentException("Object: " + o + " is null!");
 		}
+	}
+	
+	public static void checkNull(Object o, String errorMsg) {
+	  if( o == null) {
+	    throw new IllegalArgumentException(errorMsg);
+	  }
 	}
 	
 	public static boolean isInit(MethodNode m) {
@@ -62,7 +74,7 @@ public class PalusUtil implements Opcodes{
     }
     
     public static String concatStrings(String[] strs) {
-      PalusUtil.checkNull(strs);
+      PalusUtil.checkNull(strs, "The string array for concatenating can not be null!");
       StringBuilder sb = new StringBuilder();
       for(String str : strs) {
         sb.append(str);
@@ -151,8 +163,9 @@ public class PalusUtil implements Opcodes{
     }
     
     public static int[] computeObjectIdInArray(Object array) {
-      PalusUtil.checkNull(array);
-      PalusUtil.checkTrue(array.getClass().isArray());
+      PalusUtil.checkNull(array, "The array input for computing object id can not be null!");
+      PalusUtil.checkTrue(array.getClass().isArray(), "The object is not an array type: "
+          + array.getClass());
       
       int length = Array.getLength(array);
       int[] retIDs = new int[length];
@@ -165,8 +178,10 @@ public class PalusUtil implements Opcodes{
     }
     
     public static String convertArrayToFlatString(Object array) {
-      PalusUtil.checkNull(array);
-      PalusUtil.checkTrue(array.getClass().isArray());
+      PalusUtil.checkNull(array, "The array input for converting array to flat string "
+          + "can not be null!");
+      PalusUtil.checkTrue(array.getClass().isArray(), "The array object is not an array type. "
+          + "It is: " + array.getClass());
       StringBuilder sb = new StringBuilder();
       
       int length = Array.getLength(array);
@@ -245,8 +260,8 @@ public class PalusUtil implements Opcodes{
 	}
 	
 	public static boolean isTwoArrayCompatible(Class<?> superType, Class<?> extendType) {
-	  PalusUtil.checkNull(superType);
-	  PalusUtil.checkNull(extendType);
+	  PalusUtil.checkNull(superType, "The given super type could not be null!");
+	  PalusUtil.checkNull(extendType, "The given extend type could not be null!");
 	  //PalusUtil.checkTrue(superType.isArray());
 	  if(!extendType.isArray()) {
 	    return false;
@@ -410,9 +425,10 @@ public class PalusUtil implements Opcodes{
 	
 	private static Object createOneDimenPrimitiveOrStringArrayFromStrings(Class<?> componentType,
 	    String[] values) {
-	  PalusUtil.checkNull(componentType);
-	  PalusUtil.checkTrue(isPrimitiveOrStringType(componentType));
-	  PalusUtil.checkNull(values);
+	  PalusUtil.checkNull(componentType, "The array's component type could not be null!");
+	  PalusUtil.checkTrue(isPrimitiveOrStringType(componentType), "The component type: "
+	      +  componentType.getName() + " is not primitive or string type.");
+	  PalusUtil.checkNull(values, "The string[] values could not be null!");
 	  //create the array by reflection
 	  Object array = Array.newInstance(componentType, values.length);
 	  for(int i = 0; i < values.length; i++) {
@@ -425,7 +441,8 @@ public class PalusUtil implements Opcodes{
 	}
 	
 	public static Object createPrimitiveOrStringValueFromString(Class<?> t, String value) {
-	    PalusUtil.checkTrue(t.isPrimitive() || PalusUtil.isStringType(t));
+	    PalusUtil.checkTrue(t.isPrimitive() || PalusUtil.isStringType(t), "The given type: "
+	        + t.getName() + " is not primtive and string type.");
 	    
 	    if(PalusUtil.isStringType(t)) {
 	      return value;
@@ -442,7 +459,7 @@ public class PalusUtil implements Opcodes{
 	    } else if ( t == double.class) {
 	      return new Double(value);
 	    } else if ( t == char.class) {
-	      PalusUtil.checkTrue(value.length() == 1);
+	      PalusUtil.checkTrue(value.length() == 1, "The length of given char is not 1.");
 	      return new Character(value.charAt(0));
 	    } else if ( t == boolean.class) {
 	      return Boolean.getBoolean(value);

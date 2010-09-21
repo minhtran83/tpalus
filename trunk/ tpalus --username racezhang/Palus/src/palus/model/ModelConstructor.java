@@ -235,8 +235,8 @@ public class ModelConstructor {
 		//add root/exit node
         model.addRoot(root);
         model.addExit(exit);
-        PalusUtil.checkTrue(root.isRootNode());
-        PalusUtil.checkTrue(exit.isExitNode());
+        PalusUtil.checkTrue(root.isRootNode(), "The root node is not valid.");
+        PalusUtil.checkTrue(exit.isExitNode(), "The exit node is not valid.");
         //check the validity of the given trace list
         TraceAnalyzer.checkTraceEventsAndPosition(traceList);
 		
@@ -244,8 +244,8 @@ public class ModelConstructor {
 		this.buildClassModelRecurisvely(model, root, exit, traceList);
 		
 		//check the invariant
-		PalusUtil.checkTrue(root.isRootNode());
-		PalusUtil.checkTrue(exit.isExitNode());
+		PalusUtil.checkTrue(root.isRootNode(), "The root node is not valid.");
+		PalusUtil.checkTrue(exit.isExitNode(), "The exit node is not valid.");
 		
 		return model;
 	}
@@ -263,8 +263,10 @@ public class ModelConstructor {
 	    PalusUtil.checkNull(srcNode);
 	    PalusUtil.checkNull(destNode);
 	    PalusUtil.checkNull(traceList);
-	    PalusUtil.checkTrue(srcNode != destNode);
-	    PalusUtil.checkTrue(srcNode.getClassModel() == model && destNode.getClassModel() == model);
+	    PalusUtil.checkTrue(srcNode != destNode, "The src node should != destNode.");
+	    PalusUtil.checkTrue(srcNode.getClassModel() == model && destNode.getClassModel() == model,
+	        "The class model of src node: " + srcNode.getClassModel() + " should == that of dest node: "
+	        + destNode.getClassModel());
 	    TraceAnalyzer.checkTraceEventsAndPosition(traceList);
 	    
 	    //no more trace to process
@@ -332,7 +334,7 @@ public class ModelConstructor {
 	 * method pair index in the first level
 	 * */
 	private Integer[] getFirstLevelEventsStartIndex(List<TraceEventAndPosition> traceList) {
-	    PalusUtil.checkTrue(traceList.size() >= 2);
+	    PalusUtil.checkTrue(traceList.size() >= 2, "The trace list size: " + traceList.size() + " should >= 2.");
 	    TraceAnalyzer.checkTraceEventsAndPosition(traceList);
 	    if(traceList.size() == 2) {
 	      return new Integer[]{0};
@@ -359,12 +361,12 @@ public class ModelConstructor {
 	      }
 	      else if(traceEventAndPosition.event.getPairEvent() == currentTrace.event && i%2 == 1 //XXX FIXME
 	          && traceEventAndPosition.event.getUniqueTracePairID() == currentTrace.event.getUniqueTracePairID()) {
-	        PalusUtil.checkTrue(!currentHasMatched);
+	        PalusUtil.checkTrue(!currentHasMatched, "The currentHasMatched flag should be false!");
 	        currentHasMatched = true;
 	      }
 	    }
 	    
-	    PalusUtil.checkTrue(currentHasMatched);
+	    PalusUtil.checkTrue(currentHasMatched, "The currentHasMatched flag should be true!");
 	    
         //return (Integer[])indexList.toArray(new Integer[0]);
 		//convert list to an array, the above statement will issue a warning

@@ -1,8 +1,14 @@
 // Copyright 2010 Google Inc. All Rights Reserved.
 package palus.trace;
 
+import palus.model.serialize.TraceSerializer;
+
+import palus.model.TraceAnalyzer;
+
 import palus.PalusUtil;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -13,6 +19,22 @@ import java.util.List;
  *
  */
 public class TraceStack {
+  
+   /**
+    * use checkpointing for recorded traces or not
+    * */
+    public static boolean use_check_point = false;  
+  
+    /**
+     * The check pointing of recorded traces. If the recorded trace exceeds the
+     * size. It will first dump it to disk, and reclaim the memory
+     * */
+    public static int check_point_size = 100000;
+    
+    /**
+     * The number of splitted trace file to disk
+     * */
+    private static int split_file_count = 0;
   
     /**
      * The list keeping all recorded traces
@@ -54,7 +76,33 @@ public class TraceStack {
 						className, methodName, methodDesc, thiz, params);
 			}
 		}
-		PalusUtil.checkNull(pushItem);
+		PalusUtil.checkNull(pushItem, "The trace event item to push into stack could not be null.");
 		traces.add(pushItem);
+		
+		//if the traces grows too fast
+		if(TraceStack.use_check_point && traces.size() >= TraceStack.check_point_size) {
+		  check_point_recorded_traces();
+		}
+	}
+	
+	private static void check_point_recorded_traces() {
+	  Tracer.switchOff();
+	  
+	  File dump_file = new File(TraceAnalyzer.PROJECT_NAME + "_partial_" + (split_file_count++)
+	      + ".model");
+	  try {
+	    TraceSerializer objectSerializer = new TraceSerializer(traces, dump_file);
+        objectSerializer.serializeTracesAsObject();
+      } catch (IOException e1) {
+        e1.printStackTrace();
+        throw new RuntimeException(e1);
+      }
+      
+      System.out.println("Split succeeds! " + dump_file.getAbsolutePath());
+      
+      //reclaim the memory
+	  traces.clear();
+	  
+	  Tracer.switchOn();
 	}
 }

@@ -77,7 +77,7 @@ public class ClassModel implements Serializable {
 	 * Creates an empty class model for the given type
 	 * */
 	public ClassModel(Class<?> modelledClass) {
-		PalusUtil.checkNull(modelledClass);
+		PalusUtil.checkNull(modelledClass, "The class to model could not be null!");
 		this.modelledClass = modelledClass;
 		this.classModelID = Stats.genClassModelID();
 		//XXX is it a good idea to put add root/ add exit inside constructor?
@@ -134,9 +134,10 @@ public class ClassModel implements Serializable {
 	}
 	
 	public void addRoot(ModelNode root) {
-		PalusUtil.checkTrue(this.root == null);
-		PalusUtil.checkNull(root);
-		PalusUtil.checkTrue(root.isRootNode());
+		PalusUtil.checkTrue(this.root == null, "There has already a root existed, no "
+		    + "more root node could be added.");
+		PalusUtil.checkNull(root, "The new added root could not be null.");
+		PalusUtil.checkTrue(root.isRootNode(), "The added node is a not a root node.");
 		if(!this.nodes.contains(root)) {
 		  this.nodes.add(root);
 		} else {
@@ -146,15 +147,17 @@ public class ClassModel implements Serializable {
 	}
 	
 	public ModelNode getRoot() {
-		PalusUtil.checkNull(this.root);
-		PalusUtil.checkTrue(this.root.isRootNode());
+		PalusUtil.checkNull(this.root, "The root node is null.");
+		PalusUtil.checkTrue(this.root.isRootNode(), "The root node is not valid, it "
+		    + "has " + this.root.getAllIncomingEdges().size() + " incoming edges.");
 		return this.root;
 	}
 	
 	public void addExit(ModelNode exit) {
-	  PalusUtil.checkTrue(this.exit == null);
-	  PalusUtil.checkNull(exit);
-	  PalusUtil.checkTrue(exit.isExitNode());
+	  PalusUtil.checkTrue(this.exit == null, "There has already an exit node existed, can not"
+	      + " add another exit node.");
+	  PalusUtil.checkNull(exit, "The exit node could not be null!");
+	  PalusUtil.checkTrue(exit.isExitNode(), "The new added exit node is not valid.");
 	  if(!this.nodes.contains(exit)) {
 	    this.nodes.add(exit);
 	  } else {
@@ -167,10 +170,13 @@ public class ClassModel implements Serializable {
 	 * This method is used during model merging
 	 * */
 	private void resetExit(ModelNode newExit) {
-	  PalusUtil.checkNull(this.exit);
+	  PalusUtil.checkNull(this.exit, "The original exit node could not be null, when "
+	      + "reseting the graph exit node.");
 	  //XXX PalusUtil.checkTrue(!this.exit.isExitNode() ||  !this.nodes.contains(exit));
-	  PalusUtil.checkNull(newExit);
-	  PalusUtil.checkTrue(newExit.isExitNode());
+	  PalusUtil.checkNull(newExit, "The new exit node could not be null, when "
+	      + "reseting the graph exit node.");
+	  PalusUtil.checkTrue(newExit.isExitNode(), "The new exit node is not "
+	      + "an exit node, its outgoing edge number: " + newExit.getAllOutgoingEdges().size());
 	  if(!this.nodes.contains(newExit)) {
 	    throw new RuntimeException("You could only reset an existing node.");
 	  }
@@ -178,14 +184,14 @@ public class ClassModel implements Serializable {
 	}
 	
 	public ModelNode getExit() {
-	  PalusUtil.checkNull(this.exit);
-	  PalusUtil.checkTrue(this.exit.isExitNode());
+	  PalusUtil.checkNull(this.exit, "The exit node should not be null.");
+	  PalusUtil.checkTrue(this.exit.isExitNode(), "The exit node is not valid.");
 	  return this.exit;
 	}
 	
 	public void addModelNode(ModelNode node) {
-	    PalusUtil.checkNull(node);
-	    PalusUtil.checkTrue(this.root != null);
+	    PalusUtil.checkNull(node, "The new adding node should not be null.");
+	    PalusUtil.checkTrue(this.root != null, "The root node should not be null.");
 	    
 		if(!this.nodes.contains(node)) {
 		    node.setClassModel(this);
@@ -197,7 +203,7 @@ public class ClassModel implements Serializable {
 	}
     
     public void addModelNodes(List<ModelNode> nodes) {
-      PalusUtil.checkNull(nodes);
+      PalusUtil.checkNull(nodes, "The node list for add should not be null.");
       for(ModelNode node : nodes) {
         this.addModelNode(node);
       }
@@ -207,10 +213,10 @@ public class ClassModel implements Serializable {
 	 * When deleting a node, its neighbor edges will also be deleted.
 	 * */
 	public void deleteModelNode(ModelNode node) throws ModelNodeNotFoundException {
-	  PalusUtil.checkNull(node);
-	  PalusUtil.checkNull(this.root);
+	  PalusUtil.checkNull(node, "The model node to delete could not be null.");
+	  PalusUtil.checkNull(this.root, "The root node could not be null.");
 	  //can not delete a root
-	  PalusUtil.checkTrue(this.root != node);
+	  PalusUtil.checkTrue(this.root != node, "You can not add the existing root node!");
 	  
 	  this.checkExistence(node);
 	  //remove its transitions
@@ -268,7 +274,7 @@ public class ClassModel implements Serializable {
      * Merges all redundant decorations for a set of class models
      * */
     public static int mergeEquivalentDecorations(Map<Class<?>, ClassModel> models) {
-      PalusUtil.checkNull(models);
+      PalusUtil.checkNull(models, "The class model map could not be null.");
       int total_num = 0;
       for(ClassModel model : models.values()) {
         total_num += model.mergeEquivalentDecorations();
@@ -291,7 +297,7 @@ public class ClassModel implements Serializable {
      * Gets the total number of decoration values for a set of class models
      * */
     public static int getDecorationNum(Map<Class<?>, ClassModel> models) {
-      PalusUtil.checkNull(models);
+      PalusUtil.checkNull(models, "The class model map could not be null.");
       int total_num = 0;
       for(ClassModel model : models.values()) {
         total_num += model.getDecorationNum();
@@ -304,12 +310,14 @@ public class ClassModel implements Serializable {
 	 * */
 	public void mergeModel(ClassModel model) {
 	    //System.out.println("start merging model: ");
-		PalusUtil.checkNull(model);
-		PalusUtil.checkNull(this.root);
-		PalusUtil.checkNull(this.exit);
-		PalusUtil.checkNull(model.root);
-		PalusUtil.checkNull(model.exit);
-		PalusUtil.checkTrue(model.getModelledClass() == this.getModelledClass());
+		PalusUtil.checkNull(model, "The class model could not be null.");
+		PalusUtil.checkNull(this.root, "The model root could not be null.");
+		PalusUtil.checkNull(this.exit, "The model exit could not be null.");
+		PalusUtil.checkNull(model.root, "The root of model to be merged could not be null");
+		PalusUtil.checkNull(model.exit, "The exit of model to be merged could not be null");
+		PalusUtil.checkTrue(model.getModelledClass() == this.getModelledClass(),
+		    "The to be merged modelled class: " + model.getModelledClass()
+		    + " should == the model class of this: " + this.getModelledClass());
 		
 		//The merge algorithm is a recursive one, which which the graph node
 		//from root. And do that level by level following the outgoing edges.
@@ -396,8 +404,8 @@ public class ClassModel implements Serializable {
 	 * @throws ModelNodeNotFoundException 
 	 * */
 	private void removeUnreachableNodesFromRoot() throws ModelNodeNotFoundException {
-	  PalusUtil.checkNull(this.root);
-      PalusUtil.checkTrue(this.root.isRootNode());
+	  PalusUtil.checkNull(this.root, "The root node could not be null");
+      PalusUtil.checkTrue(this.root.isRootNode(), "The root node is not valid.");
 	//get all dangling nodes (nodes which do not have incoming/outgoing edges)
       List<ModelNode> danglingNodes = new LinkedList<ModelNode>();
       List<ModelNode> reachableNodes = this.getAllSubNodes(this.root);
@@ -475,10 +483,10 @@ public class ClassModel implements Serializable {
 	    //System.out.println("inside check rep...");
 	    PalusUtil.checkNull(this.root);
 	    PalusUtil.checkNull(this.exit);
-	    PalusUtil.checkTrue(this.root.isRootNode());
+	    PalusUtil.checkTrue(this.root.isRootNode(), "The root node is not valid.");
 	    if(this.nodes.size() != 1) {
 	      //XXX flaw
-	        PalusUtil.checkTrue(this.exit.isExitNode());
+	        PalusUtil.checkTrue(this.exit.isExitNode(), "The exit node is not valid.");
 	    }
 	    //all nodes are reachable from root
 	    //System.out.println("Before sub node number checking");
@@ -486,7 +494,8 @@ public class ClassModel implements Serializable {
 	    Log.log("In check rep, sub node number after root: " + this.getAllSubNodes(this.root).size()
 	        + ", all nodes: " + this.nodes.size());
 	    
-	    PalusUtil.checkTrue(this.getAllSubNodes(this.root).size() + 1 == this.nodes.size());
+	    PalusUtil.checkTrue(this.getAllSubNodes(this.root).size() + 1 == this.nodes.size(),
+	        "The size of subnodes of root + 1 != this.nodes.size().");
 	    
 	    //System.out.println("check rep pass sub node number consistence, node size: " + this.nodes.size());
 	    
@@ -496,10 +505,10 @@ public class ClassModel implements Serializable {
 	      //so in this sense, root, exit nodes are all isolated, thus
 	      //root id could also be exit, and vice verse.
 	      if(node.isExitNode() && node != root) {
-	        PalusUtil.checkTrue(node == exit);
+	        PalusUtil.checkTrue(node == exit, "The node should == exit!");
 	      }
 	      if(node.isRootNode() && node != exit) {
-	        PalusUtil.checkTrue(node == root);
+	        PalusUtil.checkTrue(node == root, "The node should == root!");
 	      }
 	    }
 	    //check the transition
@@ -592,7 +601,8 @@ public class ClassModel implements Serializable {
 	 * */
 	private void checkPublicTransitions() {
 	  for(Transition transition : this.transitions) {
-	    PalusUtil.checkTrue(transition.isPublicTransition());
+	    PalusUtil.checkTrue(transition.isPublicTransition(), "Transition: " + transition
+	        + " is not a public transition (including public method).");
 	  }
 	}
 	
@@ -711,7 +721,7 @@ public class ClassModel implements Serializable {
           }
           destNode.getClassModel().addTransitions(subTransitions);
           
-          PalusUtil.checkTrue(destNode.getClassModel() == this);
+          PalusUtil.checkTrue(destNode.getClassModel() == this, "The class model of dest node should == this!");
           Log.log("Finish merging, dest node is exit, to be merged is not: ");
           //Log.log(destNode.getClassModel().getModelInfo());
 	    }	    
@@ -728,14 +738,15 @@ public class ClassModel implements Serializable {
 	      for(Transition temp : transitions) {
 	        Log.log("   node id: " + temp.getDestNode().getNodeId() + ", tmp hashcode: " + temp.hashCode() + ",  " + temp.toSignature());
 	      }
-	      
+	      //XXX it could be ConcurrentModificationException here
 	      for(Transition transition : transitions) {
 	        //we use the signature for comparison, only concern on the method name, desc, owner class
 	        Transition destT = //destNode.getOutgoingTranisitionBySignature(transition); //XXX
 	            destNode.getOutgoingTransitionBySignatureAndPosition(transition);
 	        if(destT != null) {
 	          //we go down one level to continue merging
-	          PalusUtil.checkTrue(destT.getSourceNode() == destNode && transition.getSourceNode() == tobeMerged);
+	          PalusUtil.checkTrue(destT.getSourceNode() == destNode && transition.getSourceNode() == tobeMerged,
+	              "The source node of destT should == destNode, and source node of transition should == tobeMerged.");
 	          //XXX do the merge here, will cause error
 	          TraceTransitionManager.mergeTransitions(destT, transition);
 	          //merge the decoration
@@ -880,7 +891,7 @@ public class ClassModel implements Serializable {
 	  //#XXX be careful, the model could be empty then
 	  //check the root invariant does not violate
 	  PalusUtil.checkNull(this.root);
-	  PalusUtil.checkTrue(this.root.isRootNode());
+	  PalusUtil.checkTrue(this.root.isRootNode(), "The root node is not valid.");
 	  
 	  //check that the Class Model could be only one node remaining
 	  if(this.nodes.size() == 1) {
@@ -905,9 +916,11 @@ public class ClassModel implements Serializable {
 	    System.out.println(this.getModelInfo());
 	  }
 	  
-	  PalusUtil.checkTrue(exitNodes.size() > 0);
+	  PalusUtil.checkTrue(exitNodes.size() > 0, "The existNodes's size: " + exitNodes.size()
+	      + " should > 0.");
 	  for(ModelNode exitNode : exitNodes) {
-	    PalusUtil.checkTrue(exitNode.numOfInEdges() > 0);
+	    PalusUtil.checkTrue(exitNode.numOfInEdges() > 0, "The num of incoming edges of exitNode: "
+	        + exitNode.numOfInEdges() + " should > 0.");
 	  }
 	  //we do not need to unify if there is only one node
       if(exitNodes.size() == 1) {
@@ -927,7 +940,7 @@ public class ClassModel implements Serializable {
 	  //their incoming edges). Finally, all other exit nodes will be deleted.
 	  ModelNode unifiedExit = exitNodes.remove(0);
 	  
-	  PalusUtil.checkTrue(unifiedExit.isExitNode());
+	  PalusUtil.checkTrue(unifiedExit.isExitNode(), "The unified exit node is not valid.");
 	  Log.log("choose: " + unifiedExit.getNodeId() + " as unified exit");	  
 	  
 	  //reconnecting the incoming edges of other exit nodes to the unified exit
@@ -947,7 +960,7 @@ public class ClassModel implements Serializable {
 	    this.deleteModelNode(otherExit);
 	  }
 	  //reset the exit
-	  PalusUtil.checkTrue(unifiedExit.isExitNode());
+	  PalusUtil.checkTrue(unifiedExit.isExitNode(), "The unified exit node after reset is not valid.");
 	  this.resetExit(unifiedExit);
 	}
 	

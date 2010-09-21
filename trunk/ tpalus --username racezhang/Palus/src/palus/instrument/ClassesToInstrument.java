@@ -38,9 +38,10 @@ class ClassesToInstrument {
    * @param file a text file containing all need-to-instrument classes
    * */
   public static void initInstrumentedClasses(File file) {
-    PalusUtil.checkNull(file);
-    PalusUtil.checkTrue(file.exists());
-    PalusUtil.checkTrue(needToInstrumentClasses == null);
+    PalusUtil.checkNull(file, "The file containing instrumentation classes could not be null!");
+    PalusUtil.checkTrue(file.exists(), "The given file: " + file.getAbsolutePath()
+        + " does not exist!");
+    PalusUtil.checkTrue(needToInstrumentClasses == null, "The class set to instrument could not be null!");
     
     //init the set and add the classes one by one
     needToInstrumentClasses = new HashSet<String>();
@@ -69,7 +70,7 @@ class ClassesToInstrument {
    * Should this class be instrumented.
    * */
   public static boolean instrumentClass(String name) {
-    PalusUtil.checkNull(name);
+    PalusUtil.checkNull(name, "Instrumenting class name could not be null!");
     //if there is no instrument classes provided, we assume
     //every class should be instrumented
     if(needToInstrumentClasses == null) {
@@ -92,7 +93,8 @@ class ClassesToInstrument {
    * The number of classes to instrument
    * */
   public static int numOfInstrumentedClasses() {
-    PalusUtil.checkNull(needToInstrumentClasses);
+    PalusUtil.checkNull(needToInstrumentClasses, "Instrumenting class list "
+        + "could not be null!");
     return needToInstrumentClasses.size();
   }
 }

@@ -94,7 +94,8 @@ public class PalusSpawner {
     List<String> ret_args = new LinkedList<String>();
     for(String arg : args) {
       String[] splits = arg.split("=");
-      PalusUtil.checkTrue(splits.length == 1 || splits.length == 2);
+      PalusUtil.checkTrue(splits.length == 1 || splits.length == 2, "The length of splits: "
+          + splits.length + " is not 1 or 2.");
       if(excluded_option_name.contains(splits[0])) {
         continue;
       }
@@ -177,7 +178,8 @@ public class PalusSpawner {
     for(int i = 0; i < commands.length; i++) {
       if(commands[i].trim().equals("--random_seed")) {
         index = i;
-        PalusUtil.checkTrue(i < commands.length - 1);
+        PalusUtil.checkTrue(i < commands.length - 1, "The i :" + i + " should be less than "
+            + "the commands' length - 1: " + (commands.length - 1));
         break;
       }
     }
@@ -201,7 +203,7 @@ public class PalusSpawner {
       }
     }
     
-    PalusUtil.checkNull(ret_commands);
+    PalusUtil.checkNull(ret_commands, "The returning command could not be null!");
     return ret_commands;
   }
   

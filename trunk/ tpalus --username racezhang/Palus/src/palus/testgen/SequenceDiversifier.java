@@ -94,7 +94,7 @@ public class SequenceDiversifier {
    * related ones
    * */
   public SequenceDiversifier(ModelBasedGenerator generator, MethodRecommender recommender) {
-    PalusUtil.checkNull(generator);
+    PalusUtil.checkNull(generator, "The model-based generator could not be null.");
     this.generator = generator;
     this.components = generator.components;
     this.recommender = recommender;
@@ -105,8 +105,8 @@ public class SequenceDiversifier {
    * @param statement is the method call it just extends
    * */
   public void diversifySequence(Sequence sequence, StatementKind statement) {
-    PalusUtil.checkNull(sequence);
-    PalusUtil.checkNull(statement);
+    PalusUtil.checkNull(sequence, "The sequence to diversify could not be null.");
+    PalusUtil.checkNull(statement, "The statement to diversify could not be null.");
     
     Log.log("Statement type: " + statement.getClass() + ", " + statement);
     
@@ -159,8 +159,8 @@ public class SequenceDiversifier {
    * Diversify (append) an sequence
    * */
   protected void diversifyOneSequence(Sequence sequence, StatementKind statement) {
-    PalusUtil.checkNull(sequence);
-    PalusUtil.checkNull(statement);
+    PalusUtil.checkNull(sequence, "The sequence for diversifying could not be null.");
+    PalusUtil.checkNull(statement, "The statement for diversifying could not be null.");
     
     List<Class<?>> inputClasses = statement.getInputTypes();
     int[] varIndex = new int[inputClasses.size()];

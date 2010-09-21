@@ -142,8 +142,8 @@ public class ModelBasedGenerator extends ForwardGenerator {
       long timeMillis, int maxSequences, SequenceCollection seeds, Map<Class<?>, ClassModel> models,
       ParamValueCollections valueCollections, MethodRecommender recommender) {
     super(statements, covClasses, timeMillis, maxSequences, seeds);
-    PalusUtil.checkNull(models);
-    PalusUtil.checkNull(recommender);
+    PalusUtil.checkNull(models, "The class models for generator could not be null.");
+    PalusUtil.checkNull(recommender, "The method recommender for generator could not be null.");
     //initialize the model and model sequences
     this.models = models;
     if(merge_equivalent_decoration) {
@@ -244,8 +244,8 @@ public class ModelBasedGenerator extends ForwardGenerator {
     tran = seqTranPair.b;
     
     //check not null
-    PalusUtil.checkNull(eSeq);
-    PalusUtil.checkNull(tran);
+    PalusUtil.checkNull(eSeq, "The created executable sequence could not be null.");
+    PalusUtil.checkNull(tran, "The transiton which the sequence extends could not be null.");
     
     //no feedback
     if(GenInputsAbstract.dontexecute) {
@@ -484,8 +484,8 @@ public class ModelBasedGenerator extends ForwardGenerator {
     Sequence baseSequence = seqTransPair.a;
     Transition extendTransition = seqTransPair.b;
     
-    PalusUtil.checkNull(baseSequence);
-    PalusUtil.checkNull(extendTransition);
+    PalusUtil.checkNull(baseSequence, "The base sequence could not be null.");
+    PalusUtil.checkNull(extendTransition, "The transition to extend could not be null.");
     
     StatementKind statement = this.selectStatement(extendTransition);
     
@@ -606,7 +606,8 @@ public class ModelBasedGenerator extends ForwardGenerator {
     Set<Class<?>> modelledClasses = model.keySet();
     for(StatementKind statement : statements) {
       Class<?> declaringClass = PalusUtil.getDeclaringClass(statement);
-      PalusUtil.checkTrue(declaringClass != null);
+      PalusUtil.checkTrue(declaringClass != null, "The declaring class for statement: "
+          + statement + " should not be null.");
       if(!modelledClasses.contains(declaringClass)) {
         uncovered.add(statement);
       }
@@ -714,7 +715,7 @@ public class ModelBasedGenerator extends ForwardGenerator {
     int[] seqlengths = new int[sequences.sequences.size()];
     for(int i = 0; i < sequences.sequences.size(); i++) {
       Sequence oneseq = sequences.sequences.get(i);
-      PalusUtil.checkTrue(oneseq.size() > 0);
+      PalusUtil.checkTrue(oneseq.size() > 0, "The sequence size should > 0.");
       seqlengths[i] = oneseq.size();
     }
     

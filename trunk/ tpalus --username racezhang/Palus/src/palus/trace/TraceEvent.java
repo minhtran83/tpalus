@@ -116,12 +116,12 @@ public abstract class TraceEvent implements Serializable {
 	 * */
 	public TraceEvent(int id, String className, String methodName, String methodDesc, Object thiz,
 			Object[] params) {
-		PalusUtil.checkNull(className);
-		PalusUtil.checkNull(methodName);
-		PalusUtil.checkNull(methodDesc);
+		PalusUtil.checkNull(className, "The class name to set could not be null.");
+		PalusUtil.checkNull(methodName, "The method name to set could not be null.");
+		PalusUtil.checkNull(methodDesc, "The method descriptor to set could not be null.");
 		//XXX can not check, thiz could be null for static and init
 		//PalusUtil.checkNull(thiz); 
-		PalusUtil.checkNull(params);
+		PalusUtil.checkNull(params, "The parameter object array could not be null.");
 		this.id = id;
 		this.className = className;
 		this.methodName = methodName;
@@ -208,7 +208,8 @@ public abstract class TraceEvent implements Serializable {
      * */
 	public void setUniqueTracePairID(int uniqueId) {
 		//this is actually designed for final
-		PalusUtil.checkTrue(this.unique_trace_pair_id == -1);
+		PalusUtil.checkTrue(this.unique_trace_pair_id == -1, "The unique trace pair id "
+		    + "should not be already set!");
 		this.unique_trace_pair_id = uniqueId;
 	}
 	/**
@@ -223,7 +224,8 @@ public abstract class TraceEvent implements Serializable {
      * */
 	public void setTraceEventSequenceID(int sequenceId) {
 	  //actually designed for final
-	  PalusUtil.checkTrue(this.traceEventSequenceId == -1);
+	  PalusUtil.checkTrue(this.traceEventSequenceId == -1, "The trace event sequence id "
+	      + "should not be already set!");
 	  this.traceEventSequenceId = sequenceId;
 	}
 	/**
@@ -237,7 +239,7 @@ public abstract class TraceEvent implements Serializable {
      * could only be set once!
      * */
 	public void setStackDepth(int stackDepth) {
-	  PalusUtil.checkTrue(this.stackDepth == -1);
+	  PalusUtil.checkTrue(this.stackDepth == -1, "The stack depth should not be already set!");
 	  this.stackDepth = stackDepth;
 	}
 	/**
@@ -263,8 +265,8 @@ public abstract class TraceEvent implements Serializable {
      * could only be set once!
      * */
 	public void setPair(TraceEvent event) {
-		PalusUtil.checkNull(event);
-		PalusUtil.checkTrue(this.pair == null);
+		PalusUtil.checkNull(event, "The event pair to set could not be null.");
+		PalusUtil.checkTrue(this.pair == null, "The event pair should not be already set!");
 		this.pair = event;
 	}
 	/**
@@ -331,7 +333,8 @@ public abstract class TraceEvent implements Serializable {
      * Gets the object id of the {@code i}-th parameter.
      * */
 	public int getParamObjectID(int i) {
-	  PalusUtil.checkTrue(i >= 0 && i < this.serializableParams.length);
+	  PalusUtil.checkTrue(i >= 0 && i < this.serializableParams.length, "The given index: "
+	      + i + " should >=0 and < " + this.serializableParams.length);
 	  return this.paramIDs[i];
 	}
 	
@@ -426,7 +429,7 @@ public abstract class TraceEvent implements Serializable {
 	 * Converts the current object into readable string.
 	 * */
     public String toParsableString() {
-      PalusUtil.checkTrue(this.stackDepth != -1);
+      PalusUtil.checkTrue(this.stackDepth != -1, "The stack depth should not be -1.");
       StringBuilder sb = new StringBuilder();
       for(int i = 0; i < this.stackDepth; i++) {
         sb.append("  ");
@@ -489,7 +492,9 @@ public abstract class TraceEvent implements Serializable {
 	 * Dumps all parameter values as string for debugging
 	 * */
 	protected String getParamsAsString() {
-	  PalusUtil.checkTrue(this.paramIDs.length == this.serializableParams.length);
+	  PalusUtil.checkTrue(this.paramIDs.length == this.serializableParams.length,
+	      "The parameter id length: " + this.paramIDs.length + " should == "
+	      + " serializable param length: " + this.serializableParams.length);
 	  StringBuilder sb = new StringBuilder();
 	  int[] ids = this.paramIDs;
 	  sb.append("[");
@@ -544,7 +549,8 @@ public abstract class TraceEvent implements Serializable {
 	      //not a primitive type
 	      baseType = Class.forName(typeName);
 	    }
-	    PalusUtil.checkNull(baseType);
+	    PalusUtil.checkNull(baseType, "The base type for array type: " + typeName
+	        + " could not be null.");
 	    //XXX not a good way!
 	    return Array.newInstance(baseType, dimension).getClass();
 	  }

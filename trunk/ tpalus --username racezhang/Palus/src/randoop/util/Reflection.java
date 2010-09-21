@@ -560,7 +560,7 @@ public final class Reflection {
        //create a statement for each enum constant
        for(Object constant : constants) {
          PrimitiveOrStringOrNullDecl enumDecl = 
-           new PrimitiveOrStringOrNullDecl(constant.getClass(), constant);
+           new PrimitiveOrStringOrNullDecl(/*constant.getClass()*/clazz, constant);
          enums.add(enumDecl);
        }
      }

@@ -47,7 +47,8 @@ public class ObjectSequenceProcessor {
    * Constructor. Initializes the classes list to process.
    * */
   public ObjectSequenceProcessor(Collection<Class<?>> classes) {
-    PalusUtil.checkNull(classes);
+    PalusUtil.checkNull(classes, "The class collection to get ObjectSequence annotation "
+        + "could not be null.");
     this.classes = classes;
   }
 

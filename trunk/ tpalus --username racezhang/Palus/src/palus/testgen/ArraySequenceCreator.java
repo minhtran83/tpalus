@@ -72,7 +72,8 @@ public class ArraySequenceCreator {
    * */
   public static SimpleList<Sequence> createArray(Class<?> type, SequenceCollection components,
       List<Sequence> sequences, int expectedLength) {
-    PalusUtil.checkTrue(expectedLength >= 0);
+    PalusUtil.checkTrue(expectedLength >= 0, "The array expected length: " + expectedLength
+        + " should >= 0.");
     if(!type.isArray()) {
       return new ArrayListSimpleList<Sequence>();
     }

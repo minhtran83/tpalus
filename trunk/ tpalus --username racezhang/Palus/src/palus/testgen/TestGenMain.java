@@ -5,6 +5,8 @@ package palus.testgen;
 import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
 
+import randoop.PrimitiveOrStringOrNullDecl;
+
 import palus.Log;
 import palus.PalusUtil;
 import palus.analysis.MethodRecommender;
@@ -261,6 +263,12 @@ public class TestGenMain {
       // Add user-specified seeds, provided by users
       components.addAll(SeedSequences.getSeedsFromAnnotatedFields(allClasses.toArray(new Class<?>[0])));
       
+      //Add enum constants
+      if(PalusOptions.use_enum_type) {
+        List<PrimitiveOrStringOrNullDecl> enumDecls = Reflection.getEnumDeclarations(allClasses);
+        components.addAll(SeedSequences.enumsToSeeds(enumDecls));
+      }
+      
       //add method-specific inputs
       if(useMethodSpecificValue) {
         ParamValueProcessor paramValueProcessor = new ParamValueProcessor(allClasses);
@@ -277,7 +285,7 @@ public class TestGenMain {
       //init the test generation explorer
       AbstractGenerator explorer = null;
       if(useModel) {
-        PalusUtil.checkNull(models);
+        PalusUtil.checkNull(models, "The constructed class models could not be null.");
         //use the explorer of Palus
         explorer  = new ModelBasedGenerator(
             model,
@@ -621,7 +629,8 @@ public class TestGenMain {
           line = br.readLine();
           while(line != null) {
             String className = line.trim();
-            if(!className.equals("")) { 
+            //skip empty line and comment line
+            if(!className.equals("") && !className.startsWith("#")) { 
                //System.out.println(className);
                //System.out.println("   Tested Class: " + className);
                Class<?> clazz = Class.forName(className);

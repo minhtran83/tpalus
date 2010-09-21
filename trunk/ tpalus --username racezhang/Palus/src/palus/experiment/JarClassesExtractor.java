@@ -92,11 +92,12 @@ public class JarClassesExtractor {
     String jarPath = 
     //"/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/gws/gws_deploy.jar";
     //"/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/testing/tap/testbroker/server/TestBroker_deploy.jar";
-    "/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/ads/pebl/libpebl.jar";
+    //"/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/ads/pebl/libpebl.jar";
+    "/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/buzz/sessionbin_deploy.jar";
     String packageName =
     //"com.google.gws";
     //"com.google.testing.tap";
-      "com.google.ads.pebl";
+      "com.google.buzz";
     JarClassesExtractor.extracClassNamesForTests(jarPath, packageName);
   }
   

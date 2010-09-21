@@ -136,8 +136,9 @@ public class ModelNode implements Serializable {
      * If the transition has already existed, it does nothing.
      * */
 	public void addOutgoingEdge(Transition transition) {
-		PalusUtil.checkNull(transition);
-		PalusUtil.checkTrue(transition.getSourceNode() == this);
+		PalusUtil.checkNull(transition, "The transition object could not be null.");
+		PalusUtil.checkTrue(transition.getSourceNode() == this, "The source node of"
+		    + transition + " should be this object.");
 		
 		if(!this.outEdges.contains(transition)) {
 		    this.outEdges.add(transition);
@@ -147,7 +148,8 @@ public class ModelNode implements Serializable {
 	public List<ModelNode> getAllOutgoingNodes() {
 	    List<ModelNode> subNodes = new LinkedList<ModelNode>();
 	    for(Transition transition : this.outEdges) {
-	      PalusUtil.checkTrue(transition.getSourceNode() == this);
+	      PalusUtil.checkTrue(transition.getSourceNode() == this, "The source node of"
+	          + " transition: " + transition + " should be this object!");
 	      PalusUtil.checkNull(transition.getDestNode());
 	      subNodes.add(transition.getDestNode());
 	    }
@@ -168,7 +170,8 @@ public class ModelNode implements Serializable {
 	 * */
 	public void addIncomingEdge(Transition transition) {
 		PalusUtil.checkNull(transition);
-		PalusUtil.checkTrue(transition.getDestNode() == this);
+		PalusUtil.checkTrue(transition.getDestNode() == this, "The dest node of "
+		    + transition + " should be this node!");
 		
 		if(!this.inEdges.contains(transition)) {
 		    this.inEdges.add(transition);
@@ -185,7 +188,9 @@ public class ModelNode implements Serializable {
 	
 	public void setClassModel(ClassModel newModel) {
 	  //make sure they are modelling the same class
-	  PalusUtil.checkTrue(newModel.getModelledClass() == this.modelledClass);
+	  PalusUtil.checkTrue(newModel.getModelledClass() == this.modelledClass,
+	      "The newModel's class: " + newModel.getModelledClass() + " should == "
+	      + "this modelled class: " + this.modelledClass);
 	  this.classModel = newModel;
 	}
 	
@@ -228,10 +233,13 @@ public class ModelNode implements Serializable {
 	    if(t.toSignature().equals(transition.toSignature())) {
 	      // check the position of its decorations
 	      // first need to check that both transitions (this and the parameter) should have unique position
-	      PalusUtil.checkTrue(t.hasDecoration());
-	      PalusUtil.checkTrue(t.hasUniqueDecorationPosition());
-	      PalusUtil.checkTrue(transition.hasDecoration());
-	      PalusUtil.checkTrue(transition.hasUniqueDecorationPosition());
+	      PalusUtil.checkTrue(t.hasDecoration(), "The transition: " + t + " should have decorations.");
+	      PalusUtil.checkTrue(t.hasUniqueDecorationPosition(), "The transition: "
+	          + t + " should have unique decoration positions.");
+	      PalusUtil.checkTrue(transition.hasDecoration(), "The transition: " + transition
+	          + " should have decorations.");
+	      PalusUtil.checkTrue(transition.hasUniqueDecorationPosition(), "The transition: "
+	          + transition + " should have unique decoration positions.");
 	      if(t.getUniqueDecorationPosition() == transition.getUniqueDecorationPosition()) {
 	        return t;
 	      }
@@ -281,13 +289,17 @@ public class ModelNode implements Serializable {
 	 * For each instance of this class, this method should hold.
 	 * */
 	public void checkRep() {
-	    PalusUtil.checkTrue(this.nodeid >= 0);
-		PalusUtil.checkTrue(this.modelledClass == this.classModel.getModelledClass());
+	    PalusUtil.checkTrue(this.nodeid >= 0, "The node id: " + this.nodeid + " should >= 0.");
+		PalusUtil.checkTrue(this.modelledClass == this.classModel.getModelledClass(),
+		    "The modelled class: " + this.modelledClass + " should == the class model's class: "
+		    + this.classModel.getModelledClass());
 		for(Transition transition : this.getAllIncomingEdges()) {
-		  PalusUtil.checkTrue(transition.getDestNode() == this);
+		  PalusUtil.checkTrue(transition.getDestNode() == this, "The dest node of transition: "
+		      + transition + " should be equal to this object!");
 		}
 		for(Transition transition : this.getAllOutgoingEdges()) {
-		  PalusUtil.checkTrue(transition.getSourceNode() == this);
+		  PalusUtil.checkTrue(transition.getSourceNode() == this, "The source node of transition: "
+		      + transition + " should be equal to this object.");
 		}
 	}
 	

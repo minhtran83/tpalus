@@ -77,7 +77,8 @@ public final class ClassesToModel {
 	 * only once. It will throw an exception if the code changes the class set later on.
 	 * */
 	public static void initializeClassesToModel(Collection<Class<?>> classes) {
-	  PalusUtil.checkTrue(classesToModel.isEmpty());
+	  PalusUtil.checkTrue(classesToModel.isEmpty(), "The classesToModel set should not "
+	      + "be already set!");
 	  classesToModel.addAll(classes);
 	}
 }
