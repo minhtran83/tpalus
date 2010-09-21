@@ -67,9 +67,9 @@ public class TraceAnalyzer {
 	 * @param traces the (raw) traces obtained from program execution
 	 * */
 	public TraceAnalyzer(List<TraceEvent> traces) {
-	    PalusUtil.checkNull(traces);
+	    PalusUtil.checkNull(traces, "The trace event list could not be null!");
 	    for(TraceEvent trace : traces) {
-	      PalusUtil.checkNull(trace);
+	      PalusUtil.checkNull(trace, "Any trace event object could not be null!");
 	    }
 		this.traces = traces;
 		TRACE_TX_FILE = PROJECT_NAME + "_trace.txt";
@@ -346,7 +346,7 @@ public class TraceAnalyzer {
 			if(event instanceof InitEntryEvent) {
 				Position thizPosition = Position.getThisPosition();
 				TraceEvent pairedEvent = event.getPairEvent();
-				PalusUtil.checkNull(pairedEvent);
+				PalusUtil.checkNull(pairedEvent, "The pair event of: " + event + " could not be null!");
 				int receiverId = pairedEvent.getReceiverObjectID();
 				Class<?> type = Class.forName(event.getClassName());
 				addEventToClassMap(retMap, receiverId, type, event, thizPosition);
@@ -367,7 +367,7 @@ public class TraceAnalyzer {
 				}
 				//add the parameters
 				int[] paramIds = event.getParamObjectIDs();
-				PalusUtil.checkNull(paramIds);
+				PalusUtil.checkNull(paramIds, "The param ids could not be null!");
 				for(int i = 0; i < paramIds.length; i++) {
 					Position paramPosition = Position.getParaPosition(i + 1); //1 - param.length
 					int paramId = paramIds[i]; //XXX be aware, use declarative type or runtime type?
@@ -386,7 +386,8 @@ public class TraceAnalyzer {
 				Class<?> retType = event.getReturnType();				
 				//XXX be aware using pair event
 				TraceEvent pairEvent = event.getPairEvent();
-				PalusUtil.checkNull(pairEvent);
+				PalusUtil.checkNull(pairEvent, "The pair event for event: " + event
+				    + " could not be null!");
 				PalusUtil.checkTrue(pairEvent instanceof MethodExitEvent, "The pair event: " + pairEvent
 				    + " should be MethodExitEvent type!");
 				int retObjId = ((MethodExitEvent)pairEvent).getRetObjectID();
@@ -419,9 +420,9 @@ public class TraceAnalyzer {
 	 * */
 	private static void addEventToClassMap(Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> map,
 		int objId, Class<?> type, TraceEvent event, Position p) {
-		PalusUtil.checkNull(map);
-		PalusUtil.checkNull(type);
-		PalusUtil.checkNull(event);
+		PalusUtil.checkNull(map, "The instance event map could not be null!");
+		PalusUtil.checkNull(type, "The class type could not be null!");
+		PalusUtil.checkNull(event, "The trace event could not be null!");
 		//skip null object id
 		if(objId == 0) {
 		  Log.log("    potential bug in Palus. Null object!");
@@ -442,14 +443,14 @@ public class TraceAnalyzer {
 			map.put(type, new LinkedHashMap<Instance, List<TraceEventAndPosition>>());
 		}
 		Map<Instance, List<TraceEventAndPosition>> instanceEventMap = map.get(type);
-		PalusUtil.checkNull(instanceEventMap);
+		PalusUtil.checkNull(instanceEventMap, "The instance event map could not be null for type: " + type);
 		
 		Instance instance = new Instance(objId, type);
 		if(!instanceEventMap.containsKey(instance)) {
 			instanceEventMap.put(instance, new ArrayList<TraceEventAndPosition>());
 		}
 		List<TraceEventAndPosition> eventList = instanceEventMap.get(instance);
-		PalusUtil.checkNull(eventList);
+		PalusUtil.checkNull(eventList, "The event list could not be null for instance: " + instance);
 		
 		eventList.add(new TraceEventAndPosition(event, p));
 	}

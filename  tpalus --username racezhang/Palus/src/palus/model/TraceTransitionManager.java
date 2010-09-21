@@ -51,7 +51,7 @@ public class TraceTransitionManager {
    * part is not well-tested yet.
    * */
   static List<Transition> findTransitionsByTraceEvent(TraceEvent trace) {
-    PalusUtil.checkNull(trace);
+    PalusUtil.checkNull(trace, "The trace argument could not be null!");
     //get the transitions
     List<Transition> transitions = traceToTransition.get(trace);
     
@@ -68,8 +68,8 @@ public class TraceTransitionManager {
    * null, if there is no transition found for the given trace.
    * */
   static List<Transition> findTransitionsByTraceEventAndPosition(TraceEvent trace, Position position) {
-    PalusUtil.checkNull(trace);
-    PalusUtil.checkNull(position);
+    PalusUtil.checkNull(trace, "The trace argument could not be null!");
+    PalusUtil.checkNull(position, "The position argument could not be null!");
     
     List<Transition> retList = new LinkedList<Transition>();
     //TraceEvent trace = tap.event;
@@ -106,8 +106,8 @@ public class TraceTransitionManager {
    * <em>Note:</em> that here the trace event is only for InitEntryEvent and MethodEntryEvent type.
    * */
   public static void addInitTraceEventTransitionPair(TraceEvent trace, Transition transition) {
-    PalusUtil.checkNull(trace);
-    PalusUtil.checkNull(transition);
+    PalusUtil.checkNull(trace, "The trace argument could not be null!");
+    PalusUtil.checkNull(transition, "The transition argument could not be null!");
     PalusUtil.checkTrue(trace instanceof InitEntryEvent || trace instanceof MethodEntryEvent,
         "The trace: " + trace + ", should be either InitEntryEvent or MethodEntryEvent type!");
     
@@ -167,7 +167,7 @@ public class TraceTransitionManager {
     //update the traceToTransition map
     for(TraceEvent event : events) {
       List<Transition> transitions = traceToTransition.get(event);
-      PalusUtil.checkNull(transitions);
+      PalusUtil.checkNull(transitions, "The transition list for event: " + event + " could not be null!");
       PalusUtil.checkTrue(transitions.contains(tobeReplaced), "The transitions set should"
           + " contain the tobeReplaced transition: " + tobeReplaced);
       transitions.remove(tobeReplaced);
@@ -183,8 +183,8 @@ public class TraceTransitionManager {
    * there would be new transition created
    * */
   public static void mergeTransitions(Transition host, Transition tobeMerged) {
-    PalusUtil.checkNull(host);
-    PalusUtil.checkNull(tobeMerged);
+    PalusUtil.checkNull(host, "The host argument could not be null!");
+    PalusUtil.checkNull(tobeMerged, "The tobeMerged argument could not be null!");
     PalusUtil.checkTrue(!host.equals(tobeMerged), "The host transition should not be equal to "
         + "the tobeMerged transition: " + tobeMerged);
     //FIXME relax it
@@ -228,7 +228,7 @@ public class TraceTransitionManager {
    * Removes a list of transitions from two maps
    * */
   public static void removeTransitions(Collection<Transition> transitions) {
-    PalusUtil.checkNull(transitions);
+    PalusUtil.checkNull(transitions, "The transitions argument could not be null!");
     for(Transition transition : transitions) {
       removeTransition(transition);
     }
@@ -238,7 +238,7 @@ public class TraceTransitionManager {
    * Removes a given transition from two maps
    * */
   public static void removeTransition(Transition transition) {
-    PalusUtil.checkNull(transition);
+    PalusUtil.checkNull(transition, "The transition argument could not be null!");
     Log.log("Removing transition: " + transition.getTransitionID() + " from trace transition manager");
     
     if(!transitionToTrace.containsKey(transition)) {
@@ -246,7 +246,8 @@ public class TraceTransitionManager {
       return;
     }
     List<TraceEvent> events = transitionToTrace.get(transition);
-    PalusUtil.checkNull(events);
+    PalusUtil.checkNull(events, "The events list for transition: " + transition
+        + " could not be null!");
     
     //remove transition for each trace event
     for(TraceEvent event : events) {

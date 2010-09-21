@@ -59,7 +59,7 @@ public class ModelNode implements Serializable {
      * Constructor. Constructs a new model node.
      * */
 	public ModelNode(ClassModel classModel) {
-		PalusUtil.checkNull(classModel);
+		PalusUtil.checkNull(classModel, "The class model could not be null!");
 		this.classModel = classModel;
 		this.modelledClass = classModel.getModelledClass();
 		this.nodeid = Stats.genModelNodeID();
@@ -86,17 +86,17 @@ public class ModelNode implements Serializable {
 	 * to recover the state of a model node object.
 	 * */
 	void recoverFromDeserialization() {
-	  PalusUtil.checkNull(classModel);
+	  PalusUtil.checkNull(classModel, "The class model could not be null!");
 	  this.inEdges = new ArrayList<Transition>();
 	  for(int in_edge_id : this.in_edge_transition_id) {
 	    Transition t = classModel.findTransitionById(in_edge_id);
-	    PalusUtil.checkNull(t);
+	    PalusUtil.checkNull(t, "The transition for id: " + in_edge_id + " could not be null!");
 	    this.inEdges.add(t);
 	  }
 	  this.outEdges = new ArrayList<Transition>();
 	  for(int out_edge_id : this.out_edge_transition_id) {
 	    Transition t = classModel.findTransitionById(out_edge_id);
-	    PalusUtil.checkNull(t);
+	    PalusUtil.checkNull(t, "The transition for id: " + out_edge_id + " could not be null!");
 	    this.outEdges.add(t);
 	  }
 	}
@@ -108,7 +108,7 @@ public class ModelNode implements Serializable {
 	 * whether the incoming edge set is empty.
 	 * */
 	public boolean isRootNode() {
-	    PalusUtil.checkNull(this.inEdges);
+	    PalusUtil.checkNull(this.inEdges, "The incoming edges could not be null!");
 		return this.inEdges.size() == 0;
 	}
 	
@@ -119,7 +119,7 @@ public class ModelNode implements Serializable {
      * whether the outgoing edge set is empty.
      * */
 	public boolean isExitNode() {
-	  PalusUtil.checkNull(this.outEdges);
+	  PalusUtil.checkNull(this.outEdges, "The out going edges could not be null!");
 	  return this.outEdges.size() == 0;
 	}
 	
@@ -150,7 +150,8 @@ public class ModelNode implements Serializable {
 	    for(Transition transition : this.outEdges) {
 	      PalusUtil.checkTrue(transition.getSourceNode() == this, "The source node of"
 	          + " transition: " + transition + " should be this object!");
-	      PalusUtil.checkNull(transition.getDestNode());
+	      PalusUtil.checkNull(transition.getDestNode(), "The dest node of transition "
+	          + "could not be null!");
 	      subNodes.add(transition.getDestNode());
 	    }
 	    return subNodes;
@@ -169,7 +170,7 @@ public class ModelNode implements Serializable {
 	 * If the transition has already existed, it does nothing.
 	 * */
 	public void addIncomingEdge(Transition transition) {
-		PalusUtil.checkNull(transition);
+		PalusUtil.checkNull(transition, "The incoming transition could not be null!");
 		PalusUtil.checkTrue(transition.getDestNode() == this, "The dest node of "
 		    + transition + " should be this node!");
 		

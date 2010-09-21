@@ -94,11 +94,11 @@ public class Transition implements Serializable {
 	 * Constructor. Create a new transition object.
 	 * */
 	public Transition(ModelNode srcNode, ModelNode destNode, String className, String methodName, String methodDesc) {
-		PalusUtil.checkNull(srcNode);
-		PalusUtil.checkNull(destNode);
-		PalusUtil.checkNull(className);
-		PalusUtil.checkNull(methodName);
-		PalusUtil.checkNull(methodDesc);
+		PalusUtil.checkNull(srcNode, "The src node argument could not be null!");
+		PalusUtil.checkNull(destNode, "The dest node argument could not be null!");
+		PalusUtil.checkNull(className, "The class name argument could not be null!");
+		PalusUtil.checkNull(methodName, "The method name argument could not be null!");
+		PalusUtil.checkNull(methodDesc, "The method descriptor argument could not be null!");
 		//make sure source/dest node are modelling the same class
 		PalusUtil.checkTrue(srcNode.getModelledClass() == destNode.getModelledClass(),
 		    "The modelled class of srcNode: " + srcNode.getModelledClass() + " should == "
@@ -209,14 +209,14 @@ public class Transition implements Serializable {
 	
 	public Method getMethod() {
 	  PalusUtil.checkTrue(this.isMethodOrConstructor, "This transition should be a method transition!");
-	  PalusUtil.checkNull(this.method);
+	  PalusUtil.checkNull(this.method, "The method field could not be null!");
 	  PalusUtil.checkTrue(this.constructor == null, "The constructor: " + constructor + " should be null!");
 	  return this.method;
 	}
 	
 	public Constructor<?> getConstructor() {
 	  PalusUtil.checkTrue(!this.isMethodOrConstructor, "The transition should be a constructor transition!");
-	  PalusUtil.checkNull(this.constructor);
+	  PalusUtil.checkNull(this.constructor, "The constructor field could not be null!");
 	  PalusUtil.checkTrue(this.method == null, "The method field should be null!");
 	  return this.constructor;
 	}
@@ -334,12 +334,12 @@ public class Transition implements Serializable {
 	public void addDecoration(Decoration decoration) {
 		PalusUtil.checkTrue(decoration.transition == this, "The transition which decoration: "
 		    + decoration + " represents should == this: " + this);
-		PalusUtil.checkNull(decoration);
+		PalusUtil.checkNull(decoration, "The decoration to add could not be null.");
 		this.decorations.add(decoration);
 	}
 	
 	public void addDecorations(List<Decoration> decorations) {
-	  PalusUtil.checkNull(decorations);
+	  PalusUtil.checkNull(decorations, "The decoration list to add could not be null.");
 	  for(Decoration decoration : decorations) {
 	    this.addDecoration(decoration);
 	  }
@@ -411,7 +411,7 @@ public class Transition implements Serializable {
 	}
 	
 	public List<Decoration> makeClones(Transition t) {
-	  PalusUtil.checkNull(t);
+	  PalusUtil.checkNull(t, "The transition to clone could not be null!");
 	  List<Decoration> cloneDecorations = new LinkedList<Decoration>();
 	  //clone the decoration
 	  for(Decoration decoration : this.decorations) {
@@ -421,7 +421,7 @@ public class Transition implements Serializable {
 	}
 	
 	public boolean hasDecorationOnPosition(Position position) {
-	  PalusUtil.checkNull(position);
+	  PalusUtil.checkNull(position, "The position argument could not be null!");
 	  for(Decoration decoration : this.decorations) {
 	    if(decoration.position == position.toIntValue()) {
 	      return true;
@@ -479,9 +479,9 @@ public class Transition implements Serializable {
 		        + " for a loop node.");
 		}
 		if(this.isMethodOrConstructor) {
-		  PalusUtil.checkNull(this.method);
+		  PalusUtil.checkNull(this.method, "The method field could not be null!");
 		} else {
-		  PalusUtil.checkNull(this.constructor);
+		  PalusUtil.checkNull(this.constructor, "The constructor field could not be null!");
 		}
 	}
 	
@@ -544,11 +544,11 @@ public class Transition implements Serializable {
 		    Object[] serializableArray, AbstractState thizState, AbstractState[] paramStates,
 		    Transition transition, int position) {
 			//check the input first
-			PalusUtil.checkNull(transition);
-			PalusUtil.checkNull(seriazableParamValues);
-			PalusUtil.checkNull(serializableArray);
-			PalusUtil.checkNull(thizState);
-			PalusUtil.checkNull(paramStates);
+			PalusUtil.checkNull(transition, "The transition argument could not be null!");
+			PalusUtil.checkNull(seriazableParamValues, "The seriazableParamValues argument could not be null!");
+			PalusUtil.checkNull(serializableArray, "The serializableArray argument could not be null!");
+			PalusUtil.checkNull(thizState, "The thizState argument could not be null!");
+			PalusUtil.checkNull(paramStates, "The paramStates argument could not be null!");
 			//System.out.println("position: " + position + ",  param length: " + params.length);
 			PalusUtil.checkTrue(seriazableParamValues.length == serializableArray.length,
 			    "The serializableParamValues' length: " + seriazableParamValues.length + " should == "
@@ -582,9 +582,9 @@ public class Transition implements Serializable {
 		 * */
 		private Decoration(DecorationValue thizValue, DecorationValue[] paramValues, Transition transition,
 		    int position) {
-		  PalusUtil.checkNull(thizValue);
-		  PalusUtil.checkNull(paramValues);
-		  PalusUtil.checkNull(transition);
+		  PalusUtil.checkNull(thizValue, "The thizValue argument could not be null!");
+		  PalusUtil.checkNull(paramValues, "The paramValues argument could not be null!");
+		  PalusUtil.checkNull(transition, "The transition argument could not be null!");
 		  this.thiz = thizValue;
 		  this.params = paramValues;
 		  this.transition = transition;
@@ -641,7 +641,7 @@ public class Transition implements Serializable {
 		}
 		
 		public List<DecorationValue> getDecorationValueByType(Class<?> type) {
-		  PalusUtil.checkNull(type);
+		  PalusUtil.checkNull(type, "The type argument could not be null!");
 		  List<DecorationValue> valuesOfType = new LinkedList<DecorationValue>();
 		  if(thiz.type.equals(type)) {
 		    valuesOfType.add(thiz);
@@ -724,8 +724,8 @@ public class Transition implements Serializable {
 		
 		//objStr could only be string and serializable primitive/string array
 		DecorationValue(Object obj, Class<?> type, AbstractState state) {
-			PalusUtil.checkNull(type);
-			PalusUtil.checkNull(state);
+			PalusUtil.checkNull(type, "The type argument could not be null!");
+			PalusUtil.checkNull(state, "The AbstractState argument could not be null!");
 			this.type = type;
 			isPrimitiveOrStringType = type.isPrimitive() || PalusUtil.isPrimitive(type)
 				|| type == java.lang.String.class;
@@ -783,7 +783,7 @@ public class Transition implements Serializable {
 		}
 		
 		public void setDependenceEdge(DependenceEdge edge) {
-			PalusUtil.checkNull(edge);
+			PalusUtil.checkNull(edge, "The dependentEdge to set could not be null!");
 			this.edge = edge;
 		}
 		

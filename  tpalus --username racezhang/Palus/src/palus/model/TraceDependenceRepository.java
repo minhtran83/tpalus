@@ -76,8 +76,8 @@ public class TraceDependenceRepository {
       Map<Instance, List<TraceEventAndPosition>>> traceMap)
     throws ClassNotFoundException, BugInPalusException {
     //no null input
-    PalusUtil.checkNull(traces);
-    PalusUtil.checkNull(traceMap);
+    PalusUtil.checkNull(traces, "The event trace list could not be null.");
+    PalusUtil.checkNull(traceMap, "The trace map could not be null.");
     // Double check the validity of the traces, there should be no missing trace here
     checkTraceSeqNumberValidity(traces);
     ///Compute the dependences for each trace one by one
@@ -141,8 +141,8 @@ public class TraceDependenceRepository {
   private static Pair<TraceEventAndPosition, TraceEventAndPosition> findDependentTracePair(
       Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> traceMap, Class<?> objectType, int objectId,
       Position objectPosition, TraceEvent trace) {
-    PalusUtil.checkNull(objectPosition);
-    PalusUtil.checkNull(trace);
+    PalusUtil.checkNull(objectPosition, "The objectPosition argument could not be null!");
+    PalusUtil.checkNull(trace, "The trace event argument could not be null!");
     
     //return null for null object
     if(objectId == 0) {
@@ -267,8 +267,9 @@ public class TraceDependenceRepository {
       Transition dependentTransition = dependentTransitions.get(0);
       Transition dependentOnTransition = dependentOnTransitions.get(0);
       //check the validity
-      PalusUtil.checkNull(dependentTransition);
-      PalusUtil.checkNull(dependentOnTransition.getDestNode());
+      PalusUtil.checkNull(dependentTransition, "The dependentTransition could not be null.");
+      PalusUtil.checkNull(dependentOnTransition.getDestNode(), "The dest node of dependentOnTransition"
+          + " could not be null!");
       //add to the map
       transitionNodeMap.put(new Pair<Transition, Position>(dependentTransition, keyTAP.position),
           new Pair<ModelNode, Position>(dependentOnTransition.getDestNode(), valueTAP.position));
@@ -330,8 +331,9 @@ public class TraceDependenceRepository {
       Transition dependentOnTransition = dependentOnTransitions.get(0);
       
       //check the validity
-      PalusUtil.checkNull(dependentOnTransition);
-      PalusUtil.checkNull(dependentOnTransition.getDestNode());
+      PalusUtil.checkNull(dependentOnTransition, "The dependentOnTransition could not be null!");
+      PalusUtil.checkNull(dependentOnTransition.getDestNode(), "The dest node of dependentOnTransition"
+          + " could not be null!");
       //add the dependence for each transition
       for(Transition transition : allTransitions) {
         //new the transition, position pair

@@ -433,8 +433,8 @@ public class ClassModel implements Serializable {
 	 * Print a brielf summary for the model
 	 * */
 	public String getModelInfo() {
-	  PalusUtil.checkNull(this.root);
-	  PalusUtil.checkNull(this.exit);
+	  PalusUtil.checkNull(this.root, "The root node should not be null.");
+	  PalusUtil.checkNull(this.exit, "The exit node should not be null.");
 	  
 	  StringBuilder sb = new StringBuilder();
 	  sb.append("---------- model info start ----------" + Globals.lineSep);
@@ -481,8 +481,8 @@ public class ClassModel implements Serializable {
 	 * */
 	public void checkRep() {
 	    //System.out.println("inside check rep...");
-	    PalusUtil.checkNull(this.root);
-	    PalusUtil.checkNull(this.exit);
+	    PalusUtil.checkNull(this.root, "The root node could not be null!");
+	    PalusUtil.checkNull(this.exit, "The exit node could not be null!");
 	    PalusUtil.checkTrue(this.root.isRootNode(), "The root node is not valid.");
 	    if(this.nodes.size() != 1) {
 	      //XXX flaw
@@ -544,8 +544,8 @@ public class ClassModel implements Serializable {
 	    ClassModel nodeModel = models.get(modelledClassForModelNode);
 	    
 	    //check the nullable
-	    PalusUtil.checkNull(transitionModel);
-	    PalusUtil.checkNull(nodeModel);
+	    PalusUtil.checkNull(transitionModel, "The transition model could not be null.");
+	    PalusUtil.checkNull(nodeModel, "The node model could not be null.");
 	    
 	    if(transitionModel.hasTransition(transitionAndPosition.a)) {
 	      tran_count ++;
@@ -635,7 +635,7 @@ public class ClassModel implements Serializable {
 //	}
 	
 	private void checkExistence(ModelNode nodeToCheck) throws ModelNodeNotFoundException {
-		PalusUtil.checkNull(nodeToCheck);
+		PalusUtil.checkNull(nodeToCheck, "The nodeToCheck should not be null!");
 		for(ModelNode node : this.nodes) {
 		    //only compare node id in equals
 			if(node.equals(nodeToCheck)) {
@@ -781,7 +781,7 @@ public class ClassModel implements Serializable {
 	 * Get all sub nodes from a given one (excluding the given one)
 	 * */
 	private List<ModelNode> getAllSubNodes(ModelNode node) {
-	  PalusUtil.checkNull(node);
+	  PalusUtil.checkNull(node, "The node for query all sub nodes could not be null.");
 	  Set<ModelNode> subNodes = new HashSet<ModelNode>();	  
 	  //do a breadth-first traverse
 	  List<ModelNode> tmp = new LinkedList<ModelNode>();
@@ -812,7 +812,7 @@ public class ClassModel implements Serializable {
 	 * transitions from the given node)
 	 * */
 	private List<Transition> getAllSubTransitions(ModelNode node) {
-	  PalusUtil.checkNull(node);	  
+	  PalusUtil.checkNull(node, "The node for querying sub transitions could not be null.");	  
 	  //add all connecting edges
 	  Set<Transition> transitions = new HashSet<Transition>();
 	  transitions.addAll(node.getAllOutgoingEdges());	  
@@ -890,7 +890,7 @@ public class ClassModel implements Serializable {
 	private void unifyAllExitNodes() throws ModelNodeNotFoundException {
 	  //#XXX be careful, the model could be empty then
 	  //check the root invariant does not violate
-	  PalusUtil.checkNull(this.root);
+	  PalusUtil.checkNull(this.root, "The root node could not be null.");
 	  PalusUtil.checkTrue(this.root.isRootNode(), "The root node is not valid.");
 	  
 	  //check that the Class Model could be only one node remaining

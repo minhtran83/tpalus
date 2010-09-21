@@ -36,23 +36,11 @@ public class PalusUtil implements Opcodes{
       .asList(new String[] { "java/", /* "com/sun/", */"javax/", "sun/",
           "test/", "org/objectweb/asm/",
           "org/xmlpull/" });
-//  
-//	public static void checkTrue(boolean condition) {
-//		if(!condition) {
-//			throw new AssertionError("Assertion error!");
-//		}
-//	}
 	
 	public static void checkTrue(boolean condition, String errorMsg) {
 	  if(!condition) {
 	    throw new AssertionError(errorMsg);
 	  }
-	}
-	
-	public static void checkNull(Object o) {
-		if(o == null) {
-			throw new IllegalArgumentException("Object: " + o + " is null!");
-		}
 	}
 	
 	public static void checkNull(Object o, String errorMsg) {
