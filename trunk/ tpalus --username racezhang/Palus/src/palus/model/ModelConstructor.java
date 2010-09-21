@@ -61,7 +61,7 @@ public class ModelConstructor {
 	 * Constructor to set up the original raw trace events
 	 * */
 	public ModelConstructor(Map<Class<?>, Map<Instance, List<TraceEventAndPosition>>> traceByClasses) {
-		PalusUtil.checkNull(traceByClasses);
+		PalusUtil.checkNull(traceByClasses, "The traceByClasses map could not be null!");
 		this.traceByClasses = traceByClasses;
 	}
 	
@@ -76,7 +76,7 @@ public class ModelConstructor {
 			  Log.log("Skip an empty model for class: " + clazz);
 			  continue;
 			}
-			PalusUtil.checkNull(model);
+			PalusUtil.checkNull(model, "The built model for clazz: " + clazz + " could not be null!");
 			models.put(clazz, model);
 		}		
 		return models;
@@ -168,7 +168,7 @@ public class ModelConstructor {
                  throw new RuntimeException(e);
             }
             
-			PalusUtil.checkNull(model);
+			PalusUtil.checkNull(model, "The built class model could not be null!");
 			//record the current node, edge num
 			
 			//check if the model size grows or not after merging
@@ -259,10 +259,10 @@ public class ModelConstructor {
 	    throws ModelNodeNotFoundException, MethodNotExistInTransitionException {
 	  
 	    //check the precondition of this method
-	    PalusUtil.checkNull(model);
-	    PalusUtil.checkNull(srcNode);
-	    PalusUtil.checkNull(destNode);
-	    PalusUtil.checkNull(traceList);
+	    PalusUtil.checkNull(model, "The given class model could not be null.");
+	    PalusUtil.checkNull(srcNode, "The given source node could not be null.");
+	    PalusUtil.checkNull(destNode, "The given dest node could not be null.");
+	    PalusUtil.checkNull(traceList, "The trace list could not be null.");
 	    PalusUtil.checkTrue(srcNode != destNode, "The src node should != destNode.");
 	    PalusUtil.checkTrue(srcNode.getClassModel() == model && destNode.getClassModel() == model,
 	        "The class model of src node: " + srcNode.getClassModel() + " should == that of dest node: "
