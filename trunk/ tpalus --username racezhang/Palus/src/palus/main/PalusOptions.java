@@ -159,6 +159,12 @@ public class PalusOptions {
       + " by the methods below will be ignored.")
   public static String error_ignored_methods = null;
   
+  @Option("Disable assertions.")
+  public static boolean disable_assertion = false;
+  
+  @Option("A file specifying how many instance to process for a specific class")
+  public static String instance_process_file = null;
+  
   
   /**
    * Parse the argument options and assign the value to the right place

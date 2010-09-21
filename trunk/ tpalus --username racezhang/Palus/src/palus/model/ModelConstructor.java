@@ -1,6 +1,8 @@
 // Copyright 2010 Google Inc. All Rights Reserved.
 package palus.model;
 
+import palus.main.PalusOptions;
+
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -179,6 +181,17 @@ public class ModelConstructor {
 			//get the node edge number of the new model
 			current_model_node_num = classModel.getAllNodes().size();
 			current_model_edge_num = classModel.getAllTransitions().size();
+			
+			//check if the max number of instance to process has been specified for this class
+			if(PalusOptions.instance_process_file != null) {
+			  int max_num = ClassesToModel.instanceToProcess(clazz.getName());
+			  if(max_num != -1) {
+			    if(instance_count >= max_num) {
+			      System.out.println("Has processed: " + max_num + " as user specifies!");
+			      break;
+			    }
+			  }
+			}
 			
 			//if not processing all traces, check should we stop building model or not
 			if(!processing_all_traces) {

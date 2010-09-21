@@ -36,10 +36,14 @@ import java.util.Set;
  * @author saizhang@google.com (Sai Zhang)
  */
 final class MethodRelations implements Opcodes {
-  //all classes
+  /**
+   * All classes in which the algorithm will compute method dependence relations.
+   * */
   private final Collection<Class<?>> classes;
   
-  //collections to keep method dependence
+  /**
+   * Three collections to keep method dependence
+   * */
   protected final Map<Class<?>, Map<Method, ReadWriteFields>> fieldReadWrites =
     new LinkedHashMap<Class<?>, Map<Method, ReadWriteFields>>();  
   protected final Map<Class<?>, Map<Method, List<Method>>> dependences =

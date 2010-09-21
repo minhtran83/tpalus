@@ -9,6 +9,8 @@ import org.objectweb.asm.tree.IntInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import palus.main.PalusOptions;
+
 import randoop.RConstructor;
 import randoop.RMethod;
 import randoop.StatementKind;
@@ -31,36 +33,78 @@ import java.util.List;
  * @author saizhang@google.com (Sai Zhang)
  */
 public class PalusUtil implements Opcodes{
-	
+ 
+   /**
+    * A list of non transformable prefixes for classes.
+    * */
    private static final List<String> nonTransformedPrefixes = Arrays
       .asList(new String[] { "java/", /* "com/sun/", */"javax/", "sun/",
           "test/", "org/objectweb/asm/",
           "org/xmlpull/" });
 	
+
+   /**
+    * Does the given class name have a non-transformable prefix?
+    * */
+   public static boolean shouldInstrumentThisClass(String className) {
+       for (String p : nonTransformedPrefixes) {
+           if (className.startsWith(p)) {
+               return false;
+           }
+       }
+
+   return true;
+   }
+   
+   /**
+    * If the given {@code condition} is false, throws the {@code errorMsg}.
+    * */
 	public static void checkTrue(boolean condition, String errorMsg) {
+	  if(PalusOptions.disable_assertion) {
+	    return;
+	  }
 	  if(!condition) {
 	    throw new AssertionError(errorMsg);
 	  }
 	}
 	
+	/**
+	    * If the given {@code o} is null, throws the {@code errorMsg}.
+	    * */
 	public static void checkNull(Object o, String errorMsg) {
+	  if(PalusOptions.disable_assertion) {
+	    return;
+	  }
 	  if( o == null) {
 	    throw new IllegalArgumentException(errorMsg);
 	  }
 	}
 	
+	/**
+	 * Is the given MethodNode {@code m} a constructor?
+	 * */
 	public static boolean isInit(MethodNode m) {
 		return m.name.equals("<init>");
 	}
 	
+	/**
+	 * Replaces the dot in the name to a slash
+	 * */
 	public static String transClassNameDotToSlash(String name) {
         return name.replace('.', '/');
     }
 
+	/**
+	 * Replaces the slash in the name to a dot
+	 * */
     public static String transClassNameSlashToDot(String name) {
         return name.replace('/', '.');
     }
     
+    /**
+     * Concatenates a string array, separted by spaces.
+     * This method is just for display purpose.
+     * */
     public static String concatStrings(String[] strs) {
       PalusUtil.checkNull(strs, "The string array for concatenating can not be null!");
       StringBuilder sb = new StringBuilder();
@@ -71,6 +115,9 @@ public class PalusUtil implements Opcodes{
       return sb.toString().trim();
     }
     
+    /**
+     * Makes a summary of a collection of integers.
+     * */
     public static int sum(Collection<Integer> ints) {
       int  total = 0;
       for(int x : ints) {
@@ -79,6 +126,9 @@ public class PalusUtil implements Opcodes{
       return total;
     }
     
+    /**
+     * Copy file contents.
+     * */
     public static int copyFile(File inFile, File outFile) throws IOException {
       FileInputStream in = new FileInputStream(inFile);
       FileOutputStream out = new FileOutputStream(outFile);
@@ -88,7 +138,10 @@ public class PalusUtil implements Opcodes{
 
       return size;
   }
-    
+  
+  /**
+   * Copy stream contents.
+   * */
   public static int copyStream(InputStream in, OutputStream out)
           throws IOException {
       int size = 0;
@@ -103,21 +156,18 @@ public class PalusUtil implements Opcodes{
 
       return size;
   }
-  
-    public static boolean shouldInstrumentThisClass(String className) {
-        for (String p : nonTransformedPrefixes) {
-            if (className.startsWith(p)) {
-                return false;
-            }
-        }
 
-    return true;
-    }
-
+  /**
+   * Returns true, if the given class is a primitive (or wrapper), or string type. 
+   * */
     public static boolean isPrimitiveOrStringType(Class<?> clz) {
+      PalusUtil.checkNull(clz, "The clz argument could not be null!");
       return clz.isPrimitive() || isPrimitive(clz) || isStringType(clz);
     }
     
+    /**
+     * Checks if the given {@code clz} argument is a one-dimension array of primitive or string values.
+     * */
     public static boolean isPrimitiveOrStringOneDimensionArrayType(Class<?> clz) {
       if(!clz.isArray()) {
         return false;
@@ -132,6 +182,11 @@ public class PalusUtil implements Opcodes{
       }
     }
     
+    /**
+     * Checks if the given class {@code clz} is not a non-primitive or non-string one
+     * dimension array.
+     * For example, it returns false for int[].
+     * */
     public static boolean isNonPrimitiveOrStringOneDimensionArray(Class<?> clz) {
       if(!clz.isArray()) {
         return false;
@@ -141,6 +196,9 @@ public class PalusUtil implements Opcodes{
       }
     }
     
+    /**
+     * Checks is every class in {@code classes} is public visible.
+     * */
     public static boolean areAllVisible(Class<?>[] classes) {
       for(Class<?> clz : classes) {
         if(!Reflection.isVisible(clz)) {
@@ -150,6 +208,9 @@ public class PalusUtil implements Opcodes{
       return true;
     }
     
+    /**
+     * Computes the object id in the given {@code array}, and returns them in an int array.
+     * */
     public static int[] computeObjectIdInArray(Object array) {
       PalusUtil.checkNull(array, "The array input for computing object id can not be null!");
       PalusUtil.checkTrue(array.getClass().isArray(), "The object is not an array type: "
@@ -165,6 +226,9 @@ public class PalusUtil implements Opcodes{
       return retIDs;
     }
     
+    /**
+     * Converts an object array to a flat string for display.
+     * */
     public static String convertArrayToFlatString(Object array) {
       PalusUtil.checkNull(array, "The array input for converting array to flat string "
           + "can not be null!");
@@ -190,6 +254,9 @@ public class PalusUtil implements Opcodes{
       return sb.toString();
     }
     
+    /**
+     * Checks if the given asm-specific {@code type} a primitive type.
+     * */
 	public static boolean isPrimitive(Type type) {
 		if (type.equals(Type.BOOLEAN_TYPE)|| type.equals(Type.CHAR_TYPE) || type.equals(Type.BYTE_TYPE)
 			||type.equals(Type.SHORT_TYPE)|| type.equals(Type.INT_TYPE) || type.equals(Type.FLOAT_TYPE)
@@ -206,12 +273,18 @@ public class PalusUtil implements Opcodes{
 	  return type.equals(Type.LONG_TYPE) || type.equals(Type.DOUBLE_TYPE);
 	}
 	
+	/**
+	 * Checks if the given {@code className} a primitive type name (excluding boxed type).
+	 * */
 	public static boolean isPrimitive(String className) {
 		return className.equals("boolean") || className.equals("char") || className.equals("byte")
 		    || className.equals("short") || className.equals("int") || className.equals("float")
 		    || className.equals("long") || className.equals("double");
 	}
 	
+	/**
+	 * Gets the type for a given primitive class name {@code className}.
+	 * */
 	public static Class<?> getClassForPrimitiveType(String className) {
 		if(!isPrimitive(className)) {
 			throw new RuntimeException(className + " is not a primitive type!");
@@ -237,6 +310,9 @@ public class PalusUtil implements Opcodes{
 		}
 	}
 	
+	/**
+	 * Checks if the given {@code clz} a primitive wrapper type.
+	 * */
 	public static boolean isPrimitive(Class<?> clz) {
 	  if (clz == java.lang.Boolean.class || clz == java.lang.Character.class
 	      || clz == java.lang.Byte.class || clz == java.lang.Short.class
@@ -247,6 +323,9 @@ public class PalusUtil implements Opcodes{
       return false;
 	}
 	
+	/**
+	 * Checks if the two given arrays {@code superType} and {@code extendType} type-compatible.
+	 * */
 	public static boolean isTwoArrayCompatible(Class<?> superType, Class<?> extendType) {
 	  PalusUtil.checkNull(superType, "The given super type could not be null!");
 	  PalusUtil.checkNull(extendType, "The given extend type could not be null!");
@@ -263,6 +342,10 @@ public class PalusUtil implements Opcodes{
 	  return compSuperType.isAssignableFrom(compExtendType) && superDimension <= extendDimension;
 	}
 	
+	/**
+	 * Gets the dimension of a given {@code arrayType}.
+	 * It returns 0 for non-array type.
+	 * */
 	public static int getDim(Class<?> arrayType) {
 	  int dim = 0;
 	  while(arrayType.isArray()) {
@@ -273,6 +356,12 @@ public class PalusUtil implements Opcodes{
 	  return dim;
 	}
 	
+	/**
+	 * Gets the component type of an array. If the given {@code arrayType}
+	 * is not an array, returns it directly.
+	 * 
+	 * For example, it returns A for array type: A[][][]
+	 * */
 	public static Class<?> getArrayComponentType(Class<?> arrayType) {
 	  while(arrayType.isArray()) {
 	    arrayType = arrayType.getComponentType();
@@ -280,10 +369,16 @@ public class PalusUtil implements Opcodes{
 	  return arrayType;
 	}
 	
+	/**
+	 * Checks if the given {@code clz} is string type.
+	 * */
 	public static boolean isStringType(Class<?> clz) {
 	  return clz == java.lang.String.class;
 	}
 	
+	/**
+	 * Gets the Java bytecode instruction for the given integer value {@code i}.
+	 * */
 	public static AbstractInsnNode getIConstInsn(int i) {
 		if(i == -1) {
 			return new InsnNode(Opcodes.ICONST_M1);
@@ -312,6 +407,9 @@ public class PalusUtil implements Opcodes{
 		
 	}
 	
+	/**
+	 * Gets the load instruction for a Java type.
+	 * */
 	public static int getLoadInsn(Type type) {
 		if (type.equals(Type.BOOLEAN_TYPE)) {
 			return ILOAD;
@@ -342,7 +440,9 @@ public class PalusUtil implements Opcodes{
 		}
 	}
 	
-	
+	/**
+	 * Gets the instruction of converting a primitive type to its wrapper type. 
+	 * */
 	public static AbstractInsnNode getBoxingInsn(Type type) {
 		if (type.equals(Type.BOOLEAN_TYPE)) {
 			return new MethodInsnNode(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;");
@@ -382,35 +482,18 @@ public class PalusUtil implements Opcodes{
 		}
 	}
 	
+	/**
+     * Converts an array of string values into its corresponding array object.
+     * */
 	public static Object createOneDimenPrimitiveOrStringArrayFromString(Class<?> componentType,
 	    String value) {
 	  String[] values = null;
 	  return createOneDimenPrimitiveOrStringArrayFromStrings(componentType, values);
 	}
 	
-//	public static String convertPrimitiveOrStringArray(Object obj) {
-//	  PalusUtil.checkNull(obj);
-//	  PalusUtil.checkTrue(PalusUtil.isPrimitiveOrStringOneDimensionArrayType(obj.getClass()));
-//	  
-//	}
-	
-	private static String concatenateStrings(String[] values) {
-	  StringBuilder sb = new StringBuilder();
-	  for(int i = 0; i < values.length; i++) {
-	    sb.append(values[i]);
-	    if(i != values.length - 1) {
-	      sb.append(SEP);
-	    }
-	  }
-	  return sb.toString();
-	}
-	
-	private static String SEP = "_P_A__";
-	
-	private static String[] splitValue(String value) {
-	  return value.split(SEP);
-	}
-	
+	/**
+	 * Converts an array of string values into its corresponding array object.
+	 * */
 	private static Object createOneDimenPrimitiveOrStringArrayFromStrings(Class<?> componentType,
 	    String[] values) {
 	  PalusUtil.checkNull(componentType, "The array's component type could not be null!");
@@ -428,6 +511,9 @@ public class PalusUtil implements Opcodes{
 	  return array;
 	}
 	
+	/**
+	 * Converts a string value to its corresponding primitive type.
+	 * */
 	public static Object createPrimitiveOrStringValueFromString(Class<?> t, String value) {
 	    PalusUtil.checkTrue(t.isPrimitive() || PalusUtil.isStringType(t), "The given type: "
 	        + t.getName() + " is not primtive and string type.");
@@ -457,7 +543,7 @@ public class PalusUtil implements Opcodes{
 	  }
 	
 	/**
-	   * Dump object array to flat string
+	   * Dumps object array to flat string
 	   * */
 	  public static String objectsToString(Object... objects) {
 	    StringBuilder sb = new StringBuilder();
@@ -498,15 +584,4 @@ public class PalusUtil implements Opcodes{
 	      return null;
 	    }
 	  }
-	
-	public static void main(String[] args) {
-	  Object o = PalusUtil.createOneDimenPrimitiveOrStringArrayFromStrings(int.class, new String[]{"1", "2", "3"});
-	  System.out.println("type: " + o.getClass());
-	  o = PalusUtil.createOneDimenPrimitiveOrStringArrayFromStrings(String.class, new String[]{"1", "2", "3"});
-      System.out.println("type: " + o.getClass());
-      String[] array = PalusUtil.splitValue("xxx__P_A__sfjslfj");
-      System.out.println("String array: " + array[0]);
-      System.out.println(PalusUtil.concatenateStrings(new String[]{"aa", "bbb", "ccc"}));
-      array = new String[]{"aa", "bbb", "ccc"};
-	}
 }
