@@ -5,8 +5,6 @@ package palus.testgen;
 import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
 
-import randoop.PrimitiveOrStringOrNullDecl;
-
 import palus.Log;
 import palus.PalusUtil;
 import palus.analysis.MethodRecommender;
@@ -561,6 +559,11 @@ public class TestGenMain {
       //remove all NotNull checker
       if(removeIsNotNullChecker) {
         SequenceCheckFilters.removeIsNotNullChecks(sequences);
+      }
+      
+      if(PalusOptions.exception_dump_file != null) {
+        SequenceExceptions seqExceptions = new SequenceExceptions(sequences, PalusOptions.exception_dump_file);
+        seqExceptions.dumpMethodExceptions();
       }
       
       write_junit_tests (outputDir, packageName, testName, testsPerFile, sequences);

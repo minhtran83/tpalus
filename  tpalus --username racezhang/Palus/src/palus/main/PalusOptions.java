@@ -120,6 +120,9 @@ public class PalusOptions {
   @Option("Use enum type")
   public static boolean use_enum_type = true;
   
+  @Option("A file dump all thrown exception during test generation")
+  public static String exception_dump_file = null;
+  
   //options not used in this class
   
   @Unpublicized
@@ -210,6 +213,7 @@ public class PalusOptions {
     GenInputsAbstract.check_npe = PalusOptions.check_npe;
     GenInputsAbstract.error_ignored_methods = PalusOptions.error_ignored_methods;
     GenInputsAbstract.use_enum_type = PalusOptions.use_enum_type;
+//    GenInputsAbstract.exception_dump_file = PalusOptions.exception_dump_file;
     
     //if users provide a list of ignored methods, we add them to the the uninteresting
     //method list. so that any exception thrown by this method will be ignored
