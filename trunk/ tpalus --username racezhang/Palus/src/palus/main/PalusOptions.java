@@ -118,7 +118,7 @@ public class PalusOptions {
   public static boolean check_npe = true;
   
   @Option("Use enum type")
-  public static boolean use_enum_type = false;
+  public static boolean use_enum_type = true;
   
   //options not used in this class
   

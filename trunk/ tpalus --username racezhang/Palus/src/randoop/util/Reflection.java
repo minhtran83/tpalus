@@ -542,33 +542,6 @@ public final class Reflection {
    }
    
    /**
-    * Gets all enum declarations from a collection of class declarations.
-    * */
-   public static List<PrimitiveOrStringOrNullDecl> getEnumDeclarations(Collection<Class<?>> classes) {
-     List<PrimitiveOrStringOrNullDecl> enums = new LinkedList<PrimitiveOrStringOrNullDecl>();
-     
-     for(Class<?> clazz : classes) {
-       if(!clazz.isEnum()) {
-         continue;
-       }
-       //double check the visibility
-       if(!Reflection.isVisible(clazz)) {
-         continue;
-       }
-       //get a list of enum constants
-       Object[] constants = clazz.getEnumConstants();
-       //create a statement for each enum constant
-       for(Object constant : constants) {
-         PrimitiveOrStringOrNullDecl enumDecl = 
-           new PrimitiveOrStringOrNullDecl(/*constant.getClass()*/clazz, constant);
-         enums.add(enumDecl);
-       }
-     }
-     
-     return enums;
-   }
-   
-   /**
     * A helper method to get enum constant by its name
     * */
    public static Object getEnumConstantByName(Class<?> type, String constantName) {
