@@ -84,6 +84,9 @@ public abstract class GenInputsAbstract extends CommandHandler {
   
   @Option("Any exception thrown by this method is ignored, added by S Zhang")
   public static String error_ignored_methods = null;
+  
+//  @Option("A file dumps all thrown exceptions during test generation, added by S Zhang")
+//  public static String exception_dump_file = null;
 
   @Option("Use null with the given frequency. [TODO explain]")
   public static Double null_ratio = null;
