@@ -74,7 +74,7 @@ public abstract class GenInputsAbstract extends CommandHandler {
   public static boolean check_npe = true;
   
   @Option("Use enum type or not, added by S Zhang")
-  public static boolean use_enum_type = false;
+  public static boolean use_enum_type = true;
   
   @Option("Remove redundant error sequences, added by S Zhang")
   public static boolean remove_redundant_errors = false;

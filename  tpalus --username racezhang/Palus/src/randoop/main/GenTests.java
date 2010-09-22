@@ -268,8 +268,9 @@ public class GenTests extends GenInputsAbstract {
     
     //Add enum constant
     if(GenInputsAbstract.use_enum_type) {
-      List<PrimitiveOrStringOrNullDecl> enumDecls = Reflection.getEnumDeclarations(classes);
-      components.addAll(SeedSequences.enumsToSeeds(enumDecls));
+//      List<PrimitiveOrStringOrNullDecl> enumDecls = Reflection.getEnumDeclarations(classes);
+//      components.addAll(SeedSequences.enumsToSeeds(enumDecls));
+      components.addAll(SeedSequences.enumsToSeeds(classes));
     }
     
     // Add user-specified seeds.

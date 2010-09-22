@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -55,13 +56,44 @@ public final class SeedSequences {
     return retval;
   }
   
-  public static Set<Sequence> enumsToSeeds(Collection<PrimitiveOrStringOrNullDecl> enumDecls) {
+  /**
+   * Gets all enum declarations from a collection of class declarations.
+   * */
+  private static List<PrimitiveOrStringOrNullDecl> getEnumDeclarations(Collection<Class<?>> classes) {
+    List<PrimitiveOrStringOrNullDecl> enums = new LinkedList<PrimitiveOrStringOrNullDecl>();
+    
+    for(Class<?> clazz : classes) {
+      if(!clazz.isEnum()) {
+        continue;
+      }
+      //double check the visibility
+      if(!Reflection.isVisible(clazz)) {
+        continue;
+      }
+      //get a list of enum constants
+      Object[] constants = clazz.getEnumConstants();
+      //create a statement for each enum constant
+      for(Object constant : constants) {
+        PrimitiveOrStringOrNullDecl enumDecl = 
+          new PrimitiveOrStringOrNullDecl(/*constant.getClass()*/clazz, constant);
+        enums.add(enumDecl);
+      }
+    }
+    
+    return enums;
+  }
+  
+  private static Set<Sequence> convertEnumToSeeds(Collection<PrimitiveOrStringOrNullDecl> enumDecls) {
     Set<Sequence> enumSeqs = new LinkedHashSet<Sequence>();
     for(PrimitiveOrStringOrNullDecl enumDecl : enumDecls) {
       assert enumDecl != null;
       enumSeqs.add(Sequence.create(enumDecl));
     }
     return enumSeqs;
+  }
+  
+  public static Set<Sequence> enumsToSeeds(Collection<Class<?>> classes) {
+    return convertEnumToSeeds(getEnumDeclarations(classes));
   }
 
   public static Set<Object> getSeeds(Class<?> c) {

@@ -265,8 +265,9 @@ public class TestGenMain {
       
       //Add enum constants
       if(PalusOptions.use_enum_type) {
-        List<PrimitiveOrStringOrNullDecl> enumDecls = Reflection.getEnumDeclarations(allClasses);
-        components.addAll(SeedSequences.enumsToSeeds(enumDecls));
+//        List<PrimitiveOrStringOrNullDecl> enumDecls = SeedSequences.getEnumDeclarations(allClasses);
+//        components.addAll(SeedSequences.enumsToSeeds(enumDecls));
+        components.addAll(SeedSequences.enumsToSeeds(allClasses));
       }
       
       //add method-specific inputs
