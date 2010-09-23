@@ -245,7 +245,7 @@ public class TestGenMain {
       
       //initialize the method recommender
       this.recommender = new MethodRecommender(classesToTest);
-      if(diversifySequence) {
+      if(diversifySequence && !PalusOptions.fall_back_to_randoop) {
         System.out.println(Globals.lineSep + "Building up method dependence model for diversifying...");
         recommender.buildDependence(model);
         Log.log("---- all method dependence ----");
@@ -564,6 +564,7 @@ public class TestGenMain {
       if(PalusOptions.exception_dump_file != null) {
         SequenceExceptions seqExceptions = new SequenceExceptions(sequences, PalusOptions.exception_dump_file);
         seqExceptions.dumpMethodExceptions();
+        System.out.println("Dump exception files to: " + seqExceptions.dumpFilePath());
       }
       
       write_junit_tests (outputDir, packageName, testName, testsPerFile, sequences);
@@ -649,6 +650,9 @@ public class TestGenMain {
         } catch (ClassNotFoundException e) {
           e.printStackTrace();
         } catch (Exception e) {
+          System.err.println("Errors in reading class: " + line);
+          e.printStackTrace();
+        } catch (Error e) {
           System.err.println("Errors in reading class: " + line);
           e.printStackTrace();
         }

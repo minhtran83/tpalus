@@ -64,9 +64,9 @@ public class JarClassesExtractor {
     List<String> retClasses = new LinkedList<String>();
     
     for(String clazz : allClasses) {
-      if(clazz.indexOf("$") != -1) {
-        continue;
-      }
+//      if(clazz.indexOf("$") != -1) {
+//        continue;
+//      }
       String className = PalusUtil.transClassNameSlashToDot(clazz);
       if(className.endsWith(".class")) {
         className = className.substring(0, className.length() - ".class".length());
@@ -93,11 +93,24 @@ public class JarClassesExtractor {
     //"/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/gws/gws_deploy.jar";
     //"/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/testing/tap/testbroker/server/TestBroker_deploy.jar";
     //"/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/ads/pebl/libpebl.jar";
-    "/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/buzz/sessionbin_deploy.jar";
+    //"/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/buzz/sessionbin_deploy.jar";
+     // "/home/saizhang/project/googlecodeval/google3/blaze-bin/javatests/com/google/buzz/alltestsbin_deploy.jar";
+     //"/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/orkut/www_frontend_bin_deploy.jar";
+     // "/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/caribou/frontend/frontend_en_bin_deploy.jar";
+      "/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/caribou/Caribou_en_deploy.jar";
     String packageName =
     //"com.google.gws";
     //"com.google.testing.tap";
-      "com.google.buzz";
+      //"com.google.buzz.video";
+      //"com.google.calendar";
+      //"com.google.orkut.dos";
+      "com.google.caribou.spam";
+    
+    if(args != null & args.length == 2) {
+      jarPath = args[0];
+      packageName = args[1];
+    }
+    
     JarClassesExtractor.extracClassNamesForTests(jarPath, packageName);
   }
   

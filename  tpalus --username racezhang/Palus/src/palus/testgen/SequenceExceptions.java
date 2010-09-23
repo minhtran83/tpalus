@@ -16,6 +16,7 @@ import palus.PalusUtil;
 
 import randoop.ExecutableSequence;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -52,6 +53,10 @@ public class SequenceExceptions {
     this.dumpFilePath = dumpFilePath;
   }
   
+  public String dumpFilePath() {
+    return new File(this.dumpFilePath).getAbsolutePath();
+  }
+  
   /**
    * Gets all thrown exceptions
    * */
@@ -80,6 +85,9 @@ public class SequenceExceptions {
     //process each executable sequences
     for(ExecutableSequence eSeq : eSeqs) {
       PalusUtil.checkNull(eSeq, "The executable sequence to process could not be null!");
+      if(!eSeq.throwsException()) {
+        continue;
+      }
       int exceptionIndex = eSeq.exceptionIndex();
       if(exceptionIndex == -1) {
         continue;
