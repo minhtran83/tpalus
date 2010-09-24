@@ -55,6 +55,9 @@ View a complete list of Palus command? execute the following command:
 || --error_ignored_methods || a list of uninteresting method. ignore any errors in these methods. || null || No ||
 || --use_palulu_model || fall back to palulu (for experiment only) || false || No ||
 || --fall_back_to_randoop || fall back to randoop (for experiment only) || false || No ||
+|| --disable_assertion || disable the assertion checking inside Palus || false || No ||
+|| --instance_process_file || A file specifying how many instance to process for one class || N/A || No ||
+|| --exception_dump_file || dump all thrown exceptions to a file during test generation || N/A || No ||
 
 
 *Additional options * for palus.wrapper.PalusWrapperMain
