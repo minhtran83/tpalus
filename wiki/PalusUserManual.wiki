@@ -57,7 +57,7 @@ View a complete list of Palus command? execute the following command:
 || --log_file || the file name for logging || N/A || No ||
 
 
-*Additional options * for palus.wrapper.PalusWrapperMain
+*Additional options* for palus.wrapper.PalusWrapperMain
 
 PalusWrapperMain wraps the Palus process. It creates, monitors the Palus process, and restarts a new Palus process with a different random seed if it crashes. This wrapper process makes Palus more robust,since Palus may call some non-terminating or system calls (e.g. System.exit(int)) during test generation and then crashes.
 
