@@ -26,6 +26,7 @@ View a complete list of Palus command? execute the following command:
 
 *Basic options* for palus.main.OfflineMain:
 
+
 || *Option* || * Explanation* || *Default* || *Required?* ||
 || --time_limit || time for test generation (in seconds) || N/A || *Yes* ||
 || --class_file || a file containing all classes for test || N/A || *Yes* ||
