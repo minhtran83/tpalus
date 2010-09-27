@@ -2,6 +2,8 @@
 
 package palus.main;
 
+import randoop.main.GenInputsAbstract;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -60,27 +62,36 @@ public class OfflineMain {
   private static boolean palulu = false;
   
   //experimental option
-  //static boolean fall_back_to_randoop = false;
+  static boolean released = true;
   
   /**
    * Start test generation.
    * TODO the args should be compatible with randoop's
    * */
   public static void main(String[] args) throws IOException, ClassNotFoundException {
-    String logFilePath = "./log_test_gen.txt";
-    Log.logConfig(logFilePath);
-    System.out.println("Log file place: " + new File(logFilePath).getAbsolutePath());
-    
-    Log.log("Start logging....");
+    //default log file
+    String logFilePath = null;
     
     if(args.length == 0) {
+      if(released) {
+        new PalusOptions().parseArgsAndConfigurePalus(new String[]{"--help"});
+      }
         //only for experiment
+        logFilePath = "./log_test_gen.txt";
         System.out.println("In experiment environment ....");
         experiment_configure_options();
     } else {
       System.out.println("Starting Palus, configuring options ...");
       PalusOptions options = new PalusOptions();
       options.parseArgsAndConfigurePalus(args);
+      //get the log file
+      logFilePath = PalusOptions.log_file;
+    }
+    
+    if(logFilePath != null) {
+      Log.logConfig(logFilePath);
+      System.out.println("Log file place: " + new File(logFilePath).getAbsolutePath());
+      Log.log("Start logging...");
     }
     
     OfflineMain main = new OfflineMain();
@@ -90,7 +101,7 @@ public class OfflineMain {
   private static void experiment_configure_options() {
     
     //fall_back_to_randoop = true;
-    TestGenMain.timelimit = 150;
+    TestGenMain.timelimit = 100;
     //TestGenMain.checkTheory = false;
     //palulu = true;
     OfflineMain.buildFromTrace = true;
@@ -116,6 +127,8 @@ public class OfflineMain {
     
     if(palulu) {
       PalusOptions.check_npe = false;
+      GenInputsAbstract.check_npe = PalusOptions.check_npe;
+      
       PalusOptions.only_output_failed_tests = true;
       PalusOptions.filter_redundant_failures = true;
       
@@ -133,8 +146,12 @@ public class OfflineMain {
       SequenceDiversifier.addReturnTypeRelatedStatement = false;
       MethodRecommender.use_tf_idf = false;
     } else {
+        GenInputsAbstract.check_npe = PalusOptions.check_npe;
+        PalusOptions.only_output_failed_tests = true;
+        PalusOptions.max_seq_num_model_tests = 2000;
+        
         TestGenMain.diversifySequence = true;
-        ModelBasedGenerator.percentage_of_random_gen = 0.4f;
+        ModelBasedGenerator.percentage_of_random_gen = 0.5f;
         ModelBasedGenerator.random_test_before_model = false;
         ModelBasedGenerator.random_test_after_model = true;
         ModelBasedGenerator.only_random_uncovered_statements = false;
@@ -180,7 +197,7 @@ public class OfflineMain {
     }
     
     //build model from saved trace
-    if(!PalusOptions.fall_back_to_randoop) {
+    if(!PalusOptions.random) {
       if(buildFromTrace) {
         System.out.println("Reading trace file: " + TRACE_OBJECT_FILE + " ...... ");
         List<TraceEvent> events = TraceSerializer.deserializeObjectsFromTrace(new File(TRACE_OBJECT_FILE));
@@ -202,7 +219,7 @@ public class OfflineMain {
     }
     
     //for testing purpose
-    if(DUMP_MODEL_AS_TXT != null && !PalusOptions.fall_back_to_randoop && PalusOptions.dump_model_as_text) {
+    if(DUMP_MODEL_AS_TXT != null && !PalusOptions.random && PalusOptions.dump_model_as_text) {
         dumpModels(models, DUMP_MODEL_AS_TXT);
     }
     

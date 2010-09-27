@@ -245,13 +245,14 @@ public class TestGenMain {
       
       //initialize the method recommender
       this.recommender = new MethodRecommender(classesToTest);
-      if(diversifySequence && !PalusOptions.fall_back_to_randoop) {
+      if(diversifySequence && !PalusOptions.random) {
         System.out.println(Globals.lineSep + "Building up method dependence model for diversifying...");
         recommender.buildDependence(model);
         Log.log("---- all method dependence ----");
         Log.log(recommender.showDependence());
         //return;
         System.out.println("Finishing method dependence model building");
+        System.out.println();
       }
       
       //init the component
