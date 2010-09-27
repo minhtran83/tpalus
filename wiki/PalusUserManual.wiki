@@ -228,6 +228,15 @@ Palus provides two annotations for test generation configuration
     @ObjectSequence
     public static String createmap = "var0 = cons : java.util.HashMap.<init>() : ";
    }}}
+   
+   A more sophisticated input:
+   {{{
+@ObjectSequence
+  public static String mutateMap = "var0 = cons : java.util.HashMap.<init>() :"
+      + Globals.lineSep + "var1 = prim : double:-1.0 :"
+      + Globals.lineSep + "var2 = prim : java.lang.String:\"hi!\" :"
+      + Globals.lineSep + "var3 = method : java.util.HashMap.put(java.lang.Object,java.lang.Object) : var0 var1 var2";
+    }}}
 
    will informs Palus to initialize a new {{{HashMap}}} and put it into the pool before test generation starts.
 
