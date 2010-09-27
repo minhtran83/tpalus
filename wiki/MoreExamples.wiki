@@ -156,3 +156,7 @@ Due to the unknown (unfixed) bugs, Palus might crash in some cases. There could 
    3.1 change to a new random seed using {{{--random_seed NUM}}}, and execute again (or simply execute again first).
 
    3.2 specify the max number of test generation based on the constructed models, using the command {{{--max_seq_num_model_tests NUM}}}. It is an unpublicized option, which informs Palus only to create {{{NUM}}} tests based on the built model, and switch to random generation after {{{NUM}}} tests have been created.
+
+4. Palus crashes when calling underlying system calls
+
+It is possible for Palus to crash (or exit) when calling underlying system calls, like System.exit(). In this case, users could {{{palus.wrapper.PalusWrapperMain}}} as the main class, which wraps the Palus process, and will spawns, monitors and creates the execution of Palus. See the option section [http://code.google.com/p/tpalus/wiki/PalusUserManual#Command_Options  here].
