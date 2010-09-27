@@ -222,6 +222,15 @@ Palus provides two annotations for test generation configuration
     
    During test generation, Palus will not call the above specified method for test generation. This annotation gives programmer more flexibility in choosing which method to test.
 
+3. {{{palus.testgen.ObjectSequence}}} annotation permits programmers to supplement additional objects for test generation. For instance,
+
+   {{{
+    @ObjectSequence
+    public static String createmap = "var0 = cons : java.util.HashMap.<init>() : ";
+   }}}
+
+   will informs Palus to initialize a new {{{HashMap}}} and put it into the pool before test generation starts.
+
 = How to measure test coverage? =
 
 We use [http://cobertura.sourceforge.net/ cobertura] (version 1.9.4.1) to measure the line/branch coverage of generated unit tests. A good instruction of how to use cobertura could be found [http://cobertura.sourceforge.net/commandlinereference.html here].
