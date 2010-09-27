@@ -154,4 +154,5 @@ It tells Palus only to process 10 object instances for class {{{packagename.clas
 Due to the unknown (unfixed) bugs, Palus might crash in some cases. There could be several ways to work around this temporarily before the bugs are fixed.
 
    3.1 change to a new random seed using {{{--random_seed NUM}}}, and execute again (or simply execute again first).
+
    3.2 specify the max number of test generation based on the constructed models, using the command {{{--max_seq_num_model_tests NUM}}}. It is an unpublicized option, which informs Palus only to create {{{NUM}}} tests based on the built model, and switch to random generation after {{{NUM}}} tests have been created.
