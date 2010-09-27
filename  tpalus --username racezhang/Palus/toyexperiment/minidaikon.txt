@@ -1,0 +1,11 @@
+arrayexamples.BinaryCore
+arrayexamples.Invariant
+arrayexamples.LinearBinary
+arrayexamples.Main
+arrayexamples.PptSlices2
+arrayexamples.PptTopLevel
+arrayexamples.ProlangType
+arrayexamples.VarComparability
+arrayexamples.VarInfo
+arrayexamples.VarInfoAux
+arrayexamples.VarinfoName
