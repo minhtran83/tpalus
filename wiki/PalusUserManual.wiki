@@ -28,32 +28,32 @@ View a complete list of Palus command? execute the following command:
 
 
 || *Option* || * Explanation* || *Default* || *Required?* ||
-|| --time_limit || time for test generation (in seconds) || N/A || *Yes* ||
-|| --class_file || a file containing all classes for test || N/A || *Yes* ||
+|| --time_limit || a time limit for test generation (in seconds) || N/A || *Yes* ||
+|| --class_file || a file containing all classes for testing || N/A || *Yes* ||
 || --trace_file || a file containing all recorded event traces || N/A || *Yes* ||
-|| --model_class_file || a file containing the classes to be modelled || N/A || No ||
-|| --donot_build_model_from_trace || a flag. use already built model or not || false || No ||
+|| --model_class_file || a file containing all classes to be modelled || N/A || No ||
+|| --donot_build_model_from_trace || a flag, indicating use already built model or not || false || No ||
 || --dont_process_all_trace || only process a part of recorded traces || false || No ||
-|| --instance_per_model || number of object instances to process for each class model. || 20 || No ||
+|| --instance_per_model || number of object instances to process for each class || 20 || No ||
+|| --instance_process_file || A file specifying how many instances to process for one class || N/A || No ||
 || --auto_switch_to_random || automatically switch to random testing if the model coverage does not increase. || false || No ||
-|| --switch_time_to_random || how long to switch if the model coverage does not increase. || 6000 msc || No ||
-|| --percentage_of_random_gen || the percentage of random testing after exploring the model. || 4 || No ||
-|| --print_model_coverage || print class model coverage at the end or not. || false || No ||
+|| --switch_time_to_random || how long to switch if the model coverage does not increase || 6000 msc || No ||
+|| --percentage_of_random_gen || the percentage of random testing after exploring the model || 4 || No ||
+|| --print_model_coverage || print class model coverage at the end of test generation || false || No ||
 || --exhaustive_diversify_seq || diversify the created sequence with every method in the same class|| false || No ||
-|| --add_return_type_related_methods || add methods in the return type class as related ones. || false || No ||
-|| --process_large_trace || process a large trace. || false || No ||
+|| --add_return_type_related_methods || add methods in the return type class as related ones || false || No ||
+|| --process_large_trace || process a large trace, it is a short of several option combinations || false || No ||
 || --use_theory_check || do oracle checking on a user-provided theory. || true || No ||
-|| --check_npe || check null pointer exception or not. || false || No ||
+|| --check_npe || check null pointer exception or not || false || No ||
 || --random_seed || change to a new random seed. || 0 || No ||
-|| --dump_model_as_text || dump the built class model as text for inspection. || false || No ||
-|| --save_trace_as_txt || save the observed traces as text for inspection. || false || No ||
-|| --only_output_failed_tests || only output failed tests. || false || No ||
-|| --filter_redundant_failures || remove redundant failed tests in the result. || false || No ||
-|| --error_ignored_methods || a list of uninteresting method. ignore any errors in these methods. || null || No ||
-|| --random || pure random test generation without model || false || No ||
+|| --dump_model_as_text || dump the built class model as text for inspection || false || No ||
+|| --save_trace_as_txt || save the observed traces as text for inspection || false || No ||
+|| --only_output_failed_tests || only output failed tests || false || No ||
+|| --filter_redundant_failures || remove redundant failed tests in the result by heuristic || false || No ||
+|| --error_ignored_methods || a list of uninteresting methods. Palus will ignore any errors found in these methods. || null || No ||
+|| --random || pure random test generation without the model || false || No ||
 || --disable_assertion || disable the assertion checking inside Palus || false || No ||
-|| --instance_process_file || A file specifying how many instance to process for one class || N/A || No ||
-|| --exception_dump_file || dump all thrown exceptions to a file during test generation || N/A || No ||
+|| --exception_dump_file || dump all thrown exceptions for each method to a file during test generation || N/A || No ||
 || --verbose || dump more information during test generation || false || No ||
 || --log_file || the file name for logging || N/A || No ||
 
