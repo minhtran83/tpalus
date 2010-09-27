@@ -127,4 +127,25 @@ Randoop has a known bug reported [http://code.google.com/p/randoop/issues/detail
 
 =Tricks for Tweaking=
 1. Reduce runtime overhead when collecting traces
-   The default model of Palus will instrument and monitor the execution of ALL client code. Thus, for large-scale projects, the instrumentation is likely to impose a huge runtime overhead, or even result in OutOfMemory exception when recording traces.  In that case, we recommend users to provide a file to specify the classes you want to instrument (instead of asking Palus to instrument all). See: 
+   The default model of Palus will instrument and monitor the execution of ALL client code. Thus, for large-scale projects, the instrumentation is likely to impose a huge runtime overhead, or even result in OutOfMemory exception when recording traces.  In that case, we recommend users to provide a file to specify the classes you want to instrument (instead of asking Palus to instrument all). See the options for [http://code.google.com/p/tpalus/wiki/PalusUserManual#Command_Options instrumentation part] in the user manual.
+
+2. Reduce the number of instances to process when building models
+   By default, Palus will process EVERY object instance observed from the sample execution to construct a class model. The class model construction and merging phase uses a recursive algorithm, and could be slow for classes that have many instances observed from sample execution. To speed up the model construction phase, users could use options {{{--model_class_file}}}, {{{--instance_per_model}}}, or {{{--instance_process_file}}} to specify for which class to build model, and how many object instances to process in creating class models.
+
+  {{{--model_class_file  File_Name}}}
+
+informs Palus only build models for the classes in the file {{{File_Name}}}, and ignore other classes
+
+  {{{--instance_per_model 10}}}
+
+informs Palus only process 10 object instances to build model for each class
+
+  {{{--instance_process_file  File_Name}}}
+
+informs Palus read the file {{{File_Name}}}, and process the specified num of instances for each class. The content of a file {{{File_Name}}} looks like:
+
+   {{{
+     packagename.classname  10
+   }}}
+
+It tells Palus only to process 10 object instances for class {{{packagename.classname}}}
