@@ -68,6 +68,14 @@ PalusWrapperMain wraps the Palus process. It creates, monitors the Palus process
 || --palus_class_path || a file containing all classes for test || System.getProperty("java.class.path", ".") || No ||
 || --java_command || Use which JVM to launch Palus || "java" (the default JVM in classpath) || No ||
 
+*Options* for the palus.instrument.Agent
+
+Palus uses load-time bytecode instrumentation to modify the bytecode under test. The {{{palus.instrument.Agent}}} contains the premain method to do so. It could accept several simple options as parameter.
+
+The most common way to use is: {{{-javaagent:./palus-0.2-nodept.jar=Project_for_Test}}}.  Project_for_Test could be valid string value. For a specific run, Palus will create a file named Project_for_Test_trace.model to record all saved traces (binary format), and a file named Project_for_Test_trace.txt to save all saved traces as human-readable text.
+
+You could also specify which class to instrument like: {{{-javaagent:./palus-0.2-nodept.jar=Project_for_Test=./Instrument_File_Name}}}. The file of Instrument_File_Name contains all classes to instrument. Other classes not in this file will be skipped. This option is useful if users only want to record the traces for some particular classes.
+
 
 ==Examples==
 
