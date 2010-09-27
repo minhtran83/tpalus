@@ -1,6 +1,6 @@
 *This page is still under construction*
 
-*Note:* please download the latest version (current: *0.19*) from Downloads tab
+*Note:* please download the latest version (current: *0.20*) from Downloads tab. The *palus-0.2-nodept.jar* includes everything you need to start!
 
 <wiki:toc max_depth="3" />
 
