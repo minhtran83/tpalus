@@ -19,7 +19,7 @@ The jar could be downloaded [http://code.google.com/p/tpalus/source/browse/trunk
 tinySQL has a command line user interface, which allows users to interact with the database engine.
 
 1. collect a sample execution trace
-   {{{ java -agent:./palus-0.1.jar=tinysql -cp ./tinysql-jdk1.6.jar:./asm-all-3.1.jar:$CLASSPATH com.sqlmagic.tinysql.tinySQLCmd}}}
+   {{{ java -javaagent:./palus-0.1.jar=tinysql -cp ./tinysql-jdk1.6.jar:./asm-all-3.1.jar:$CLASSPATH com.sqlmagic.tinysql.tinySQLCmd}}}
 
    You will see a command line prompt like:
 
