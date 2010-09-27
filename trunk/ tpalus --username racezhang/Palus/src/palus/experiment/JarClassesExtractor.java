@@ -58,7 +58,8 @@ public class JarClassesExtractor {
    * A utility method returns a list of non-anonymous, non-inner class names inside a jar.
    * returns class name in the form of package.name.class.name
    * */
-  public static List<String> extracClassNamesForTests (String jarFilePath, String packageName)
+  public static List<String> extracClassNamesForTests (String jarFilePath, String packageName,
+      String fileName)
     throws IOException {
     List<String> allClasses = extractClassNames(jarFilePath);
     List<String> retClasses = new LinkedList<String>();
@@ -75,8 +76,9 @@ public class JarClassesExtractor {
       if(packageName != null && !className.startsWith(packageName)) {
         continue;
       }
-      
-      System.out.println(className);
+      if(fileName == null) {
+        System.out.println(className);
+      }
       retClasses.add(className);
     }
     
@@ -95,23 +97,27 @@ public class JarClassesExtractor {
     //"/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/ads/pebl/libpebl.jar";
     //"/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/buzz/sessionbin_deploy.jar";
      // "/home/saizhang/project/googlecodeval/google3/blaze-bin/javatests/com/google/buzz/alltestsbin_deploy.jar";
-     //"/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/orkut/www_frontend_bin_deploy.jar";
+     "/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/orkut/www_frontend_bin_deploy.jar";
      // "/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/caribou/frontend/frontend_en_bin_deploy.jar";
-      "/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/caribou/Caribou_en_deploy.jar";
+     // "/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/caribou/Caribou_en_deploy.jar";
+     // "/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/testing/fortknox/alerts/alerts_lib_bin_deploy.jar";
+      //"/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/testing/fortknox/projects/megastore_repository_bin_deploy.jar";
+    //"/home/saizhang/project/googlecodeval/google3/blaze-bin/java/com/google/testing/fortknox/client/client_bin_deploy.jar";
     String packageName =
     //"com.google.gws";
     //"com.google.testing.tap";
       //"com.google.buzz.video";
       //"com.google.calendar";
-      //"com.google.orkut.dos";
-      "com.google.caribou.spam";
+      "com.google.orkut";
+      //"com.google.testing.fortknox";
+     //"com.google.caribou.base";
     
-    if(args != null & args.length == 2) {
+    if(args != null & args.length >= 2) {
       jarPath = args[0];
       packageName = args[1];
     }
     
-    JarClassesExtractor.extracClassNamesForTests(jarPath, packageName);
+    JarClassesExtractor.extracClassNamesForTests(jarPath, packageName, null);
   }
   
 }

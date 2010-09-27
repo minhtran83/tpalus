@@ -36,9 +36,9 @@ import randoop.Globals;
  */
 public class TraceAnalyzer {
   
-    public static String PROJECT_NAME = "bcel_repro_";//"jsap_repro_";//"apache_repro_";//"rhino_repro_";
+    public static String PROJECT_NAME = "bcel_repro_";//"rhino_repro_";//"apache_repro_";//"jsap_repro_";//"sat4j_repro_";////"tinysql_repro_";//////
     //"jdtcore_";//
-      //"sat4j_repro_";//"tinysql_repro_";//"apache_";
+      //"apache_";
     ////"toy_db";////
     ////"html_parser_";// 
   
@@ -171,8 +171,10 @@ public class TraceAnalyzer {
 		  for(List<TraceEventAndPosition> list : entry.getValue().values()) {
 		    traceNum += list.size();
 		  }
-		  System.out.println("    class: " + entry.getKey() + ", instance number: " + entry.getValue().size()
+		  if(PalusOptions.verbose) {
+		    System.out.println("    class: " + entry.getKey() + ", instance number: " + entry.getValue().size()
 		      + ", total size: " + traceNum);
+		  }
 		}
 		System.out.println(Globals.lineSep);
 		//first capture the parameter dependence between trace events

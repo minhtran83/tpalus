@@ -70,7 +70,16 @@ public final class ContractCheckingVisitor implements ExecutionVisitor {
     }
 
      if (s.getResult(idx) instanceof ExceptionalExecution) {
-       if (GenInputsAbstract.forbid_null && GenInputsAbstract.check_npe) {
+       boolean shouldAddCheck = GenInputsAbstract.check_npe;
+       if(s.sequence.getStatementKind(idx) instanceof RMethod) {
+         RMethod rmethod = (RMethod)s.sequence.getStatementKind(idx);
+         String methodName = rmethod.getMethod().getName();
+         if(methodName.equals("toString") || methodName.equals("hashCode")) {
+           shouldAddCheck = true;
+         }
+       }
+       //add a checker
+       if (GenInputsAbstract.forbid_null && shouldAddCheck) {
          ExceptionalExecution exec = (ExceptionalExecution)s.getResult(idx);
          if (exec.getException().getClass().equals(NullPointerException.class)) {           
            //check if this method is not interesting, so that ignore the thrown exception

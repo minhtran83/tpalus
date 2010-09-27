@@ -58,6 +58,7 @@ public class PalusOptions {
   @Option("How many instances to process if there not processing the whole trace file")
   public static int instance_per_model = 20;
   
+  @Unpublicized
   @Option("Only process user provided classes to build model")
   public static boolean process_and_model_all_class = false;
   
@@ -67,6 +68,7 @@ public class PalusOptions {
   @Option("The time interval to wait before switching to random testing, after the coverage does not increase")
   public static int switch_time_to_random = 6000;
   
+  @Unpublicized
   @Option("Diversify the generated sequence with static analysis")
   public static boolean dont_diversify_sequence = false;
   
@@ -85,9 +87,11 @@ public class PalusOptions {
   @Option("Only randomize generation tests for model uncovered statements")
   public static boolean only_random_uncovered_methods = false;
   
+  @Unpublicized
   @Option("Use abstract state as constrains for argument selection")
   public static boolean dont_use_abstract_state_as_selector = false;
   
+  @Unpublicized
   @Option("Merge equivalent decorations in the model")
   public static boolean dont_merge_equivalent_decorations = false;
   
@@ -112,18 +116,21 @@ public class PalusOptions {
   public static boolean process_large_trace = false;
   
   @Option("Checking user-written theory for output correctness")
-  public static boolean use_theory_check = false;
+  public static boolean use_theory_check = true;
   
   @Option("Check npe or not")
-  public static boolean check_npe = true;
+  public static boolean check_npe = false;
   
   @Option("Use enum type")
   public static boolean use_enum_type = true;
   
   @Option("A file dump all thrown exception during test generation")
   public static String exception_dump_file = null;
-  
   //options not used in this class
+  
+  @Option("Output verbose information during test generation")
+  public static boolean verbose = false;
+  
   
   @Unpublicized
   @Option("The code under test may use some dynamically generated class. "
@@ -134,9 +141,6 @@ public class PalusOptions {
   @Option("The random seed for test generation")
   public static int random_seed = 0;
   
-//  @Option("Launch Palus in a new Process")
-//  public static boolean use_palus_wrapper = false;
-  
   @Option("Dump the built model as text")
   public static boolean dump_model_as_text = false;
   
@@ -145,8 +149,8 @@ public class PalusOptions {
       + " sequences.")
   public static int max_seq_num_model_tests = 0;
   
-  @Option("Fall back to Randoop")
-  public static boolean fall_back_to_randoop = false;
+  @Option("Pure random test generation")
+  public static boolean random = false;
   
   @Option("Only output failed tests")
   public static boolean only_output_failed_tests = false;
@@ -167,6 +171,9 @@ public class PalusOptions {
   
   @Option("A file specifying how many instance to process for a specific class")
   public static String instance_process_file = null;
+  
+  @Option("The log file during test generation")
+  public static String log_file = null;
   
   
   /**
@@ -294,7 +301,7 @@ public class PalusOptions {
       }
     }
     
-    if(!PalusOptions.fall_back_to_randoop) {
+    if(!PalusOptions.random) {
       if(PalusOptions.trace_file == null) {
         errorMsg.add("Missing trace files, please provide a binary file (*_trace.model) containing all recorded trace information, using --trace_file option");
       } else {

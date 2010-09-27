@@ -49,11 +49,6 @@ public class ModelConstructor {
      * */
     public static int MAX_TRY_UNTIL_FIXED_POINT = 5;
     
-    /**
-     * A verbose flag controlling whether to dump constructed class model
-     * */
-    public static boolean verbose = true;
-    
 	/**
 	 * The raw input trace event data.
 	 * */
@@ -105,7 +100,7 @@ public class ModelConstructor {
 		//System.out.println("The max size of instances to process: " + MAX_INSTANCE_PER_MODEL);
 		//for large trace, if user choose to NOT process all traces
 		if(!processing_all_traces && instance_to_process.size() > MAX_INSTANCE_PER_MODEL) {
-		  System.out.println("Eliminate the trace size to: " + MAX_INSTANCE_PER_MODEL);
+		  System.out.print(", eliminate the trace size to: " + MAX_INSTANCE_PER_MODEL);
 		  //select the top MAX_INSTANCE_PER_MODEL instance that has the most numnber of traces
 		  instance_to_process = new LinkedHashSet<Instance>();
           Set<Instance> allInstances = classTraces.keySet();
@@ -126,7 +121,9 @@ public class ModelConstructor {
 		  }
 		}
 		
-		System.out.println("    Number of instance to process: " + instance_to_process.size());
+		System.out.print(", number of instance to process: " + instance_to_process.size());
+		System.out.println();
+		System.out.print("   ");
 		//build a class model for each object instance observed from the execution trace
 		for(Instance instance : instance_to_process) {
 		    instance_count ++;
@@ -136,9 +133,12 @@ public class ModelConstructor {
 			//start to build model from traces
 			ClassModel model = null;
             try {
-                System.out.print(" - " + traceList.size());
+                if(PalusOptions.verbose) {
+                  System.out.print("-");
+                  System.out.print( traceList.size());
+                }
                 model = this.buildClassModelFromTrace(clazz, traceList);
-                if(verbose) {
+                if(PalusOptions.verbose) {
                     Log.log("--------------- The new build model before  -------------");
                     Log.log("Class model for :" + clazz.getName());
                     Log.log(model.getModelInfo() + Globals.lineSep);
@@ -158,7 +158,7 @@ public class ModelConstructor {
                 }
                 System.out.print("+");
                 //for debugging purpose
-                if(verbose) {
+                if(PalusOptions.verbose) {
                     Log.log("############### Intermediate merging result #############");
                     Log.log("Class model for :" + clazz.getName());
                     Log.log(classModel.getModelInfo() + Globals.lineSep);
@@ -220,7 +220,7 @@ public class ModelConstructor {
             throw new RuntimeException(e);
         }
 		System.out.println();
-		if(verbose) {
+		if(PalusOptions.verbose) {
 		    Log.log(" ---------------- class model after merging and removing nonpublic transitions ------------");
 		    Log.log("Class model for: " + clazz.getName());
 		    Log.log(classModel.getModelInfo() + Globals.lineSep);
