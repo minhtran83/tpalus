@@ -76,6 +76,8 @@ The most common way to use is: {{{-javaagent:./palus-0.2-nodept.jar=Project_for_
 
 You could also specify which class to instrument like: {{{-javaagent:./palus-0.2-nodept.jar=Project_for_Test=./Instrument_File_Name}}}. The file of Instrument_File_Name contains all classes to instrument. Other classes not in this file will be skipped. This option is useful if users only want to record the traces for some particular classes.
 
+You may also find [http://code.google.com/p/tpalus/wiki/MoreExamples?ts=1285612372&updated=MoreExamples#Tricks_for_Tweaking Tricks for tweaking] useful!
+
 
 ==Examples==
 
