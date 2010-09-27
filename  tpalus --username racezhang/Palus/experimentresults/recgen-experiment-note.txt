@@ -1,0 +1,9 @@
+The RecGen tool (https://sites.google.com/site/recgentool/) is implemented on top a old Randoop version.
+The old Randoop version contains many unfixed bugs. Thus, it seems that RecGen fails to generate compilable
+tests for many of the subjects.
+
+For the SAT4J subjects, there seems no way to make the generated tests compilable using simple syntax editting.
+
+For other tests that have compilable errors, we manually correct the syntax problems.
+
+For fair comparison, we remove the calls to main(args) method, which the new version of Randoop ignores.
