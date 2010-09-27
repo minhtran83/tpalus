@@ -124,3 +124,7 @@ You may find the classtxt file for evaluation useful. [http://code.google.com/p/
 =Known bugs=
 
 Randoop has a known bug reported [http://code.google.com/p/randoop/issues/detail?id=14 here], which will lead Palus crash in some nondeterminstic circumstances. The Randoop developers are working in fixing this bug, and we recommend users to run Palus multiple times.
+
+=Tricks for Tweaking=
+1. Reduce runtime overhead when collecting traces
+   The default model of Palus will instrument and monitor the execution of ALL client code. Thus, for large-scale projects, the instrumentation is likely to impose a huge runtime overhead, or even result in OutOfMemory exception when recording traces.  In that case, we recommend users to provide a file to specify the classes you want to instrument (instead of asking Palus to instrument all). See: 
