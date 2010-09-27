@@ -16,13 +16,13 @@ Palus is an automated test generation tool, which combines various static and dy
 
 Execute the following command:
 
-{{{java -cp ./palus-0.1.jar:./asm-all-3.1.jar:./plume.jar palus.main.OfflineMain --help}}}
+{{{java -cp ./palus-0.2-nodept.jar palus.main.OfflineMain --help}}}
 
 ==Command Options==
 
 View a complete list of Palus command? execute the following command: 
 
-{{{java -cp ./palus-0.1.jar:./asm-all-3.1.jar:./plume.jar palus.main.OfflineMain --help}}}
+{{{java -cp ./palus-0.2-nodept.jar palus.main.OfflineMain --help}}}
 
 *Basic options* for palus.main.OfflineMain:
 
