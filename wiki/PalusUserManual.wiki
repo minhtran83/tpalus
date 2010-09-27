@@ -91,6 +91,8 @@ All needed class files are included in the palus-0.2-nodept.jar.
 
    java -cp ./palus-0.2-nodept.jar palus.main.OfflineMain --time_limit 10 --class_file ./toydatabase.txt --trace_file ./toydb_trace.model
 
+   The above command informs Palus to generate tests in 10 seconds, for classes defined in the toydatabase.txt file using a model built from trace file toydb_trace.model.
+
 === Example 2 (a real-world program: bcel 5.2 library) ===
 
 The first 2 steps are the same with *Example 1*
