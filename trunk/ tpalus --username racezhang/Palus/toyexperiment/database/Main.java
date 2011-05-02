@@ -3,7 +3,8 @@
 package database;
 
 /**
- * @author saizhang@google.com (Your Name Here)
+ * @author saizhang@google.com (Sai Zhang)
+ * @author szhang@cs.washington.edu (Sai Zhang)
  *
  */
 public class Main {

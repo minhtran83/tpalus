@@ -14,7 +14,7 @@ import org.apache.bcel.generic.InstructionFactory;
 import org.apache.bcel.generic.*;
 import org.apache.bcel.verifier.VerificationResult;
 
-import sun.nio.cs.ext.ISCII91;
+//import sun.nio.cs.ext.ISCII91;
 
 import plume.SimpleLog;
 import plume.ArraysMDE;
