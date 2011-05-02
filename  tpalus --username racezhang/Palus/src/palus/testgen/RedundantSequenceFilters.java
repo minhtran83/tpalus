@@ -14,7 +14,7 @@ import java.util.Set;
  * A simple utility class to filter the redundant sequences
  * 
  * @author saizhang@google.com (Sai Zhang)
- *
+ * @author szhang@cs.washington.edu (Sai Zhang)
  */
 public class RedundantSequenceFilters {
 
@@ -23,7 +23,7 @@ public class RedundantSequenceFilters {
    * when it is generated. Thus, we filter them here
    * */
   public static List<ExecutableSequence> filterRepetitiveSequences(List<ExecutableSequence> sequences) {
-    PalusUtil.checkNull(sequences);
+    PalusUtil.checkNull(sequences, "The sequence can not be null.");
     //use a set to filter it
     Set<ExecutableSequence> unique_sequences = new LinkedHashSet<ExecutableSequence>();
     for(ExecutableSequence sequence : sequences) {
