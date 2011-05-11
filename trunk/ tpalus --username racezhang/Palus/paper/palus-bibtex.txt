@@ -1,0 +1,8 @@
+@inproceedings{ZhangSBM:2011,
+ author = {Sai Zhang and David Saff and Yingyi Bu and and Michael D. Ernst},
+ title = {Combined Static and Dynamic Automated Test Generation},
+ booktitle = {Proc. 11th International Symposium on Software Testing and Analysis (ISSTA 2011)},
+ year = {2011},
+ location = {Toronto, ON, Canada},
+}
+
