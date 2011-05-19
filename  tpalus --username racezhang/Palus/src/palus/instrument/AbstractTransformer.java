@@ -171,6 +171,6 @@ public abstract class AbstractTransformer {
   /**
    * The main class transformation method
    */
-  @SuppressWarnings("unchecked")
+  //@SuppressWarnings("unchecked")
   protected abstract void transformClassNode(ClassNode cn);
 }

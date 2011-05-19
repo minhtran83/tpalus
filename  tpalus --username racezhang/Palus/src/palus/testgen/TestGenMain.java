@@ -122,6 +122,10 @@ public class TestGenMain {
      * */
     public static boolean removeIsNotNullChecker = true;
     /**
+     * remove all time out checker
+     * */
+    public static boolean removeTimeOutChecker = true;
+    /**
      * append related method use the result of static analysis
      * */
     public static boolean diversifySequence = true;
@@ -560,6 +564,10 @@ public class TestGenMain {
       //remove all NotNull checker
       if(removeIsNotNullChecker) {
         SequenceCheckFilters.removeIsNotNullChecks(sequences);
+      }
+      
+      if(removeTimeOutChecker) {
+    	  TimeoutCheckerFilters.removeTimeOutSequence(sequences);
       }
       
       if(PalusOptions.exception_dump_file != null) {

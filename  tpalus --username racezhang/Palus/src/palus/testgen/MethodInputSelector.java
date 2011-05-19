@@ -83,7 +83,7 @@ public class MethodInputSelector {
     
     //pickup a decoration randomly
     Decoration decoration = decorations.get(Randomness.nextRandomInt(decorations.size()));
-    int position = decoration.getPosition();
+    //int position = decoration.getPosition();
     
     //for the root transition, its position could only be the this position or the return type
     //XXX not sure

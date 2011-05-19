@@ -38,7 +38,7 @@ public class SequenceCheckFilters {
         //remove the IsNotNull check
         if(!toRemoves.isEmpty()) {
           for(Check toRemove : toRemoves) {
-            boolean success = eSeq.getChecks(i).remove(toRemove);
+            eSeq.getChecks(i).remove(toRemove);
           }
         }
       }

@@ -100,11 +100,11 @@ public class MethodRecommender {
   /**
    * A simple test driver.
    * */
-  public static void main(String[] args) {
-    List<Class<?>> list = new LinkedList<Class<?>>();
-    list.add(java.util.Vector.class);
-    MethodRecommender recommender = new MethodRecommender(list);
-    //recommender.buildDependence();
-    //System.out.println(recommender.relations.showFieldReadWrites());
-  }
+//  public static void main(String[] args) {
+//    List<Class<?>> list = new LinkedList<Class<?>>();
+//    list.add(java.util.Vector.class);
+//    MethodRecommender recommender = new MethodRecommender(list);
+//    recommender.buildDependence();
+//    System.out.println(recommender.relations.showFieldReadWrites());
+//  }
 }

@@ -52,6 +52,11 @@ final class MethodRelations implements Opcodes {
     new LinkedHashMap<Class<?>, Map<StatementKind, List<StatementKind>>>();
   
   /**
+   * Only for experiment
+   * */
+  private boolean use_standard_tf_idf = false;
+  
+  /**
    * Package visible constructor
    * */
   MethodRelations(Collection<Class<?>> classes) {
@@ -445,6 +450,7 @@ final class MethodRelations implements Opcodes {
         }
       }
       
+      dependentMethods.addAll(methodAndReadWrites.keySet());
       relatedMethodMap.put(method, dependentMethods);
     }
     

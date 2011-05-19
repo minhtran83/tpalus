@@ -14,6 +14,7 @@ import java.util.Stack;
 import palus.Log;
 import palus.PalusUtil;
 import palus.main.PalusOptions;
+import palus.model.ktail.KTailMerger;
 import palus.model.serialize.TraceSerializer;
 import palus.trace.ClinitEntryEvent;
 import palus.trace.ClinitExitEvent;
@@ -68,9 +69,9 @@ public class TraceAnalyzer {
 	 * */
 	public TraceAnalyzer(List<TraceEvent> traces) {
 	    PalusUtil.checkNull(traces, "The trace event list could not be null!");
-	    for(TraceEvent trace : traces) {
-	      PalusUtil.checkNull(trace, "Any trace event object could not be null!");
-	    }
+//	    for(TraceEvent trace : traces) {
+//	      PalusUtil.checkNull(trace, "Any trace event object could not be null!");
+//	    }
 		this.traces = traces;
 		TRACE_TX_FILE = PROJECT_NAME + "_trace.txt";
 	    //dump the trace event as object stream for reuse
@@ -210,7 +211,24 @@ public class TraceAnalyzer {
 		if(dependences != null) {
 		    System.out.println(Globals.lineSep + "We found: " + dependences.size()
 		        + " dependence pairs to enhance the class model.");
-		    ClassModel.enhanceClassModel(models, dependences);
+		    if(PalusOptions.model_with_param_edge) {
+		    	//enhance the model with parameter edges
+		        ClassModel.enhanceClassModel(models, dependences);
+		    }
+		    if(PalusOptions.use_gktail) {
+		    	System.out.println("Use k-tail to merge model");
+		    	int totalnodes = 0;
+		    	int removednodes = 0;
+		    	for(Class<?> c : models.keySet()) {
+		    	    ClassModel cmodel = models.get(c);
+		    	    KTailMerger merger = new KTailMerger(cmodel, 2);
+		    	    merger.mergeNodesByKTail();
+		    	    totalnodes = totalnodes + cmodel.getAllNodes().size();
+		    	    removednodes = removednodes + merger.getMergedNum();
+		    	    System.out.println("remove node: " + merger.getMergedNum() + ", for: " + c.getSimpleName() + cmodel.getAllNodes().size());
+		    	}
+		    	System.out.println("- --- remove: " + removednodes + " ,  in : " + totalnodes);
+		    }
 		    System.out.println("Finish enhancing the model with dependence information.");
 		} else {
 		  System.out.println("No dependence relations found");

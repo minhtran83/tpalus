@@ -23,6 +23,7 @@ import randoop.main.GenInputsAbstract;
  * Class keeping all Palus options from command
  * 
  * @author saizhang@google.com (Sai Zhang)
+ * @author szhang@cs.washington.edu (Sai Zhang)
  */
 public class PalusOptions {
 
@@ -175,6 +176,18 @@ public class PalusOptions {
   @Option("The log file during test generation")
   public static String log_file = null;
   
+  /** for experiments */
+  @Unpublicized
+  @Option("enhance the model with dependence")
+  public static boolean model_with_param_edge = true;
+  
+  @Unpublicized
+  @Option("use GKTail to refine the model")
+  public static boolean use_gktail = false;
+  
+  @Unpublicized
+  @Option("The number k in gttaik algorithm")
+  public static int gttail_k = 2;
   
   /**
    * Parse the argument options and assign the value to the right place

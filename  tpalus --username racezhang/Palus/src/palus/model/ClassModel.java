@@ -28,6 +28,7 @@ import randoop.Globals;
  *
  */
 public class ClassModel implements Serializable {
+	
 	/**
 	 * A unique id for each class model
 	 * */

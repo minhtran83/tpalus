@@ -122,7 +122,7 @@ public class ModelSerializer {
     FileInputStream fin = new FileInputStream(file);
     ObjectInputStream ois = new ObjectInputStream(fin);
     
-    Object obj = null;
+    //Object obj = null;
     int size = ois.readInt();
     //System.out.println("size: " + size);
     for(int i = 0; i < size; i++) {
