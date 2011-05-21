@@ -162,40 +162,7 @@ public class ApacheCollectionTheory {
 
 The above simple theory specify the specification that each bag implementation should obey. That is, there should be no exception when adding non-null items to a bag, and after the add operation, the bag should contain the added item.
 
-Users could simply put this class to the classlist.txt file as the input of Palus. Palus will automatically extract the theory and check its correctness, when it sees a Bag and Object instances during testing generation. This simple theory find several violations (bugs) in the latest apache-common release. Here is an example failed tests:
-
-{{{
-
-public void test414() throws Throwable {
-
-    org.apache.commons.collections.TreeBag var0 = new org.apache.commons.collections.TreeBag();
-    java.lang.Integer var1 = new java.lang.Integer(1);
-    org.apache.commons.collections.ArrayStack var2 = new org.apache.commons.collections.ArrayStack(var1);
-    java.lang.Class[] var3 = new java.lang.Class[] { };
-    org.apache.commons.collections.Closure[] var4 = new org.apache.commons.collections.Closure[] { };
-    org.apache.commons.collections.functors.ChainedClosure var5 = new org.apache.commons.collections.functors.ChainedClosure(var4);
-    org.apache.commons.collections.functors.ChainedClosure var6 = new org.apache.commons.collections.functors.ChainedClosure(var4);
-    java.lang.Object[] var7 = new java.lang.Object[] { var6};
-    org.apache.commons.collections.functors.InstantiateTransformer var8 = new org.apache.commons.collections.functors.InstantiateTransformer(var3, var7);
-    org.apache.commons.collections.functors.IdentityPredicate var9 = new org.apache.commons.collections.functors.IdentityPredicate((java.lang.Object)var8);
-    org.apache.commons.collections.TreeBag var10 = new org.apache.commons.collections.TreeBag();
-    boolean var11 = var9.evaluate((java.lang.Object)var10);
-    org.apache.commons.collections.functors.EqualPredicate var12 = new org.apache.commons.collections.functors.EqualPredicate((java.lang.Object)var10);
-    boolean var13 = org.apache.commons.collections.CollectionUtils.isSubCollection((java.util.Collection)var2, (java.util.Collection)var10);
-    java.util.Iterator var14 = var10.iterator();
-    boolean var15 = var0.removeAll((java.util.Collection)var10);
-    
-    try {
-        new theory.ApacheCollectionTheory().bagAddItemToContainIt(var0, var10);
-    } catch (java.lang.AssertionError ae) {
-        fail("Theory checking: theory.ApacheCollectionTheory:public void theory.ApacheCollectionTheory.bagAddItemToContainIt(org.apache.commons.collections.Bag,java.lang.Object) fails");
-    } catch (java.lang.Exception ex) {
-        fail("Theory checking: theory.ApacheCollectionTheory:public void theory.ApacheCollectionTheory.bagAddItemToContainIt(org.apache.commons.collections.Bag,java.lang.Object) fails");
-    }
-
-  }
-
-}}}
+Users could simply put this class to the classlist.txt file as the input of Palus. Palus will automatically extract the theory and check its correctness, when it sees a Bag and Object instances during testing generation. This simple theory find several violations (bugs) in the latest apache-common release.
 
 *Note*: please turn on the option *--use_theory_check* when starting Palus.
 
