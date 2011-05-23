@@ -189,6 +189,10 @@ public class PalusOptions {
   @Option("The number k in gttaik algorithm")
   public static int gttail_k = 2;
   
+  @Unpublicized
+  @Option("Output tests")
+  public static boolean outputtests = true;
+  
   /**
    * Parse the argument options and assign the value to the right place
    * */
