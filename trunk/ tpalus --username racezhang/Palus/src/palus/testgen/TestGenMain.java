@@ -162,6 +162,7 @@ public class TestGenMain {
      * */
     private static AbstractGenerator testgenhandler = null;
     
+    
     /**
      * Constructor, register a JVM shutdown hook here
      * */
@@ -570,13 +571,20 @@ public class TestGenMain {
     	  TimeoutCheckerFilters.removeTimeOutSequence(sequences);
       }
       
+      System.out.println("Dumping all potential buggy method.");
+      BuggyMethodSummarizer.dumpBuggyMethods(sequences);
+      
       if(PalusOptions.exception_dump_file != null) {
         SequenceExceptions seqExceptions = new SequenceExceptions(sequences, PalusOptions.exception_dump_file);
         seqExceptions.dumpMethodExceptions();
         System.out.println("Dump exception files to: " + seqExceptions.dumpFilePath());
       }
       
-      write_junit_tests (outputDir, packageName, testName, testsPerFile, sequences);
+      if(PalusOptions.outputtests) {
+          write_junit_tests (outputDir, packageName, testName, testsPerFile, sequences);
+      } else {
+    	  System.out.println("Finished: not output any tests as the user specifies.");
+      }
     }
     
     /**
